@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  /* Daily Gourmet Design Tokens — aus Catering_Firma_Branding (tokens.json) */
+  --color-paper: #f6f7f9;        /* surfaceTint */
+  --color-surface: #ffffff;
+  --color-ink: #1e2937;          /* textPrimary */
+  --color-ink-soft: #3a4e64;
+  --color-muted: #667085;        /* textSecondary */
+  --color-line: #e3e7ed;         /* border */
+  --color-line-strong: #c7d0db;
+
+  /* Primär: Brand-Blau (Token-Namen bleiben stabil, nur Werte getauscht) */
+  --color-basil: #1b5fa0;        /* primary */
+  --color-basil-deep: #1b3350;   /* dunkles Brand-Blau (Hero, Hover) */
+  --color-basil-soft: #eaf3fb;
+
+  /* Akzent: Magenta */
+  --color-saffron: #e12b76;      /* accentMagenta */
+  --color-saffron-soft: #fce9f0;
+
+  --color-ok: #2fae94;           /* accentTeal / success */
+  --color-ok-soft: #e6f6f1;
+  --color-warn: #e2a93b;         /* warning */
+  --color-warn-soft: #fbf3e0;
+  --color-danger: #d6455a;
+  --color-danger-soft: #fbe9eb;
+  --color-info: #5aa3e0;
+  --color-info-soft: #eaf3fb;
+
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-sans: "Work Sans", system-ui, sans-serif;
+
+  --radius-card: 0.875rem;       /* radius.lg = 14px */
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px; /* typography.scale.body */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Druckansichten (Küche & Einkauf) */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::selection { background: var(--color-basil-soft); }
+
+.scroll-x { overflow-x: auto; }
+.scroll-x::-webkit-scrollbar { height: 8px; }
+.scroll-x::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: 4px; }
