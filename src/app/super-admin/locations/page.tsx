@@ -9,7 +9,7 @@ export default function LocationsPage() {
     <>
       <PageHeader
         title="Standorte"
-        subtitle="Küchen- und Produktionsstandorte von Daily Gourmet."
+        subtitle="Küchen- und Produktionsstandorte aller Mandanten."
         actions={<Button><Plus size={16} aria-hidden /> Standort anlegen</Button>}
       />
       <Card>

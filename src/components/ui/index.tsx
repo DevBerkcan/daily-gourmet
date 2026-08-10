@@ -100,24 +100,26 @@ export function StatCard({ label, value, hint, tone = "default" }: { label: stri
 
 /* ---------- Buttons & Inputs (Dummy-Interaktion) ---------- */
 
-export function Button({ children, variant = "primary", href }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost" | "danger"; href?: string }) {
+export function Button({ children, variant = "primary", href, onClick, type = "button", disabled }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost" | "danger"; href?: string; onClick?: () => void; type?: "button" | "submit"; disabled?: boolean }) {
   const styles = {
     primary: "bg-basil text-white hover:bg-basil-deep",
     secondary: "border border-line-strong bg-surface text-ink hover:bg-paper",
     ghost: "text-basil hover:bg-basil-soft",
     danger: "bg-danger-soft text-danger hover:bg-danger hover:text-white",
   }[variant];
-  const cls = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil ${styles}`;
+  const cls = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:cursor-not-allowed disabled:opacity-50 ${styles}`;
   if (href) return <Link href={href} className={cls}>{children}</Link>;
-  return <button type="button" className={cls}>{children}</button>;
+  return <button type={type} onClick={onClick} disabled={disabled} className={cls}>{children}</button>;
 }
 
-export function SearchInput({ placeholder = "Suchen …" }: { placeholder?: string }) {
+export function SearchInput({ placeholder = "Suchen …", value, onChange }: { placeholder?: string; value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   return (
     <input
       type="search"
       placeholder={placeholder}
       aria-label={placeholder}
+      value={value}
+      onChange={onChange}
       className="min-h-10 w-full max-w-xs rounded-lg border border-line bg-surface px-3.5 text-sm text-ink placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-basil"
     />
   );

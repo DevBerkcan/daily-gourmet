@@ -86,9 +86,9 @@ export default function AdminDashboard() {
           <Factory size={18} className="text-basil" aria-hidden />
           <span className="text-sm font-medium text-ink">Produktion Freitag vorbereiten</span>
         </Link>
-        <Link href="/admin/users" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
+        <Link href="/admin/meal-plans/mp-033" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
           <CalendarPlus size={18} className="text-basil" aria-hidden />
-          <span className="text-sm font-medium text-ink">Offene Einladung: Frank Otten</span>
+          <span className="text-sm font-medium text-ink">Speiseplan KW 33 freigeben</span>
         </Link>
       </div>
 

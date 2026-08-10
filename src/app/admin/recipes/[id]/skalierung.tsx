@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import { Card, CardHeader, Table, Td } from "@/components/ui";
-import { zutatById } from "@/lib/data";
-import type { Rezept } from "@/lib/types";
+import type { Rezept, Zutat } from "@/lib/types";
 
 /**
  * Interaktive Hochrechnung (Phase 1 im Client).
  * In Phase 2 rechnet das Backend mit decimal-Arithmetik —
  * das Ergebnis dieser Ansicht ist eine Vorschau.
  */
-export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
+export function RezeptSkalierung({ rezept, zutaten }: { rezept: Rezept; zutaten: Zutat[] }) {
   const [portionen, setPortionen] = useState(rezept.standardPortionen * 25);
   const faktor = portionen / rezept.standardPortionen;
 
@@ -37,7 +36,7 @@ export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
       />
       <Table head={["Zutat", "Originalmenge", "Hochgerechnet"]}>
         {rezept.zutaten.map((rz) => {
-          const z = zutatById(rz.zutatId);
+          const z = zutaten.find((zt) => zt.id === rz.zutatId);
           return (
             <tr key={rz.zutatId}>
               <Td className="font-medium text-ink">{z?.name ?? rz.zutatId}</Td>

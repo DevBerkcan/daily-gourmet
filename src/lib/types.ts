@@ -20,6 +20,7 @@ export type BestellStatus = "DRAFT" | "SUBMITTED" | "CONFIRMED" | "LOCKED" | "CA
 export type ProduktionsStatus = "PLANNED" | "PREPARING" | "COMPLETED" | "CANCELLED";
 export type EinkaufslistenStatus = "DRAFT" | "REVIEWED" | "ORDERED" | "COMPLETED";
 export type Einheit = "g" | "kg" | "ml" | "l" | "Stück";
+export type Schwierigkeitsgrad = "Einfach" | "Mittel" | "Anspruchsvoll";
 
 export interface Tenant {
   id: string;
@@ -65,6 +66,8 @@ export interface Einrichtung {
   standortId: string;
   bestellfrist: string;
   aktiveWochentage: string[];
+  /** Vertraglich vereinbarter Verkaufspreis je Portion (€), Basis für Umsatzmessung. */
+  portionspreis: number;
   status: "AKTIV" | "INAKTIV";
   notizen?: string;
 }
@@ -90,8 +93,12 @@ export interface Zutat {
   einkaufspreis?: number;
   lieferant: string;
   allergene: string[];
+  /** Kennzeichnungspflichtige Zusatzstoffe (E-Nummern etc.), getrennt von Allergenen. */
+  zusatzstoffe: string[];
   vegetarisch: boolean;
   vegan: boolean;
+  bio: boolean;
+  regional: boolean;
   aktiv: boolean;
   /** Nährwerte je 100 g / 100 ml — kommen später live über die Lebensmittel-API */
   naehrwertePro100: Naehrwerte;
@@ -110,11 +117,21 @@ export interface Rezept {
   kategorie: string;
   standardPortionen: number;
   zubereitungszeitMin: number;
+  schwierigkeit: Schwierigkeitsgrad;
   zubereitungsschritte: string[];
   zutaten: RezeptZutat[];
   vegetarisch: boolean;
   vegan: boolean;
   produktionshinweise?: string;
+  /** DGE-"Lebenswelten", für die das Rezept freigegeben ist. */
+  zielgruppen: string[];
+  bildUrl?: string;
+  kerntemperaturC?: number;
+  lagerhinweis?: string;
+  haltbarkeitNachZubereitung?: string;
+  erstelltVon: string;
+  erstelltAm: string;
+  aktualisiertAm?: string;
   aktiv: boolean;
   version: number;
 }
@@ -151,6 +168,21 @@ export interface Bestellung {
   positionen: BestellPosition[];
   abgesendetAm?: string;
   frist: string;
+}
+
+/** Aufbereitete Umsatz-Zeile für das Reporting (aus Bestellung + Speiseplan + Einrichtung verknüpft). */
+export interface UmsatzZeile {
+  bestellungId: string;
+  speiseplanId: string;
+  kalenderwoche: number;
+  jahr: number;
+  einrichtungId: string;
+  einrichtungName: string;
+  standortId: string;
+  standortName: string;
+  portionen: number;
+  portionspreis: number;
+  umsatz: number;
 }
 
 export interface ProduktionsPosition {

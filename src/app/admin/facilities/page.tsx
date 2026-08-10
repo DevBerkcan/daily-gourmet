@@ -19,7 +19,7 @@ export default function FacilitiesPage() {
             <option>Alle Standorte</option><option>Zentralküche Düsseldorf</option><option>Produktionsküche Neuss</option>
           </select>
         </div>
-        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Bestellfrist", "Liefertage", "Status"]}>
+        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>
           {einrichtungen.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
@@ -34,6 +34,7 @@ export default function FacilitiesPage() {
               <Td className="text-muted">{standortById(e.standortId)?.name}</Td>
               <Td className="text-muted">{e.bestellfrist}</Td>
               <Td><span className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</span></Td>
+              <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
             </tr>
           ))}

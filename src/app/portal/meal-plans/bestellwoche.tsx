@@ -1,9 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Card, Button, Tag, DummyNote } from "@/components/ui";
-import { speiseplaene, rezeptById, rezeptAllergene } from "@/lib/data";
-import { Lock, Save, Send } from "lucide-react";
+import { PageHeader, Button, Tag, StatusBadge, EmptyState, DummyNote } from "@/components/ui";
+import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
+import { speiseplaeneByEinrichtung, bestellungByEinrichtungUndPlan, rezeptById, rezeptAllergene } from "@/lib/data";
+import type { Speiseplan, Bestellung } from "@/lib/types";
+import { Save, Send } from "lucide-react";
+
+const heute = "2026-08-06";
+const einrichtungId = "f-001";
 
 /**
  * Interaktive Wochenansicht mit Portionseingabe (Phase 1: nur Client-State).
@@ -12,15 +17,60 @@ import { Lock, Save, Send } from "lucide-react";
  * serverseitiger Fristprüfung.
  */
 export function BestellWoche() {
-  const plan = speiseplaene.find((p) => p.status === "PUBLISHED")!;
-  const [mengen, setMengen] = useState<Record<string, number>>({
-    "2026-08-06|r-001": 145,
-    "2026-08-07|r-002": 120,
-    "2026-08-07|r-003": 35,
-  });
+  const wochen = useMemo(() => speiseplaeneByEinrichtung(einrichtungId), []);
+  const [planId, setPlanId] = useState<string>(
+    () => wochen.find((p) => p.status === "PUBLISHED")?.id ?? wochen[0]?.id ?? ""
+  );
+  const plan = wochen.find((p) => p.id === planId);
+  const readOnly = plan?.status === "CLOSED" || plan?.status === "ARCHIVED";
+  const bestellung = plan ? bestellungByEinrichtungUndPlan(einrichtungId, plan.id) : undefined;
+
+  return (
+    <>
+      <PageHeader
+        title={plan ? `Speiseplan KW ${plan.kalenderwoche}` : "Speiseplan"}
+        subtitle="Tragen Sie die Portionsmengen je Gericht ein. Vergangene Tage sind gesperrt; Änderungen sind bis zur Frist (Vortag, 09:00 Uhr) möglich."
+        actions={
+          wochen.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="Kalenderwoche wählen"
+                value={planId}
+                onChange={(e) => setPlanId(e.target.value)}
+                className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm"
+              >
+                {wochen.map((w) => (
+                  <option key={w.id} value={w.id}>KW {w.kalenderwoche} / {w.jahr}</option>
+                ))}
+              </select>
+              {plan && <StatusBadge status={plan.status} />}
+            </div>
+          ) : undefined
+        }
+      />
+
+      {!plan ? (
+        <EmptyState title="Keine Speisepläne verfügbar" text="Für Ihre Einrichtung sind derzeit keine veröffentlichten Speisepläne vorhanden." />
+      ) : plan.tage.length === 0 ? (
+        <EmptyState title="Keine Tage geplant" text={`Für KW ${plan.kalenderwoche} liegen keine Plandaten vor.`} />
+      ) : (
+        <WochenTage key={plan.id} plan={plan} bestellung={bestellung} readOnly={readOnly} />
+      )}
+
+      <DummyNote />
+    </>
+  );
+}
+
+function WochenTage({ plan, bestellung, readOnly }: { plan: Speiseplan; bestellung: Bestellung | undefined; readOnly: boolean }) {
+  const initialMengen = useMemo(() => {
+    const m: Record<string, number> = {};
+    bestellung?.positionen.forEach((pos) => { m[`${pos.datum}|${pos.rezeptId}`] = pos.portionen; });
+    return m;
+  }, [bestellung]);
+  const [mengen, setMengen] = useState<Record<string, number>>(initialMengen);
   const [gespeichert, setGespeichert] = useState<string | null>(null);
 
-  const heute = "2026-08-06";
   const gesamt = useMemo(() => Object.values(mengen).reduce((s, n) => s + (n || 0), 0), [mengen]);
 
   const setMenge = (key: string, value: number) => {
@@ -31,48 +81,65 @@ export function BestellWoche() {
 
   return (
     <>
-      <PageHeader
-        title={`Speiseplan KW ${plan.kalenderwoche}`}
-        subtitle="Tragen Sie die Portionsmengen je Gericht ein. Vergangene Tage sind gesperrt; Änderungen sind bis zur Frist (Vortag, 09:00 Uhr) möglich."
-        actions={
-          <>
-            <Button variant="secondary"><Save size={15} aria-hidden /> Als Entwurf speichern</Button>
-            <Button><Send size={15} aria-hidden /> Verbindlich absenden</Button>
-          </>
-        }
-      />
+      {!readOnly && (
+        <div className="mb-4 flex justify-end gap-2 no-print">
+          <Button variant="secondary"><Save size={15} aria-hidden /> Als Entwurf speichern</Button>
+          <Button><Send size={15} aria-hidden /> Verbindlich absenden</Button>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-card border border-line bg-surface px-5 py-3 text-sm">
         <span className="text-muted">Bestellte Portionen gesamt:</span>
         <span className="font-display text-xl font-semibold text-basil">{gesamt}</span>
-        <span className="ml-auto text-xs text-muted">Status: Bestätigt · letzte Änderung 01.08., 14:22</span>
+        {bestellung && (
+          <span className="ml-auto flex items-center gap-2 text-xs text-muted">
+            <StatusBadge status={bestellung.status} />
+            {bestellung.abgesendetAm && `letzte Änderung ${bestellung.abgesendetAm}`}
+          </span>
+        )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <WeekCalendar>
         {plan.tage.map((tag) => {
-          const gesperrt = tag.datum < heute;
+          const gesperrt = readOnly || tag.datum < heute;
           return (
-            <Card key={tag.datum} className={`flex flex-col ${gesperrt ? "opacity-70" : ""}`}>
-              <div className="flex items-center justify-between border-b border-line px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-ink">{tag.wochentag}</p>
-                  <p className="text-xs text-muted">{new Date(tag.datum).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</p>
-                </div>
-                {gesperrt && <Lock size={14} className="text-muted" aria-label="Frist abgelaufen" />}
-              </div>
-              <div className="flex flex-1 flex-col gap-3 px-4 py-3">
-                {tag.rezeptIds.map((rid) => {
-                  const r = rezeptById(rid);
-                  if (!r) return null;
-                  const key = `${tag.datum}|${rid}`;
-                  const allergene = rezeptAllergene(r);
-                  return (
-                    <div key={rid} className="rounded-lg border border-line bg-paper px-3 py-2.5">
-                      <p className="text-sm font-medium leading-snug text-ink">{r.name}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
+            <DayColumn
+              key={tag.datum}
+              wochentag={tag.wochentag}
+              datum={tag.datum}
+              isToday={tag.datum === heute}
+              locked={gesperrt}
+              lockedLabel="Frist abgelaufen"
+              hinweis={tag.hinweis}
+              footer={
+                !gesperrt && (
+                  <label className="mt-auto text-xs text-muted">
+                    Hinweis zum Tag
+                    <input
+                      type="text"
+                      placeholder="z. B. Klasse 5b auf Ausflug"
+                      className="mt-1 min-h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+                    />
+                  </label>
+                )
+              }
+            >
+              {tag.rezeptIds.map((rid) => {
+                const r = rezeptById(rid);
+                if (!r) return null;
+                const key = `${tag.datum}|${rid}`;
+                const allergene = rezeptAllergene(r);
+                return (
+                  <MealTile
+                    key={rid}
+                    rezept={r}
+                    tags={
+                      <>
                         {r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">veg.</Tag> : null}
                         {allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}
-                      </div>
+                      </>
+                    }
+                    footer={
                       <label className="mt-2.5 flex items-center justify-between gap-2 text-xs text-muted">
                         Portionen
                         <input
@@ -85,28 +152,16 @@ export function BestellWoche() {
                           aria-label={`Portionen für ${r.name} am ${tag.wochentag}`}
                         />
                       </label>
-                    </div>
-                  );
-                })}
-                {tag.hinweis && <p className="rounded-md bg-saffron-soft px-2.5 py-1.5 text-xs text-ink">{tag.hinweis}</p>}
-                {!gesperrt && (
-                  <label className="mt-auto text-xs text-muted">
-                    Hinweis zum Tag
-                    <input
-                      type="text"
-                      placeholder="z. B. Klasse 5b auf Ausflug"
-                      className="mt-1 min-h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-basil"
-                    />
-                  </label>
-                )}
-              </div>
-            </Card>
+                    }
+                  />
+                );
+              })}
+            </DayColumn>
           );
         })}
-      </div>
+      </WeekCalendar>
 
       {gespeichert && <p className="mt-4 text-sm text-ok">{gespeichert}</p>}
-      <DummyNote />
     </>
   );
 }
