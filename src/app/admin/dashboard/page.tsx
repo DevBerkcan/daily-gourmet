@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button, DummyNote } from "@/components/ui";
-import { bestellungen, einrichtungById, speiseplaene, benachrichtigungen } from "@/lib/data";
+import { bestellungen, einrichtungById, speiseplaene, benachrichtigungen, standorte } from "@/lib/data";
 import { CalendarPlus, ShoppingBasket, Factory } from "lucide-react";
 
 export const metadata = { title: "Übersicht" };
@@ -21,7 +21,7 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Bestellungen KW 32" value="3" hint="2 verbindlich · 1 Entwurf" />
-        <StatCard label="Portionen heute" value="315" hint="Zentralküche Düsseldorf" />
+        <StatCard label="Portionen heute" value="315" hint={standorte[0]?.name} />
         <StatCard label="Offene Fristen" value="1" hint="Kita Sonnenblume · morgen 08:00 Uhr" tone="warn" />
         <StatCard label="Speiseplan KW 33" value="In Prüfung" hint="Freigabe durch Miriam ausstehend" tone="warn" />
       </div>

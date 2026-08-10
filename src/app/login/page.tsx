@@ -6,7 +6,7 @@ export const metadata = { title: "Anmelden" };
 const rollen = [
   { href: "/super-admin/dashboard", icon: Building2, label: "Super Admin", hint: "Gentle Group · Plattformverwaltung" },
   { href: "/admin/dashboard", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
-  { href: "/kitchen", icon: Soup, label: "Küche", hint: "Zentralküche Düsseldorf · Produktion" },
+  { href: "/kitchen", icon: Soup, label: "Küche", hint: "Daily Gourmet · Produktion" },
   { href: "/portal/dashboard", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
 ];
 

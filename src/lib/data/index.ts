@@ -29,15 +29,14 @@ export const benutzer: Benutzer[] = [
 ];
 
 export const standorte: Standort[] = [
-  { id: "s-001", name: "Zentralküche Düsseldorf", anschrift: "Ronsdorfer Str. 74, 40233 Düsseldorf", kontaktperson: "Petra Salomon", kapazitaetPortionen: 2500, status: "AKTIV" },
-  { id: "s-002", name: "Produktionsküche Neuss", anschrift: "Hammer Landstr. 5, 41460 Neuss", kontaktperson: "Ali Demir", kapazitaetPortionen: 900, status: "AKTIV" },
+  { id: "s-001", name: "Daily Gourmet", anschrift: "Eiland 2, 42103 Wuppertal", kontaktperson: "Petra Salomon", kapazitaetPortionen: 3400, status: "AKTIV" },
 ];
 
 export const einrichtungen: Einrichtung[] = [
   { id: "f-001", name: "Musterschule Nord", kundennummer: "DG-1001", anschrift: "Nordstraße 12, 40477 Düsseldorf", ansprechpartner: "Claudia Winter", email: "sekretariat@musterschule-nord.de", telefon: "0211 555 101", standortId: "s-001", bestellfrist: "Vortag, 09:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do", "Fr"], portionspreis: 4.8, status: "AKTIV", notizen: "Vegetarische Linie sehr gefragt." },
   { id: "f-002", name: "Musterschule Süd", kundennummer: "DG-1002", anschrift: "Südallee 44, 40217 Düsseldorf", ansprechpartner: "Frank Otten", email: "verwaltung@musterschule-sued.de", telefon: "0211 555 202", standortId: "s-001", bestellfrist: "Vortag, 09:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do"], portionspreis: 4.6, status: "AKTIV" },
-  { id: "f-003", name: "Kita Sonnenblume", kundennummer: "DG-1003", anschrift: "Blumenweg 3, 40589 Düsseldorf", ansprechpartner: "Hanna Bruns", email: "leitung@kita-sonnenblume.de", telefon: "0211 555 303", standortId: "s-002", bestellfrist: "Vortag, 08:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do", "Fr"], portionspreis: 5.2, status: "AKTIV" },
-  { id: "f-004", name: "Seniorenzentrum Am Park", kundennummer: "DG-1004", anschrift: "Parkstraße 88, 40476 Düsseldorf", ansprechpartner: "Georg Lentz", email: "kueche@sz-ampark.de", telefon: "0211 555 404", standortId: "s-002", bestellfrist: "Vortag, 10:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], portionspreis: 6.5, status: "INAKTIV", notizen: "Vertrag pausiert bis September." },
+  { id: "f-003", name: "Kita Sonnenblume", kundennummer: "DG-1003", anschrift: "Blumenweg 3, 40589 Düsseldorf", ansprechpartner: "Hanna Bruns", email: "leitung@kita-sonnenblume.de", telefon: "0211 555 303", standortId: "s-001", bestellfrist: "Vortag, 08:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do", "Fr"], portionspreis: 5.2, status: "AKTIV" },
+  { id: "f-004", name: "Seniorenzentrum Am Park", kundennummer: "DG-1004", anschrift: "Parkstraße 88, 40476 Düsseldorf", ansprechpartner: "Georg Lentz", email: "kueche@sz-ampark.de", telefon: "0211 555 404", standortId: "s-001", bestellfrist: "Vortag, 10:00 Uhr", aktiveWochentage: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], portionspreis: 6.5, status: "INAKTIV", notizen: "Vertrag pausiert bis September." },
 ];
 
 /* Feste Auswahllisten für Formulare, Filter und Kategorisierung */
@@ -172,7 +171,7 @@ export const speiseplaene: Speiseplan[] = [
     ],
   },
   {
-    id: "mp-033", kalenderwoche: 33, jahr: 2026, status: "REVIEW", standortIds: ["s-001", "s-002"], einrichtungIds: ["f-001", "f-002"],
+    id: "mp-033", kalenderwoche: 33, jahr: 2026, status: "REVIEW", standortIds: ["s-001"], einrichtungIds: ["f-001", "f-002"],
     tage: [
       { wochentag: "Montag", datum: "2026-08-10", rezeptIds: ["r-003"] },
       { wochentag: "Dienstag", datum: "2026-08-11", rezeptIds: ["r-001"] },

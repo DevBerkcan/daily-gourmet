@@ -21,10 +21,10 @@ export default function CompanyPage() {
           <div className="grid gap-4 px-5 py-5 sm:grid-cols-2">
             <Field id="name" label="Unternehmensname" value="Daily Gourmet GmbH" />
             <Field id="ust" label="USt-IdNr." value="DE 123 456 789" />
-            <Field id="strasse" label="Straße und Hausnummer" value="Ronsdorfer Str. 74" />
-            <Field id="plz" label="PLZ und Ort" value="40233 Düsseldorf" />
-            <Field id="tel" label="Telefon" value="0211 555 000" />
-            <Field id="mail" label="E-Mail" value="info@dailygourmet.de" />
+            <Field id="strasse" label="Straße und Hausnummer" value="Eiland 2" />
+            <Field id="plz" label="PLZ und Ort" value="42103 Wuppertal" />
+            <Field id="tel" label="Telefon" value="(0)202 – 479 47 001" />
+            <Field id="mail" label="E-Mail" value="info@daily-gourmet.de" />
           </div>
         </Card>
         <div className="flex flex-col gap-6">

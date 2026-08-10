@@ -1,5 +1,5 @@
 import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag, DummyNote } from "@/components/ui";
-import { einrichtungen, standortById } from "@/lib/data";
+import { einrichtungen, standorte, standortById } from "@/lib/data";
 import { Plus } from "lucide-react";
 
 export const metadata = { title: "Einrichtungen" };
@@ -16,7 +16,8 @@ export default function FacilitiesPage() {
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3.5 no-print">
           <SearchInput placeholder="Einrichtung suchen …" />
           <select aria-label="Nach Standort filtern" className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
-            <option>Alle Standorte</option><option>Zentralküche Düsseldorf</option><option>Produktionsküche Neuss</option>
+            <option>Alle Standorte</option>
+            {standorte.map((s) => <option key={s.id}>{s.name}</option>)}
           </select>
         </div>
         <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button, DummyNote } from "@/components/ui";
-import { produktionsplaene, rezeptById } from "@/lib/data";
+import { produktionsplaene, rezeptById, standortById } from "@/lib/data";
 import { Printer } from "lucide-react";
 
 export const metadata = { title: "Küche — Heutige Produktion" };
@@ -13,7 +13,7 @@ export default function KitchenDashboard() {
     <>
       <PageHeader
         title="Heutige Produktion"
-        subtitle="Donnerstag, 06. August · Zentralküche Düsseldorf"
+        subtitle={`Donnerstag, 06. August · ${standortById(heute.standortId)?.name}`}
         actions={<Button variant="secondary"><Printer size={15} aria-hidden /> Küchenzettel drucken</Button>}
       />
 
