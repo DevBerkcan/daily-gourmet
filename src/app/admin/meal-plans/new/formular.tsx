@@ -35,7 +35,7 @@ export function WochenplanFormular() {
   }, [plaene]);
 
   const [weekKey, setWeekKey] = useState(() => (wochen[0] ? `${wochen[0].jahr}-${wochen[0].kalenderwoche}` : ""));
-  const [standortIds, setStandortIds] = useState<string[]>([]);
+  const [standortIds, setStandortIds] = useState<string[]>(() => standorte.map((s) => s.id));
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
 
   const toggleStandort = (id: string) => {
