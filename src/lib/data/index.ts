@@ -331,3 +331,26 @@ export const umsatzUebersicht = (): UmsatzZeile[] =>
       };
     })
     .sort((a, b) => b.jahr - a.jahr || b.kalenderwoche - a.kalenderwoche);
+
+/* ---------- Produktion (abgeleitet aus bestätigten Bestellungen) ---------- */
+
+/** Eindeutige Liefertage mit zählenden Bestellungen für Einrichtungen eines Standorts, sortiert. */
+export const bestelldatenJeStandort = (standortId: string): string[] => {
+  const set = new Set<string>();
+  bestellungen
+    .filter((b) => bestellungZaehltAlsUmsatz(b) && einrichtungById(b.einrichtungId)?.standortId === standortId)
+    .forEach((b) => b.positionen.forEach((p) => set.add(p.datum)));
+  return [...set].sort();
+};
+
+/** Über alle Einrichtungen eines Standorts summierte Bestellmenge je Rezept für einen Liefertag. */
+export const bestellteMengeProTagUndStandort = (datum: string, standortId: string): { rezeptId: string; menge: number }[] => {
+  const mengen = new Map<string, number>();
+  bestellungen
+    .filter((b) => bestellungZaehltAlsUmsatz(b) && einrichtungById(b.einrichtungId)?.standortId === standortId)
+    .forEach((b) => b.positionen.forEach((p) => {
+      if (p.datum !== datum) return;
+      mengen.set(p.rezeptId, (mengen.get(p.rezeptId) ?? 0) + p.portionen);
+    }));
+  return [...mengen.entries()].map(([rezeptId, menge]) => ({ rezeptId, menge }));
+};
