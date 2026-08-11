@@ -1,6 +1,6 @@
 import { PageHeader, Button, DummyNote } from "@/components/ui";
 import { Plus, Sparkles } from "lucide-react";
-import { ZutatenTabelle } from "./zutaten-tabelle";
+import { ZutatenTabelle } from "@/features/ingredients/components/zutaten-tabelle";
 
 export const metadata = { title: "Zutaten" };
 

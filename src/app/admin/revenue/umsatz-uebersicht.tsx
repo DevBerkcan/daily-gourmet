@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardHeader, StatCard, Table, Td } from "@/components/ui";
-import { umsatzUebersicht } from "@/lib/data";
+import { umsatzUebersicht } from "@/features/meal-plans/data";
 
 const EUR = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 

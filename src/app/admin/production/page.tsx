@@ -1,6 +1,6 @@
 import { PageHeader, Button, DummyNote } from "@/components/ui";
 import { Plus } from "lucide-react";
-import { Produktionstabelle } from "./produktionstabelle";
+import { Produktionstabelle } from "@/features/production/components/produktionstabelle";
 
 export const metadata = { title: "Produktionsplanung" };
 

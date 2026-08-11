@@ -1,7 +1,3 @@
-import type { SpeiseplanTag } from "./types";
-
-const WOCHENTAGE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"];
-
 const toIsoDateString = (d: Date) => d.toISOString().slice(0, 10);
 
 /** ISO-8601-Kalenderwoche und -Jahr für ein Datum (UTC, verschiebt auf den Donnerstag der Woche). */
@@ -41,12 +37,6 @@ export function weekdayDatesOfIsoWeek(week: number, year: number): string[] {
     d.setUTCDate(monday.getUTCDate() + i);
     return toIsoDateString(d);
   });
-}
-
-/** Erzeugt leere Speiseplan-Tage (Mo–Fr, ohne Rezepte) für eine Kalenderwoche. */
-export function generateWeekTage(week: number, year: number): SpeiseplanTag[] {
-  const dates = weekdayDatesOfIsoWeek(week, year);
-  return WOCHENTAGE.map((wochentag, i) => ({ wochentag, datum: dates[i], rezeptIds: [] }));
 }
 
 /**

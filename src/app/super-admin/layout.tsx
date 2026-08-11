@@ -1,7 +1,7 @@
 "use client";
 
 import { AppShell, type NavItem } from "@/components/shell/AppShell";
-import { LayoutDashboard, Building2, Users, MapPin, Activity, ScrollText, ToggleLeft } from "lucide-react";
+import { LayoutDashboard, Building2, Users, MapPin, Activity, ScrollText, ToggleLeft, LifeBuoy } from "lucide-react";
 
 const nav: NavItem[] = [
   { label: "Übersicht", href: "/super-admin/dashboard", icon: LayoutDashboard },
@@ -11,6 +11,7 @@ const nav: NavItem[] = [
   { label: "System", href: "/super-admin/system", icon: Activity },
   { label: "Audit-Log", href: "/super-admin/audit", icon: ScrollText },
   { label: "Feature-Flags", href: "/super-admin/features", icon: ToggleLeft },
+  { label: "Support", href: "/super-admin/support", icon: LifeBuoy },
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {

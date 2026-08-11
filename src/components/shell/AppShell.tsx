@@ -13,7 +13,7 @@ export interface NavItem {
 
 interface AppShellProps {
   areaLabel: string;
-  areaTone: "platform" | "tenant" | "kitchen" | "portal";
+  areaTone: "platform" | "tenant" | "kitchen" | "portal" | "driver";
   nav: NavItem[];
   userName: string;
   userRole: string;
@@ -25,6 +25,7 @@ const toneStyles = {
   tenant: { chip: "bg-basil text-white", ring: "border-basil" },
   kitchen: { chip: "bg-saffron text-ink", ring: "border-saffron" },
   portal: { chip: "bg-info text-white", ring: "border-info" },
+  driver: { chip: "bg-ok text-white", ring: "border-ok" },
 } as const;
 
 export function AppShell({ areaLabel, areaTone, nav, userName, userRole, children }: AppShellProps) {

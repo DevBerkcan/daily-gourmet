@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { ChefHat, Building2, Soup, School } from "lucide-react";
+import { ChefHat, Building2, Soup, School, Truck } from "lucide-react";
 
 export const metadata = { title: "Anmelden" };
 
 const rollen = [
-  { href: "/super-admin/dashboard", icon: Building2, label: "Super Admin", hint: "Gentle Group · Plattformverwaltung" },
+  { href: "/super-admin/dashboard", icon: Building2, label: "Super Admin", hint: "Softwareinhaber · Vollzugriff & Mandanten-Support" },
   { href: "/admin/dashboard", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
   { href: "/kitchen", icon: Soup, label: "Küche", hint: "Daily Gourmet · Produktion" },
+  { href: "/driver", icon: Truck, label: "Fahrer", hint: "Daily Gourmet · Auslieferung" },
   { href: "/portal/dashboard", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
 ];
 

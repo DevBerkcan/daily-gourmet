@@ -1,6 +1,6 @@
 import { PageHeader, Card, Button, DummyNote } from "@/components/ui";
 import { Plus } from "lucide-react";
-import { WochenplanTabelle } from "./wochenplan-tabelle";
+import { WochenplanTabelle } from "@/features/meal-plans/components/wochenplan-tabelle";
 
 export const metadata = { title: "Speisepläne" };
 

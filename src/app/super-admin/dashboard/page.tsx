@@ -1,5 +1,7 @@
 import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, DummyNote } from "@/components/ui";
-import { tenants, auditLog } from "@/lib/data";
+import { auditLog } from "@/lib/data";
+import { tenants } from "@/features/tenants/data";
+import { SupportSummary } from "./support-summary";
 
 export const metadata = { title: "Plattform-Übersicht" };
 
@@ -14,6 +16,8 @@ export default function SuperAdminDashboard() {
         <StatCard label="Einrichtungen" value="15" hint="über alle Mandanten" />
         <StatCard label="Bestellungen KW 32" value="212" hint="+9 % gegenüber Vorwoche" tone="ok" />
       </div>
+
+      <SupportSummary />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card>

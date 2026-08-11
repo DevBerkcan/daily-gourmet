@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Lock, UtensilsCrossed, Carrot, Soup, Salad, IceCreamCone, Croissant, Sandwich, Utensils, type LucideIcon } from "lucide-react";
 import { Tag } from "@/components/ui";
-import type { Rezept } from "@/lib/types";
+import type { Rezept } from "@/features/recipes/types";
 
 export function WeekCalendar({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (

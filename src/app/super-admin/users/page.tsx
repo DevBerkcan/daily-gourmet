@@ -1,5 +1,6 @@
 import { PageHeader, Card, Table, Td, StatusBadge, SearchInput, Tag, DummyNote } from "@/components/ui";
-import { benutzer, tenants } from "@/lib/data";
+import { benutzer } from "@/lib/data";
+import { tenants } from "@/features/tenants/data";
 
 export const metadata = { title: "Globale Benutzer" };
 

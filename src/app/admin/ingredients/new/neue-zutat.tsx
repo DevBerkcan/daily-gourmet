@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui";
-import { ZutatFormular } from "../zutat-formular";
-import { addZutat } from "../store";
-import type { Zutat } from "@/lib/types";
+import { ZutatFormular } from "@/features/ingredients/components/zutat-formular";
+import { addZutat } from "@/features/ingredients/store";
+import type { Zutat } from "@/features/ingredients/types";
 
 export function NeueZutat() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 import { PageHeader, Card, Button, DummyNote } from "@/components/ui";
 import { Plus } from "lucide-react";
-import { RezepteTabelle } from "./rezepte-tabelle";
+import { RezepteTabelle } from "@/features/recipes/components/rezepte-tabelle";
 
 export const metadata = { title: "Rezepte" };
 

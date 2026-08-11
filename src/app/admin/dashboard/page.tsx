@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button, DummyNote } from "@/components/ui";
-import { bestellungen, einrichtungById, speiseplaene, benachrichtigungen, standorte } from "@/lib/data";
+import { bestellungen, einrichtungById, benachrichtigungen, standorte } from "@/lib/data";
+import { speiseplaene } from "@/features/meal-plans/data";
 import { CalendarPlus, ShoppingBasket, Factory } from "lucide-react";
 
 export const metadata = { title: "Übersicht" };
@@ -30,7 +31,7 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader
             title="Bestellungen der Woche"
-            actions={<Link href="/admin/facilities" className="text-xs font-medium text-basil hover:underline">Alle Einrichtungen</Link>}
+            actions={<Link href="/admin/orders" className="text-xs font-medium text-basil hover:underline">Alle Bestellungen</Link>}
           />
           <Table head={["Einrichtung", "Status", "Abgesendet", "Frist"]}>
             {bestellungen.filter((b) => b.speiseplanId === "mp-032").map((b) => (

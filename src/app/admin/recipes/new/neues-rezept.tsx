@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui";
-import { RezeptFormular, type RezeptFormDaten } from "../rezept-formular";
-import { addRezept } from "../store";
+import { RezeptFormular, type RezeptFormDaten } from "@/features/recipes/components/rezept-formular";
+import { addRezept } from "@/features/recipes/store";
 
 const HEUTE = "2026-08-06";
 const ADMIN_NAME = "Miriam Hoffmann";
