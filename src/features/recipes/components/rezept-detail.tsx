@@ -7,7 +7,7 @@ import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState, Dummy
 import { Copy, Printer } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
-import { useRezepte, updateRezept, duplicateRezept, rezeptAllergeneLive, rezeptZusatzstoffeLive, rezeptBioAnteilLive, rezeptRegionalAnteilLive, rezeptWareneinsatzLive } from "../store";
+import { useRezepte, updateRezept, duplicateRezept, rezeptAllergeneLive, rezeptZusatzstoffeLive, rezeptBioAnteilLive, rezeptRegionalAnteilLive, rezeptWareneinsatzLive, naehrwerteProPortion } from "../store";
 import { useZutaten } from "@/features/ingredients/store";
 
 export function RezeptDetail({ id }: { id: string }) {
@@ -16,6 +16,7 @@ export function RezeptDetail({ id }: { id: string }) {
   const zutaten = useZutaten();
   const rezept = rezepte.find((r) => r.id === id);
   const [bearbeiten, setBearbeiten] = useState(false);
+  const [naehrwertModus, setNaehrwertModus] = useState<"portion" | "100g">("portion");
 
   if (!rezept) {
     return (
@@ -65,7 +66,7 @@ export function RezeptDetail({ id }: { id: string }) {
 
       <PageHeader
         title={rezept.name}
-        subtitle={`${rezept.kategorie} · Standard: ${rezept.standardPortionen} Portionen · ${rezept.zubereitungszeitMin} Min. · ${rezept.schwierigkeit} · Version ${rezept.version}`}
+        subtitle={`${rezept.rezeptnummer ? rezept.rezeptnummer + " · " : ""}${rezept.kategorie} · Standard: ${rezept.standardPortionen} Portionen · ${rezept.zubereitungszeitMin} Min. · ${rezept.schwierigkeit} · Version ${rezept.version}`}
         actions={
           <>
             <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
@@ -95,6 +96,7 @@ export function RezeptDetail({ id }: { id: string }) {
         {rezept.zielgruppen.map((z) => <Tag key={z}>{z}</Tag>)}
         {bioAnteil > 0 && <Tag tone="green">Bio-Anteil {bioAnteil} %</Tag>}
         {regionalAnteil > 0 && <Tag tone="green">Regional-Anteil {regionalAnteil} %</Tag>}
+        {rezept.nutriScore && <Tag tone="green">Nutri-Score {rezept.nutriScore}</Tag>}
         {allergene.map((a) => <Tag key={a} tone="amber">Allergen: {a}</Tag>)}
         {zusatzstoffe.map((z) => <Tag key={z}>{z}</Tag>)}
       </div>
@@ -128,36 +130,79 @@ export function RezeptDetail({ id }: { id: string }) {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="h-fit">
-            <CardHeader title="Nährwerte je Portion" hint="Berechnet aus den Nährwerten der Zutaten (je 100 g/ml)" />
-            <Table head={["Zutat", "Menge", "kcal-Anteil"]}>
-              {rezept.zutaten.map((rz) => {
-                const z = zutaten.find((zt) => zt.id === rz.zutatId);
-                if (!z) return null;
-                const faktor = (rz.menge * (z.basiseinheit === "Stück" ? 1 : 1000)) / 100 / rezept.standardPortionen;
-                const kcal = Math.round(z.naehrwertePro100.kcal * faktor);
+          {rezept.naehrwertePro100g ? (
+            <Card className="h-fit">
+              <CardHeader
+                title={`Nährwerte je ${naehrwertModus === "portion" ? "Portion" : "100 g"}`}
+                hint={rezept.nutriScoreKategorie ? `Aus Kennzeichnungsdaten importiert · ${rezept.nutriScoreKategorie}` : "Aus Kennzeichnungsdaten importiert"}
+                actions={
+                  rezept.portionsgewichtG ? (
+                    <div className="flex overflow-hidden rounded-lg border border-line text-xs no-print">
+                      <button type="button" onClick={() => setNaehrwertModus("portion")} className={`px-2.5 py-1.5 font-medium ${naehrwertModus === "portion" ? "bg-basil-soft text-basil" : "text-muted hover:bg-paper"}`}>je Portion</button>
+                      <button type="button" onClick={() => setNaehrwertModus("100g")} className={`px-2.5 py-1.5 font-medium ${naehrwertModus === "100g" ? "bg-basil-soft text-basil" : "text-muted hover:bg-paper"}`}>je 100 g</button>
+                    </div>
+                  ) : undefined
+                }
+              />
+              {(() => {
+                const n = naehrwertModus === "portion" && rezept.portionsgewichtG
+                  ? naehrwerteProPortion(rezept.naehrwertePro100g, rezept.portionsgewichtG)
+                  : rezept.naehrwertePro100g;
                 return (
-                  <tr key={rz.zutatId}>
-                    <Td className="font-medium text-ink">{z.name}</Td>
-                    <Td className="text-muted">{rz.menge} {rz.einheit}</Td>
-                    <Td>{kcal} kcal</Td>
-                  </tr>
+                  <Table head={["Nährwert", "Wert"]}>
+                    <tr><Td className="font-medium text-ink">Energie</Td><Td>{n.kcal.toLocaleString("de-DE")} kcal / {n.kj.toLocaleString("de-DE")} kJ</Td></tr>
+                    <tr><Td className="font-medium text-ink">Fett</Td><Td>{n.fettG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="pl-8 text-muted">davon gesättigte Fettsäuren</Td><Td>{n.gesFettSaeurenG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="font-medium text-ink">Kohlenhydrate</Td><Td>{n.kohlenhydrateG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="pl-8 text-muted">davon Zucker</Td><Td>{n.zuckerG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="font-medium text-ink">Ballaststoffe</Td><Td>{n.ballaststoffeG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="font-medium text-ink">Eiweiß</Td><Td>{n.eiweissG.toLocaleString("de-DE")} g</Td></tr>
+                    <tr><Td className="font-medium text-ink">Salz</Td><Td>{n.salzG.toLocaleString("de-DE")} g</Td></tr>
+                  </Table>
                 );
-              })}
-            </Table>
-            <p className="border-t border-line px-5 py-3 text-xs text-muted">
-              Quelle: Open Food Facts / USDA FoodData Central · Werte pro Portion bei Standardmenge.
-            </p>
-          </Card>
+              })()}
+              {rezept.naehrwertbezogeneAngaben && rezept.naehrwertbezogeneAngaben.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 border-t border-line px-5 py-3">
+                  {rezept.naehrwertbezogeneAngaben.map((a) => <Tag key={a} tone="green">{a}</Tag>)}
+                </div>
+              )}
+            </Card>
+          ) : (
+            <Card className="h-fit">
+              <CardHeader title="Nährwerte je Portion" hint="Berechnet aus den Nährwerten der Zutaten (je 100 g/ml)" />
+              <Table head={["Zutat", "Menge", "kcal-Anteil"]}>
+                {rezept.zutaten.map((rz) => {
+                  const z = zutaten.find((zt) => zt.id === rz.zutatId);
+                  if (!z) return null;
+                  const faktor = (rz.menge * (z.basiseinheit === "Stück" ? 1 : 1000)) / 100 / rezept.standardPortionen;
+                  const kcal = Math.round(z.naehrwertePro100.kcal * faktor);
+                  return (
+                    <tr key={rz.zutatId}>
+                      <Td className="font-medium text-ink">{z.name}</Td>
+                      <Td className="text-muted">{rz.menge} {rz.einheit}</Td>
+                      <Td>{kcal} kcal</Td>
+                    </tr>
+                  );
+                })}
+              </Table>
+              <p className="border-t border-line px-5 py-3 text-xs text-muted">
+                Quelle: Open Food Facts / USDA FoodData Central · Werte pro Portion bei Standardmenge.
+              </p>
+            </Card>
+          )}
 
           <Card className="h-fit">
             <CardHeader title="Kalkulation" hint="Wareneinsatz auf Basis der aktuellen Einkaufspreise" />
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 text-sm">
-              <span className="text-muted">Wareneinsatz gesamt:</span>
-              <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.gesamt.toLocaleString("de-DE")} €</span>
-              <span className="ml-auto text-muted">je Portion:</span>
-              <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.proPortion.toLocaleString("de-DE")} €</span>
-            </div>
+            {rezept.zutaten.some((rz) => zutaten.find((z) => z.id === rz.zutatId)?.einkaufspreis != null) ? (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 text-sm">
+                <span className="text-muted">Wareneinsatz gesamt:</span>
+                <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.gesamt.toLocaleString("de-DE")} €</span>
+                <span className="ml-auto text-muted">je Portion:</span>
+                <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.proPortion.toLocaleString("de-DE")} €</span>
+              </div>
+            ) : (
+              <p className="px-5 py-4 text-sm text-muted">Noch keine Einkaufspreise hinterlegt — die Zutaten dieses Rezepts kommen aus dem Rezepturimport und warten auf die Anbindung der Zutaten-API.</p>
+            )}
           </Card>
         </div>
       </div>

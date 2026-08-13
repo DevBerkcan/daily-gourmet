@@ -13,7 +13,7 @@ export function ControlsBoard() {
   const [kontrollen, setKontrollen] = useState<Kontrolle[]>(kontrollenSeed);
   const [offen, setOffen] = useState(false);
   const [art, setArt] = useState("Kerntemperatur");
-  const [bereich, setBereich] = useState("Penne al Pomodoro · Charge 2");
+  const [bereich, setBereich] = useState("Vollkorn Penne mit Tomaten-Kräutersauce · Charge 2");
   const [soll, setSoll] = useState("mind. 75 °C");
   const [ist, setIst] = useState("");
 

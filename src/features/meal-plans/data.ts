@@ -5,21 +5,21 @@ export const speiseplaene: Speiseplan[] = [
   {
     id: "mp-032", kalenderwoche: 32, jahr: 2026, status: "PUBLISHED", standortIds: ["s-001"], einrichtungIds: ["f-001", "f-002", "f-003"],
     tage: [
-      { wochentag: "Montag", datum: "2026-08-03", rezeptIds: ["r-001", "r-004"] },
-      { wochentag: "Dienstag", datum: "2026-08-04", rezeptIds: ["r-002"] },
-      { wochentag: "Mittwoch", datum: "2026-08-05", rezeptIds: ["r-003", "r-004"], hinweis: "Aktionstag: vegetarische Woche" },
-      { wochentag: "Donnerstag", datum: "2026-08-06", rezeptIds: ["r-001"] },
-      { wochentag: "Freitag", datum: "2026-08-07", rezeptIds: ["r-002", "r-003"] },
+      { wochentag: "Montag", datum: "2026-08-03", rezeptIds: ["r-088", "r-001"] },
+      { wochentag: "Dienstag", datum: "2026-08-04", rezeptIds: ["r-037"] },
+      { wochentag: "Mittwoch", datum: "2026-08-05", rezeptIds: ["r-024", "r-001"], hinweis: "Aktionstag: vegetarische Woche" },
+      { wochentag: "Donnerstag", datum: "2026-08-06", rezeptIds: ["r-088"] },
+      { wochentag: "Freitag", datum: "2026-08-07", rezeptIds: ["r-037", "r-024"] },
     ],
   },
   {
     id: "mp-033", kalenderwoche: 33, jahr: 2026, status: "REVIEW", standortIds: ["s-001"], einrichtungIds: ["f-001", "f-002"],
     tage: [
-      { wochentag: "Montag", datum: "2026-08-10", rezeptIds: ["r-003"] },
-      { wochentag: "Dienstag", datum: "2026-08-11", rezeptIds: ["r-001"] },
-      { wochentag: "Mittwoch", datum: "2026-08-12", rezeptIds: ["r-002"] },
-      { wochentag: "Donnerstag", datum: "2026-08-13", rezeptIds: ["r-004"] },
-      { wochentag: "Freitag", datum: "2026-08-14", rezeptIds: ["r-001"] },
+      { wochentag: "Montag", datum: "2026-08-10", rezeptIds: ["r-024"] },
+      { wochentag: "Dienstag", datum: "2026-08-11", rezeptIds: ["r-088"] },
+      { wochentag: "Mittwoch", datum: "2026-08-12", rezeptIds: ["r-037"] },
+      { wochentag: "Donnerstag", datum: "2026-08-13", rezeptIds: ["r-001"] },
+      { wochentag: "Freitag", datum: "2026-08-14", rezeptIds: ["r-088"] },
     ],
   },
   {

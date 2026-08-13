@@ -31,18 +31,18 @@ export function RezepteTabelle() {
           {REZEPT_KATEGORIEN.map((k) => <option key={k}>{k}</option>)}
         </select>
       </div>
-      <Table head={["Rezept", "Kategorie", "Portionen (Std.)", "Zeit", "Ersteller", "Allergene", "Ernährung", "Version", "Status"]}>
+      <Table head={["Rezept", "Kategorie", "Portionen (Std.)", "Nutri-Score", "Ersteller", "Allergene", "Ernährung", "Version", "Status"]}>
         {gefiltert.map((r) => {
           const allergene = rezeptAllergeneLive(r, zutaten);
           return (
             <tr key={r.id} className="hover:bg-paper">
               <Td>
                 <Link href={`/admin/recipes/${r.id}`} className="font-medium text-basil hover:underline">{r.name}</Link>
-                <span className="block max-w-64 truncate text-xs text-muted">{r.beschreibung}</span>
+                <span className="block max-w-64 truncate text-xs text-muted">{r.rezeptnummer ? `${r.rezeptnummer} · ` : ""}{r.beschreibung}</span>
               </Td>
               <Td className="text-muted">{r.kategorie}</Td>
               <Td>{r.standardPortionen}</Td>
-              <Td className="text-muted">{r.zubereitungszeitMin} Min.</Td>
+              <Td>{r.nutriScore ? <Tag tone="green">{r.nutriScore}</Tag> : <span className="text-muted">—</span>}</Td>
               <Td className="text-muted">{r.erstelltVon}</Td>
               <Td>
                 {allergene.length > 0

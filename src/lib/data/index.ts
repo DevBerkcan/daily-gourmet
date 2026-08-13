@@ -36,33 +36,33 @@ export const bestellungen: Bestellung[] = [
   {
     id: "b-1001", einrichtungId: "f-001", speiseplanId: "mp-032", status: "CONFIRMED", abgesendetAm: "2026-08-01, 14:22", frist: "Vortag, 09:00 Uhr",
     positionen: [
-      { datum: "2026-08-06", rezeptId: "r-001", portionen: 145 },
-      { datum: "2026-08-07", rezeptId: "r-002", portionen: 120, hinweis: "10 Portionen ohne Sauce" },
-      { datum: "2026-08-07", rezeptId: "r-003", portionen: 35 },
+      { datum: "2026-08-06", rezeptId: "r-088", portionen: 145 },
+      { datum: "2026-08-07", rezeptId: "r-037", portionen: 120, hinweis: "10 Portionen ohne Sauce" },
+      { datum: "2026-08-07", rezeptId: "r-024", portionen: 35 },
     ],
   },
   {
     id: "b-1002", einrichtungId: "f-002", speiseplanId: "mp-032", status: "SUBMITTED", abgesendetAm: "2026-08-04, 08:41", frist: "Vortag, 09:00 Uhr",
     positionen: [
-      { datum: "2026-08-06", rezeptId: "r-001", portionen: 98 },
-      { datum: "2026-08-07", rezeptId: "r-002", portionen: 90 },
+      { datum: "2026-08-06", rezeptId: "r-088", portionen: 98 },
+      { datum: "2026-08-07", rezeptId: "r-037", portionen: 90 },
     ],
   },
   {
     id: "b-1003", einrichtungId: "f-003", speiseplanId: "mp-032", status: "DRAFT", frist: "Vortag, 08:00 Uhr",
-    positionen: [ { datum: "2026-08-07", rezeptId: "r-003", portionen: 42 } ],
+    positionen: [ { datum: "2026-08-07", rezeptId: "r-024", portionen: 42 } ],
   },
   {
     id: "b-0991", einrichtungId: "f-001", speiseplanId: "mp-031", status: "LOCKED", abgesendetAm: "2026-07-27, 10:05", frist: "Vortag, 09:00 Uhr",
-    positionen: [ { datum: "2026-07-30", rezeptId: "r-002", portionen: 140 } ],
+    positionen: [ { datum: "2026-07-30", rezeptId: "r-037", portionen: 140 } ],
   },
   {
     id: "b-0992", einrichtungId: "f-002", speiseplanId: "mp-031", status: "LOCKED", abgesendetAm: "2026-07-27, 08:50", frist: "Vortag, 09:00 Uhr",
-    positionen: [ { datum: "2026-07-30", rezeptId: "r-002", portionen: 95 }, { datum: "2026-07-31", rezeptId: "r-001", portionen: 60 } ],
+    positionen: [ { datum: "2026-07-30", rezeptId: "r-037", portionen: 95 }, { datum: "2026-07-31", rezeptId: "r-088", portionen: 60 } ],
   },
   {
     id: "b-0993", einrichtungId: "f-003", speiseplanId: "mp-031", status: "LOCKED", abgesendetAm: "2026-07-27, 07:40", frist: "Vortag, 08:00 Uhr",
-    positionen: [ { datum: "2026-07-30", rezeptId: "r-003", portionen: 30 } ],
+    positionen: [ { datum: "2026-07-30", rezeptId: "r-024", portionen: 30 } ],
   },
 ];
 

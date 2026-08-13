@@ -5,15 +5,15 @@ export const produktionsplaene: ProduktionsPlan[] = [
   {
     id: "pp-0806", datum: "2026-08-06", standortId: "s-001",
     positionen: [
-      { rezeptId: "r-001", bestellteMenge: 243, zusatzMenge: 12, status: "PREPARING", begruendung: "Erfahrungswert Nachbestellungen Musterschule Nord" },
-      { rezeptId: "r-004", bestellteMenge: 60, zusatzMenge: 0, status: "PLANNED" },
+      { rezeptId: "r-088", bestellteMenge: 243, zusatzMenge: 12, status: "PREPARING", begruendung: "Erfahrungswert Nachbestellungen Musterschule Nord" },
+      { rezeptId: "r-001", bestellteMenge: 60, zusatzMenge: 0, status: "PLANNED" },
     ],
   },
   {
     id: "pp-0807", datum: "2026-08-07", standortId: "s-001",
     positionen: [
-      { rezeptId: "r-002", bestellteMenge: 210, zusatzMenge: 10, status: "PLANNED", begruendung: "Sicherheitsmenge Freitag" },
-      { rezeptId: "r-003", bestellteMenge: 77, zusatzMenge: 5, status: "PLANNED" },
+      { rezeptId: "r-037", bestellteMenge: 210, zusatzMenge: 10, status: "PLANNED", begruendung: "Sicherheitsmenge Freitag" },
+      { rezeptId: "r-024", bestellteMenge: 77, zusatzMenge: 5, status: "PLANNED" },
     ],
   },
 ];
