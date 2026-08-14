@@ -6,3 +6,6 @@ out/
 .env.local
 *.tsbuildinfo
 next-env.d.ts
+
+# Backend lebt in einem eigenen Git-Repository (siehe backend/README.md)
+/backend/
