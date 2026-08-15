@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           <ShoppingBasket size={18} className="text-basil" aria-hidden />
           <span className="text-sm font-medium text-ink">Einkaufsliste KW 32 prüfen</span>
         </Link>
-        <Link href="/admin/production/2026-08-07" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
+        <Link href="/admin/production/pp-0807" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
           <Factory size={18} className="text-basil" aria-hidden />
           <span className="text-sm font-medium text-ink">Produktion Freitag vorbereiten</span>
         </Link>

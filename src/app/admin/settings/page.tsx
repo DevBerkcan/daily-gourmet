@@ -1,11 +1,16 @@
-import { PageHeader, Card, CardHeader, Button, Tag, DummyNote } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Tag, DummyNote } from "@/components/ui";
+import { SaveButton } from "@/components/ui/save-button";
 
 export const metadata = { title: "Einstellungen" };
 
 export default function SettingsPage() {
   return (
     <>
-      <PageHeader title="Einstellungen" subtitle="Bestellfristen, Freigaben und Standardwerte für Daily Gourmet." actions={<Button>Speichern</Button>} />
+      <PageHeader
+        title="Einstellungen"
+        subtitle="Bestellfristen, Freigaben und Standardwerte für Daily Gourmet."
+        actions={<SaveButton />}
+      />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Bestellfristen" hint="Serverseitig durchgesetzt — Browser-Manipulation umgeht die Frist nicht" />

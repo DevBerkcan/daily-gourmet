@@ -1,4 +1,6 @@
-import { PageHeader, Card, CardHeader, Button, DummyNote } from "@/components/ui";
+import { PageHeader, Card, CardHeader, DummyNote } from "@/components/ui";
+import { SaveButton } from "@/components/ui/save-button";
+import { BrandingCard } from "./branding-card";
 
 export const metadata = { title: "Unternehmen" };
 
@@ -14,7 +16,7 @@ function Field({ label, value, id }: { label: string; value: string; id: string 
 export default function CompanyPage() {
   return (
     <>
-      <PageHeader title="Unternehmen" subtitle="Stammdaten und Branding von Daily Gourmet." actions={<Button>Änderungen speichern</Button>} />
+      <PageHeader title="Unternehmen" subtitle="Stammdaten und Branding von Daily Gourmet." actions={<SaveButton label="Änderungen speichern" />} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Stammdaten" />
@@ -37,16 +39,7 @@ export default function CompanyPage() {
               <Field id="portion" label="Standardportion" value="1 Portion = 1 Essen" />
             </div>
           </Card>
-          <Card>
-            <CardHeader title="Branding" hint="Logo und Farben erscheinen im Kundenportal" />
-            <div className="flex items-center gap-4 px-5 py-5">
-              <div className="flex size-16 items-center justify-center rounded-xl bg-basil font-display text-xl font-semibold text-white" aria-hidden>DG</div>
-              <div>
-                <Button variant="secondary">Logo hochladen</Button>
-                <p className="mt-1.5 text-xs text-muted">PNG oder SVG, max. 1 MB</p>
-              </div>
-            </div>
-          </Card>
+          <BrandingCard />
         </div>
       </div>
       <DummyNote />
