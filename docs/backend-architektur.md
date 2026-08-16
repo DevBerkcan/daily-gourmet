@@ -1,5 +1,13 @@
 # Backend-Architektur — Daily Gourmet (Phase 2)
 
+> **Status 2026-08-15: durch `BACKEND_IMPLEMENTATION_PLAN.md` (Repo-Root) ersetzt.** Der
+> tatsächliche Implementierungsauftrag verlangt ein einzelnes `DailyGourmet.Api`-Projekt (keine
+> Clean-Architecture-Aufteilung in Domain/Application/Infrastructure), JWT-Bearer-Auth (keine
+> Cookie-Sessions) und ASP.NET Core 10 (nicht 8). Das fachliche Datenmodell (Mandanten, Rollen,
+> Entitäten) unten bleibt inhaltlich gültig und wurde im neuen Plan übernommen — nur die technische
+> Struktur unterscheidet sich. Dieses Dokument bleibt als historischer Kontext stehen, ist aber
+> **nicht mehr die verbindliche Architekturquelle**.
+
 Zielplattform: **ASP.NET Core 8 (C#)**, Datenbank: **MS SQL Server auf MonsterASP**, Frontend: Next.js (Phase 1, bereits vorhanden).
 
 > Hinweis zur Datenbank: Der ursprüngliche Anforderungskatalog nennt PostgreSQL.

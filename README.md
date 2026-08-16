@@ -3,9 +3,12 @@
 Mandantenfähige SaaS-Plattform für Catering-Unternehmen, Großküchen, Schulen und Einrichtungen.
 Plattformbetreiber: **Gentle Group** · Beispiel-Mandant: **Daily Gourmet**
 
-> **Aktueller Stand: Phase 1 — Frontend mit Beispieldaten.**
-> Alle Ansichten sind mit Dummy-Daten hinterlegt. In Phase 2 wird das C#-Backend
-> (ASP.NET Core, gehostet auf MonsterASP) angebunden und ersetzt die Dummy-Daten vollständig.
+> **Aktueller Stand: Phase 2 — Backend fertiggestellt, Frontend-Anbindung läuft.**
+> Das C#-Backend (`DailyGourmet.Api`, ASP.NET Core 10 + EF Core + SQL Server) ist vollständig
+> implementiert, migriert und mit Beispieldaten befüllt (`Data/DbSeeder.cs`). Login, Routenschutz
+> und die Einrichtungsverwaltung sind bereits an die echte API angebunden; alle übrigen Bereiche
+> laufen noch mit den ursprünglichen Dummy-Daten aus Phase 1. Genauer Stand je Feature:
+> **`BACKEND_AUDIT.md`**. Architektur/Entitäten/Endpunkte: **`BACKEND_IMPLEMENTATION_PLAN.md`**.
 
 ---
 
@@ -32,7 +35,12 @@ Auf der Login-Seite (`/login`) gibt es **Demo-Einstiege** für alle vier Bereich
 | Plattformverwaltung | SUPER_ADMIN (Gentle Group) | `/super-admin/dashboard` |
 | Mandanten-Verwaltung | TENANT_OWNER (Daily Gourmet) | `/admin/dashboard` |
 | Küche | KITCHEN_MANAGER | `/kitchen` |
+| Fahrer | DRIVER | `/driver` |
 | Kundenportal | FACILITY_ADMIN (Musterschule Nord) | `/portal/dashboard` |
+
+Für eine echte Anmeldung muss `DailyGourmet.Api` laufen (Abschnitt 6) und
+`NEXT_PUBLIC_API_BASE_URL` in `.env.local` darauf zeigen (Default: `http://localhost:5080/api`,
+siehe `.env.example`). Test-Zugänge: Abschnitt 6.4.
 
 ## 2. Tech-Stack (Frontend)
 
@@ -40,7 +48,8 @@ Auf der Login-Seite (`/login`) gibt es **Demo-Einstiege** für alle vier Bereich
 - **Tailwind CSS 4** mit zentralem Token-System (`src/app/globals.css`)
 - **lucide-react** Icons
 - Deutsche Oberfläche, responsive (Desktop-Sidebar + Mobile-Drawer), Druckansichten via `no-print`, `prefers-reduced-motion` beachtet
-- Vorbereitet für Phase 2: React Hook Form + Zod (Formulare), TanStack Query (Server State)
+- **TanStack Query** für Server-State (`src/lib/services/*.ts`) + eigener `fetch`-Client (`src/lib/api/client.ts`) gegen `DailyGourmet.Api`
+- Auth: JWT (Bearer, `localStorage`), React-Context (`src/lib/auth/AuthContext.tsx`), rollenbasierter Routenschutz (`src/lib/auth/RequireRole.tsx`)
 
 ## 3. Projektstruktur
 
@@ -58,11 +67,19 @@ src/
     shell/AppShell.tsx    Sidebar, Topbar, Mobile-Navigation (bereichsabhängig eingefärbt)
     ui/index.tsx          StatusBadge, Card, Table, StatCard, Button, EmptyState, …
   lib/
-    types.ts              Domain-Typen — entsprechen 1:1 den geplanten Backend-DTOs
-    data/index.ts         Dummy-Daten (werden in Phase 2 durch API-Aufrufe ersetzt)
+    types.ts              Domain-Typen — entsprechen 1:1 den Backend-DTOs
+    data/index.ts         Verbleibende Dummy-Daten (Phase-1-Rest, siehe BACKEND_AUDIT.md)
+    api/client.ts         Zentraler fetch-Wrapper gegen DailyGourmet.Api
+    auth/                 AuthContext, RequireRole (Routenschutz), Token-Speicherung
+    services/              TanStack-Query-Hooks je Feature (ersetzen data.ts/store.ts schrittweise)
 docs/
-  backend-architektur.md  C#-Backend: Architektur, Schichten, Sicherheit, MonsterASP, Nährwert-API
-  api-endpunkte.md        Vollständige Endpunktliste /api/v1
+  ARCHITECTURE.md          Frontend-Architektur (Ordnerstruktur, Konventionen)
+  backend-architektur.md   Historisch — durch BACKEND_IMPLEMENTATION_PLAN.md ersetzt
+  api-endpunkte.md         Historisch — durch BACKEND_IMPLEMENTATION_PLAN.md ersetzt
+DailyGourmet.Api/          ASP.NET Core 10 Backend (siehe Abschnitt 6)
+Database/DailyGourmet.sql  SQL-Deploymentskript (idempotent)
+BACKEND_IMPLEMENTATION_PLAN.md  Entitäten, Endpunkte, Business-Regeln
+BACKEND_AUDIT.md                Feature-für-Feature-Status (Backend/Frontend)
 ```
 
 ## 4. Design-System
@@ -95,15 +112,102 @@ Dark Mode ist im Branding definiert (`tokens.json → colors.dark`) und kann als
 - **Nährwerte über Lebensmittel-API**: Zutaten tragen Nährwerte je 100 g/ml inkl. Quelle (Open Food Facts / USDA). Der Live-Abruf läuft in Phase 2 über das Backend (siehe `docs/backend-architektur.md`, Abschnitt 7).
 - **Snapshots**: veröffentlichte Speisepläne frieren Rezeptversionen ein (Datenmodell in Phase 2).
 
-## 6. Nächste Schritte (Phase 2 — Backend)
+## 6. Backend (`DailyGourmet.Api`)
 
-1. ASP.NET Core 8 Web-API aufsetzen (Clean Architecture, siehe `docs/backend-architektur.md`)
-2. MS-SQL-Datenbank auf MonsterASP anlegen, EF-Core-Migrationen
-3. Authentifizierung (HTTP-only-Cookies, Argon2id), RBAC, Tenant-Middleware
-4. Endpunkte gemäß `docs/api-endpunkte.md` implementieren
-5. Frontend: Dummy-Daten (`src/lib/data`) durch TanStack-Query-Hooks ersetzen
-6. Nährwert-API-Anbindung (Open Food Facts, Fallback USDA) über Backend-Proxy
-7. Tests (xUnit, Playwright E2E), Audit-Log, Benachrichtigungen
+ASP.NET Core 10 Web API, Entity Framework Core, SQL Server. Einzelnes Projekt (keine
+Clean-Architecture-Aufteilung), JWT-Bearer-Auth, Repository/Handler/Controller-Schichtung.
+Vollständige Entitäts-/Endpunktliste: **`BACKEND_IMPLEMENTATION_PLAN.md`**.
+
+### 6.1 Lokales Setup
+
+Voraussetzungen: .NET SDK ≥ 10, SQL Server (LocalDB reicht für die Entwicklung).
+
+```bash
+cd DailyGourmet.Api
+dotnet restore
+```
+
+**Verbindungszeichenfolge** — niemals in `appsettings.json` committen. Lokal über
+[User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets):
+
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=(localdb)\MSSQLLocalDB;Database=DailyGourmetDev;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "Jwt:Secret" "<mind. 32 zeichen langer zufälliger string>"
+```
+
+Für Produktionsbetrieb (MonsterASP) werden dieselben Schlüssel stattdessen als
+Umgebungsvariablen gesetzt (`ConnectionStrings__DefaultConnection`, `Jwt__Secret`, …) — siehe 6.5.
+
+### 6.2 Datenbank anlegen (Migrationen)
+
+```bash
+dotnet tool install --global dotnet-ef   # einmalig
+dotnet ef database update                # erstellt/aktualisiert das Schema
+dotnet run -- --seed                     # befüllt mit Beispieldaten (idempotent, nur wenn leer)
+```
+
+Ein SQL-Skript für Umgebungen ohne direkten `dotnet ef`-Zugriff liegt unter
+`Database/DailyGourmet.sql` (idempotent, per `dotnet ef migrations script --idempotent` erzeugt —
+bei Schemaänderungen neu generieren).
+
+Neue Migration nach Entitätsänderungen:
+
+```bash
+dotnet ef migrations add <Name>
+dotnet ef database update
+```
+
+### 6.3 Starten & Swagger
+
+```bash
+dotnet run --launch-profile http     # http://localhost:5080
+```
+
+Swagger UI (nur `Development`): `http://localhost:5080/swagger`. Der **Authorize**-Button akzeptiert
+ein JWT aus `POST /api/auth/login` (Format: `Bearer <token>`).
+
+### 6.4 Test-Zugänge (Seed-Daten)
+
+Alle Seed-Benutzer teilen sich das Passwort **`Passwort123!`** (nur lokale Entwicklung —
+`Data/DbSeeder.cs`):
+
+| E-Mail | Rolle | Bereich |
+|---|---|---|
+| `berkcan@gentle-webdesign.com` | SUPER_ADMIN | `/super-admin/dashboard` |
+| `miriam.hoffmann@daily-gourmet.de` | TENANT_OWNER | `/admin/dashboard` |
+| `petra.salomon@daily-gourmet.de` | KITCHEN_MANAGER | `/kitchen` |
+| `claudia.winter@musterschule-nord.example.de` | FACILITY_ADMIN | `/portal/dashboard` |
+| `markus.becker@daily-gourmet.de` | DRIVER | `/driver` |
+
+Diese fünf sind auch als Ein-Klick-Buttons auf `/login` hinterlegt.
+
+### 6.5 Deployment (MonsterASP)
+
+1. `dotnet publish -c Release` → Ergebnis per WebDeploy/ZIP auf die MonsterASP-Website hochladen.
+2. Datenbank im MonsterASP-Panel anlegen, Connection String **nicht** ins Repo — als
+   Umgebungsvariable/Portal-Konfiguration setzen (`ConnectionStrings__DefaultConnection`).
+3. `Jwt__Secret`, `Smtp__Host`/`Smtp__Username`/`Smtp__Password`/`Smtp__FromEmail`,
+   `Cors__AllowedOrigins__0` (Frontend-URL) ebenfalls als Umgebungsvariablen setzen.
+4. Migrationen als separater Schritt ausführen (`dotnet ef database update` mit der
+   Produktions-Connection-String, oder `Database/DailyGourmet.sql` manuell einspielen) —
+   **nicht** automatisch beim App-Start.
+5. Frontend: `NEXT_PUBLIC_API_BASE_URL` auf die MonsterASP-API-URL setzen, CORS im Backend
+   entsprechend auf die Frontend-Produktions-URL beschränken.
+
+### 6.6 Konfiguration im Überblick
+
+| appsettings-Schlüssel | Zweck | Produktionsquelle |
+|---|---|---|
+| `ConnectionStrings:DefaultConnection` | SQL-Server-Verbindung | Umgebungsvariable |
+| `Jwt:Secret` / `Issuer` / `Audience` / `ExpirationMinutes` | JWT-Signierung | `Secret` als Umgebungsvariable |
+| `Smtp:Host/Port/Username/Password/FromEmail/FromName` | E-Mail-Versand (Einladungen) | Umgebungsvariablen |
+| `Cors:AllowedOrigins` | Erlaubte Frontend-Origins | Umgebungsvariable/Portal-Konfiguration |
+
+## 7. Nächste Schritte
+
+Siehe `BACKEND_AUDIT.md` für den genauen Stand je Feature und die priorisierte Liste der noch
+auf Dummy-Daten laufenden Frontend-Bereiche.
 
 ---
 
