@@ -4,14 +4,15 @@ import { type FormEvent, useState } from "react";
 import { CheckCircle2, LifeBuoy, MessageSquareText, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui";
-import { createSupportTicket, useSupportTickets } from "../store";
-import type { SupportKategorie, SupportPrioritaet } from "../types";
+import { useCreateSupportTicket, useSupportTickets } from "@/lib/services/support";
+import type { SupportKategorie, SupportPrioritaet } from "@/lib/services/support";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
 export function TenantSupportWidget() {
   const pathname = usePathname();
-  const tickets = useSupportTickets().filter((ticket) => ticket.tenantId === "t-001");
+  const tickets = useSupportTickets();
+  const createTicket = useCreateSupportTicket();
   const [offen, setOffen] = useState(false);
   const [gesendet, setGesendet] = useState<string | null>(null);
   const [kategorie, setKategorie] = useState<SupportKategorie>("FRAGE");
@@ -21,8 +22,10 @@ export function TenantSupportWidget() {
 
   function senden(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const ticket = createSupportTicket({ kategorie, prioritaet, titel: titel.trim(), nachricht: nachricht.trim(), seite: pathname });
-    setGesendet(ticket.id); setTitel(""); setNachricht("");
+    createTicket.mutate(
+      { kategorie, prioritaet, titel: titel.trim(), nachricht: nachricht.trim(), seite: pathname },
+      { onSuccess: (dto) => { setGesendet(dto.ticketNumber); setTitel(""); setNachricht(""); } }
+    );
   }
 
   return (

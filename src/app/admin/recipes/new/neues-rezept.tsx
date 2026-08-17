@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { RezeptFormular, type RezeptFormDaten } from "@/features/recipes/components/rezept-formular";
-import { addRezept } from "@/features/recipes/store";
-
-const HEUTE = "2026-08-06";
-const ADMIN_NAME = "Miriam Hoffmann";
+import { useCreateRezept } from "@/lib/services/recipes";
 
 export function NeuesRezept() {
   const router = useRouter();
+  const createRezept = useCreateRezept();
 
   return (
     <>
@@ -23,11 +21,8 @@ export function NeuesRezept() {
       <PageHeader title="Rezept erstellen" subtitle="Alle Angaben, die für Produktion, Kalkulation und Freigabe an Einrichtungen gebraucht werden." />
 
       <RezeptFormular
-        erstelltVon={ADMIN_NAME}
-        erstelltAm={HEUTE}
         onSubmit={(input: RezeptFormDaten) => {
-          const rezept = addRezept({ ...input, erstelltVon: ADMIN_NAME, erstelltAm: HEUTE });
-          router.push(`/admin/recipes/${rezept.id}`);
+          createRezept.mutate(input, { onSuccess: (rezept) => router.push(`/admin/recipes/${rezept.id}`) });
         }}
         onAbbrechen={() => router.push("/admin/recipes")}
       />

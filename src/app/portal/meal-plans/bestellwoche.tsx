@@ -1,45 +1,41 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Button, Tag, StatusBadge, EmptyState, DummyNote } from "@/components/ui";
+import { PageHeader, Button, Tag, StatusBadge, EmptyState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
-import { speiseplaeneByEinrichtung } from "@/features/meal-plans/data";
-import { rezeptById, rezeptAllergene } from "@/features/recipes/data";
-import { saveBestellung, useBestellungen } from "@/features/orders/store";
+import { usePortalSpeiseplaene } from "@/lib/services/meal-plans";
+import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
+import { useZutaten } from "@/lib/services/ingredients";
+import { useSaveBestellung, useBestellungen } from "@/lib/services/orders";
 import type { Speiseplan } from "@/features/meal-plans/types";
+import type { Rezept } from "@/features/recipes/types";
 import type { Bestellung } from "@/lib/types";
 import { Save, Send } from "lucide-react";
 
 const heute = "2026-08-06";
-const einrichtungId = "f-001";
 
-/**
- * Interaktive Wochenansicht mit Portionseingabe (Phase 1: nur Client-State).
- * In Phase 2: Speichern als Entwurf / verbindliches Absenden über
- * POST /api/v1/orders bzw. POST /api/v1/orders/{id}/submit — inkl.
- * serverseitiger Fristprüfung.
- */
 export function BestellWoche() {
+  const wochen = usePortalSpeiseplaene();
   const bestellungen = useBestellungen();
-  const wochen = useMemo(() => speiseplaeneByEinrichtung(einrichtungId), []);
-  const [planId, setPlanId] = useState<string>(
-    () => wochen.find((p) => p.status === "PUBLISHED")?.id ?? wochen[0]?.id ?? ""
-  );
-  const plan = wochen.find((p) => p.id === planId);
-  const bestellung = plan ? bestellungen.find((eintrag) => eintrag.einrichtungId === einrichtungId && eintrag.speiseplanId === plan.id) : undefined;
+  const rezepte = useRezepte();
+  const zutaten = useZutaten();
+  const [planId, setPlanId] = useState<string>("");
+  const aktivePlanId = planId || wochen.find((p) => p.status === "PUBLISHED")?.id || wochen[0]?.id || "";
+  const plan = wochen.find((p) => p.id === aktivePlanId);
+  const bestellung = plan ? bestellungen.find((eintrag) => eintrag.speiseplanId === plan.id) : undefined;
   const readOnly = plan?.status === "CLOSED" || plan?.status === "ARCHIVED" || bestellung?.status === "LOCKED";
 
   return (
     <>
       <PageHeader
         title={plan ? `Speiseplan KW ${plan.kalenderwoche}` : "Speiseplan"}
-        subtitle="Tragen Sie die Portionsmengen je Gericht ein. Vergangene Tage sind gesperrt; Änderungen sind bis zur Frist (Vortag, 09:00 Uhr) möglich."
+        subtitle="Tragen Sie die Portionsmengen je Gericht ein. Vergangene Tage sind gesperrt; Änderungen sind bis zur Frist möglich."
         actions={
           wochen.length > 0 ? (
             <div className="flex items-center gap-2">
               <select
                 aria-label="Kalenderwoche wählen"
-                value={planId}
+                value={aktivePlanId}
                 onChange={(e) => setPlanId(e.target.value)}
                 className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm"
               >
@@ -58,15 +54,26 @@ export function BestellWoche() {
       ) : plan.tage.length === 0 ? (
         <EmptyState title="Keine Tage geplant" text={`Für KW ${plan.kalenderwoche} liegen keine Plandaten vor.`} />
       ) : (
-        <WochenTage key={plan.id} plan={plan} bestellung={bestellung} readOnly={readOnly} />
+        <WochenTage key={plan.id} plan={plan} bestellung={bestellung} readOnly={readOnly} rezepte={rezepte} zutaten={zutaten} />
       )}
-
-      <DummyNote />
     </>
   );
 }
 
-function WochenTage({ plan, bestellung, readOnly }: { plan: Speiseplan; bestellung: Bestellung | undefined; readOnly: boolean }) {
+function WochenTage({
+  plan,
+  bestellung,
+  readOnly,
+  rezepte,
+  zutaten,
+}: {
+  plan: Speiseplan;
+  bestellung: Bestellung | undefined;
+  readOnly: boolean;
+  rezepte: Rezept[];
+  zutaten: ReturnType<typeof useZutaten>;
+}) {
+  const saveBestellung = useSaveBestellung();
   const initialMengen = useMemo(() => {
     const m: Record<string, number> = {};
     bestellung?.positionen.forEach((pos) => { m[`${pos.datum}|${pos.rezeptId}`] = pos.portionen; });
@@ -83,7 +90,7 @@ function WochenTage({ plan, bestellung, readOnly }: { plan: Speiseplan; bestellu
   const gesamt = useMemo(() => Object.values(mengen).reduce((s, n) => s + (n || 0), 0), [mengen]);
 
   const setMenge = (key: string, value: number) => {
-    // Mengen dürfen nicht negativ sein (Prüfung erfolgt in Phase 2 zusätzlich serverseitig).
+    // Mengen dürfen nicht negativ sein (Prüfung erfolgt zusätzlich serverseitig).
     setMengen((m) => ({ ...m, [key]: Math.max(0, value) }));
     setGespeichert(null);
   };
@@ -94,8 +101,10 @@ function WochenTage({ plan, bestellung, readOnly }: { plan: Speiseplan; bestellu
       const [datum, rezeptId] = key.split("|");
       return [{ datum, rezeptId, portionen, hinweis: hinweise[datum]?.trim() || undefined }];
     });
-    saveBestellung({ einrichtungId, speiseplanId: plan.id, positionen, frist: "Vortag, 09:00 Uhr", submit });
-    setGespeichert(submit ? "Bestellung wurde verbindlich abgesendet." : "Entwurf wurde gespeichert.");
+    saveBestellung.mutate(
+      { speiseplanId: plan.id, positionen, submit },
+      { onSuccess: () => setGespeichert(submit ? "Bestellung wurde verbindlich abgesendet." : "Entwurf wurde gespeichert.") }
+    );
   };
 
   return (
@@ -146,10 +155,10 @@ function WochenTage({ plan, bestellung, readOnly }: { plan: Speiseplan; bestellu
               }
             >
               {tag.rezeptIds.map((rid) => {
-                const r = rezeptById(rid);
+                const r = rezepte.find((rz) => rz.id === rid);
                 if (!r) return null;
                 const key = `${tag.datum}|${rid}`;
-                const allergene = rezeptAllergene(r);
+                const allergene = rezeptAllergeneLive(r, zutaten);
                 return (
                   <MealTile
                     key={rid}

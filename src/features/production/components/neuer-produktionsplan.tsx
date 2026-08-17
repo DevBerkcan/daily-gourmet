@@ -4,20 +4,36 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, Card, CardHeader, Button, EmptyState } from "@/components/ui";
-import { standorte } from "@/lib/data";
-import { bestelldatenJeStandort } from "../data";
-import { addPlan, useProduktionsplaene } from "../store";
+import { useStandorte } from "@/lib/services/locations";
+import { useEinrichtungen } from "@/lib/services/facilities";
+import { useBestellungen } from "@/lib/services/orders";
+import { useProduktionsplaene, useCreateProduktionsplan } from "@/lib/services/production";
+
+const BINDENDE_STATUS = ["SUBMITTED", "CONFIRMED", "LOCKED"];
 
 export function NeuerProduktionsplan() {
   const router = useRouter();
   const plaene = useProduktionsplaene();
+  const standorte = useStandorte();
+  const einrichtungen = useEinrichtungen();
+  const bestellungen = useBestellungen();
+  const createPlan = useCreateProduktionsplan();
   const [standortId, setStandortId] = useState(standorte[0]?.id ?? "");
   const [datumOverride, setDatumOverride] = useState<string | undefined>(undefined);
 
+  const bestelldatenJeStandort = useMemo(() => {
+    const facilityIdsAtLocation = new Set(einrichtungen.filter((e) => e.standortId === standortId).map((e) => e.id));
+    const dates = new Set<string>();
+    bestellungen
+      .filter((b) => BINDENDE_STATUS.includes(b.status) && facilityIdsAtLocation.has(b.einrichtungId))
+      .forEach((b) => b.positionen.forEach((p) => dates.add(p.datum)));
+    return [...dates].sort();
+  }, [bestellungen, einrichtungen, standortId]);
+
   const verfuegbareDaten = useMemo(() => {
     const verplant = new Set(plaene.filter((p) => p.standortId === standortId).map((p) => p.datum));
-    return bestelldatenJeStandort(standortId).filter((d) => !verplant.has(d));
-  }, [plaene, standortId]);
+    return bestelldatenJeStandort.filter((d) => !verplant.has(d));
+  }, [plaene, standortId, bestelldatenJeStandort]);
 
   const datum = datumOverride && verfuegbareDaten.includes(datumOverride) ? datumOverride : (verfuegbareDaten[0] ?? "");
   const kannAnlegen = datum !== "";
@@ -68,8 +84,7 @@ export function NeuerProduktionsplan() {
         <Button
           disabled={!kannAnlegen}
           onClick={() => {
-            const plan = addPlan({ datum, standortId });
-            router.push(`/admin/production/${plan.id}`);
+            createPlan.mutate({ datum, standortId }, { onSuccess: (plan) => router.push(`/admin/production/${plan.id}`) });
           }}
         >
           Produktionsplan anlegen

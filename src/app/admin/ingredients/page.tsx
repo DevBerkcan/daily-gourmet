@@ -1,4 +1,4 @@
-import { PageHeader, Button, DummyNote } from "@/components/ui";
+import { PageHeader, Button } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { ZutatenTabelle } from "@/features/ingredients/components/zutaten-tabelle";
 
@@ -14,7 +14,6 @@ export default function IngredientsPage() {
       />
 
       <ZutatenTabelle />
-      <DummyNote />
     </>
   );
 }

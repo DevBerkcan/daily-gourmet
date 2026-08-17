@@ -1,4 +1,4 @@
-import { PageHeader, Card, Button, DummyNote } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { WochenplanTabelle } from "@/features/meal-plans/components/wochenplan-tabelle";
 
@@ -15,7 +15,6 @@ export default function MealPlansPage() {
       <Card>
         <WochenplanTabelle />
       </Card>
-      <DummyNote />
     </>
   );
 }

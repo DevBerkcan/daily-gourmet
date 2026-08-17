@@ -1,4 +1,4 @@
-import { PageHeader, DummyNote } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { ProcurementBoard } from "@/features/procurement/components/procurement-board";
 
 export const metadata = { title: "Einkauf" };
@@ -11,7 +11,6 @@ export default function ProcurementPage() {
         subtitle="Aggregierter Zutatenbedarf aus den Produktionsplänen — identische Zutaten werden zusammengefasst und in Einkaufseinheiten umgerechnet."
       />
       <ProcurementBoard />
-      <DummyNote />
     </>
   );
 }

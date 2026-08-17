@@ -3,11 +3,12 @@
 import { type FormEvent, useState } from "react";
 import { CheckCircle2, ClipboardPenLine } from "lucide-react";
 import { Button, Card, CardHeader } from "@/components/ui";
-import { setWorkStatus } from "../store";
+import { useUpdateProduktionsposition } from "@/lib/services/production";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
-export function CompletionReport({ planId, rezeptId, sollMenge }: { planId: string; rezeptId: string; sollMenge: number }) {
+export function CompletionReport({ planId, itemId, sollMenge }: { planId: string; itemId: string; sollMenge: number }) {
+  const updateStatus = useUpdateProduktionsposition();
   const [gespeichert, setGespeichert] = useState(false);
   const [produziert, setProduziert] = useState(String(sollMenge));
   const [ausschuss, setAusschuss] = useState("0");
@@ -16,7 +17,7 @@ export function CompletionReport({ planId, rezeptId, sollMenge }: { planId: stri
 
   function speichern(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setWorkStatus(planId, rezeptId, "FERTIG");
+    updateStatus.mutate({ planId, itemId, updates: { workStatus: "FERTIG" } });
     setGespeichert(true);
   }
 

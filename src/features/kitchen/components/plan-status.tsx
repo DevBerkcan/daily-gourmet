@@ -1,9 +1,6 @@
-"use client";
-
 import { KitchenStatus } from "./kitchen-status";
-import { useWorkStatuses } from "../store";
+import type { KitchenWorkStatus } from "@/lib/services/production";
 
-export function PlanStatus({ planId, rezeptId }: { planId: string; rezeptId: string }) {
-  const statuses = useWorkStatuses();
-  return <KitchenStatus status={statuses.get(`${planId}:${rezeptId}`) ?? "OFFEN"} />;
+export function PlanStatus({ status }: { status: KitchenWorkStatus }) {
+  return <KitchenStatus status={status} />;
 }

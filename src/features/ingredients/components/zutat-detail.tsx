@@ -2,23 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState, DummyNote } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
 import { ZutatFormular } from "./zutat-formular";
-import { useZutaten, updateZutat } from "../store";
-import type { Zutat } from "../types";
+import { useZutaten, useUpdateZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function ZutatDetail({ id }: { id: string }) {
   const zutaten = useZutaten();
   const zutat = zutaten.find((z) => z.id === id);
+  const updateZutat = useUpdateZutat();
   const [bearbeiten, setBearbeiten] = useState(false);
 
   if (!zutat) {
     return (
       <>
         <Card>
-          <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr) in dieser Sitzung." action={<Button href="/admin/ingredients">Zurück zur Übersicht</Button>} />
+          <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button href="/admin/ingredients">Zurück zur Übersicht</Button>} />
         </Card>
-        <DummyNote />
       </>
     );
   }
@@ -35,8 +34,7 @@ export function ZutatDetail({ id }: { id: string }) {
         <ZutatFormular
           initial={zutat}
           onSubmit={(input: Omit<Zutat, "id">) => {
-            updateZutat(zutat.id, input);
-            setBearbeiten(false);
+            updateZutat.mutate({ id: zutat.id, input }, { onSuccess: () => setBearbeiten(false) });
           }}
           onAbbrechen={() => setBearbeiten(false)}
         />
@@ -90,8 +88,6 @@ export function ZutatDetail({ id }: { id: string }) {
           </Table>
         </Card>
       </div>
-
-      <DummyNote />
     </>
   );
 }

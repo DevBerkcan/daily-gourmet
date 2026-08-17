@@ -76,6 +76,16 @@ export function useEinrichtungen() {
   return (query.data?.items ?? []).map(toEinrichtung);
 }
 
+/** Einzelne Einrichtung per Id — anders als /facilities (Liste) auch für Facility-Rollen erlaubt (eigene Einrichtung). */
+export function useEinrichtung(id: string | null | undefined): Einrichtung | undefined {
+  const query = useQuery({
+    queryKey: ["facility", id],
+    queryFn: () => api.get<FacilityDto>(`/facilities/${id}`),
+    enabled: !!id,
+  });
+  return query.data ? toEinrichtung(query.data) : undefined;
+}
+
 export function useCreateEinrichtung() {
   const queryClient = useQueryClient();
   return useMutation({

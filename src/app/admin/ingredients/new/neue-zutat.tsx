@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { ZutatFormular } from "@/features/ingredients/components/zutat-formular";
-import { addZutat } from "@/features/ingredients/store";
-import type { Zutat } from "@/features/ingredients/types";
+import { useCreateZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function NeueZutat() {
   const router = useRouter();
+  const createZutat = useCreateZutat();
 
   return (
     <>
@@ -22,8 +22,7 @@ export function NeueZutat() {
 
       <ZutatFormular
         onSubmit={(input: Omit<Zutat, "id">) => {
-          const zutat = addZutat(input);
-          router.push(`/admin/ingredients/${zutat.id}`);
+          createZutat.mutate(input, { onSuccess: (zutat) => router.push(`/admin/ingredients/${zutat.id}`) });
         }}
         onAbbrechen={() => router.push("/admin/ingredients")}
       />

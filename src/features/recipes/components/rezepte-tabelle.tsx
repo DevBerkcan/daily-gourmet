@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Table, Td, StatusBadge, SearchInput, Tag } from "@/components/ui";
 import { REZEPT_KATEGORIEN } from "../data";
-import { useZutaten } from "@/features/ingredients/store";
-import { useRezepte, rezeptAllergeneLive } from "../store";
+import { useZutaten } from "@/lib/services/ingredients";
+import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
 
 export function RezepteTabelle() {
   const rezepte = useRezepte();

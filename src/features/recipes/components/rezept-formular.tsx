@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardHeader, Button } from "@/components/ui";
 import { TextField, NumberField, TextareaField, SelectField, CheckboxRow, CheckboxGroup, ImageField } from "@/components/ui/form-fields";
 import { REZEPT_KATEGORIEN, ZIELGRUPPEN_LISTE, SCHWIERIGKEITSGRADE } from "../data";
-import { useZutaten } from "@/features/ingredients/store";
+import { useZutaten } from "@/lib/services/ingredients";
 import type { Rezept, RezeptZutat, Schwierigkeitsgrad } from "../types";
 import { Plus, Trash2 } from "lucide-react";
 

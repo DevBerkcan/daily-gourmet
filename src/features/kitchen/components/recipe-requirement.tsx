@@ -1,30 +1,38 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, Boxes, ChefHat, Clock3, MapPin, Scale, Users } from "lucide-react";
-import { Card, CardHeader, PageHeader, Tag, Table, Td } from "@/components/ui";
-import { standortById } from "@/lib/data";
-import { produktionsplaene } from "@/features/production/data";
-import { zutatById } from "@/features/ingredients/data";
-import { rezeptById } from "@/features/recipes/data";
+import { Card, CardHeader, PageHeader, Table, Td, Button, EmptyState } from "@/components/ui";
+import { useZutaten } from "@/lib/services/ingredients";
+import { useRezepte } from "@/lib/services/recipes";
+import { useProduktionsplaene } from "@/lib/services/production";
 import { PrintButton } from "./print-button";
 import { RecipeWorkActions } from "./recipe-work-actions";
 import { CompletionReport } from "./completion-report";
-import { einrichtungsName, produktionsMetaFuer, verpackungsPositionen } from "../data";
+import { einrichtungsName, verpackungsPositionen } from "../data";
 
 function rundeMenge(menge: number) {
   return Math.round(menge * 100) / 100;
 }
 
-export async function RecipeRequirement({ planId, recipeId }: { planId: string; recipeId: string }) {
-  const plan = produktionsplaene.find((eintrag) => eintrag.id === planId);
+export function RecipeRequirement({ planId, recipeId }: { planId: string; recipeId: string }) {
+  const plaene = useProduktionsplaene();
+  const rezepte = useRezepte();
+  const zutaten = useZutaten();
+  const plan = plaene.find((eintrag) => eintrag.id === planId);
   const position = plan?.positionen.find((eintrag) => eintrag.rezeptId === recipeId);
-  const rezept = rezeptById(recipeId);
+  const rezept = rezepte.find((r) => r.id === recipeId);
 
-  if (!plan || !position || !rezept) notFound();
+  if (!plan || !position || !rezept) {
+    return (
+      <Card>
+        <EmptyState title="Gericht nicht gefunden" text="Dieser Produktionsauftrag existiert nicht (mehr)." action={<Button href="/kitchen/plans">Zurück zu den Produktionsplänen</Button>} />
+      </Card>
+    );
+  }
 
   const portionen = position.bestellteMenge + position.zusatzMenge;
-  const faktor = portionen / rezept.standardPortionen;
-  const meta = produktionsMetaFuer(recipeId, rezept.standardPortionen);
+  const faktor = rezept.standardPortionen > 0 ? portionen / rezept.standardPortionen : 0;
   const ausgaben = verpackungsPositionen.filter((eintrag) => eintrag.rezeptId === recipeId);
   const datum = new Date(`${plan.datum}T12:00:00`).toLocaleDateString("de-DE", {
     weekday: "long",
@@ -43,11 +51,11 @@ export async function RecipeRequirement({ planId, recipeId }: { planId: string; 
 
       <PageHeader
         title={rezept.name}
-        subtitle={`${datum} · ${standortById(plan.standortId)?.name}`}
+        subtitle={`${datum} · ${plan.standortName}`}
         actions={<PrintButton />}
       />
 
-      <RecipeWorkActions planId={plan.id} rezeptId={recipeId} />
+      <RecipeWorkActions planId={plan.id} position={position} />
 
       <div className="my-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="flex items-center gap-3 px-5 py-4">
@@ -60,15 +68,24 @@ export async function RecipeRequirement({ planId, recipeId }: { planId: string; 
         </Card>
         <Card className="flex items-center gap-3 px-5 py-4">
           <span className="flex size-10 items-center justify-center rounded-full bg-ok-soft text-ok"><ChefHat size={19} aria-hidden /></span>
-          <div><p className="text-xs text-muted">Arbeitsplatz</p><p className="mt-1 font-semibold text-ink">{meta?.arbeitsplatz ?? "Warmküche"}</p></div>
+          <div><p className="text-xs text-muted">Arbeitsplatz</p><p className="mt-1 font-semibold text-ink">{position.workstation ?? "Nicht festgelegt"}</p></div>
         </Card>
         <Card className="flex items-center gap-3 px-5 py-4">
           <span className="flex size-10 items-center justify-center rounded-full bg-info-soft text-info"><Boxes size={19} aria-hidden /></span>
-          <div><p className="text-xs text-muted">Chargen & Gerät</p><p className="mt-1 font-semibold text-ink">{meta?.chargen ?? 1} × {meta?.geraet ?? "Kochkessel"}</p></div>
+          <div><p className="text-xs text-muted">Chargen & Gerät</p><p className="mt-1 font-semibold text-ink">{position.batchCount ?? 1} × {position.equipment ?? "Nicht festgelegt"}</p></div>
         </Card>
       </div>
 
-      {meta ? <Card className="mb-6"><CardHeader title="Produktionsauftrag" hint={`Verantwortlich: ${meta.verantwortung}`} /><div className="grid gap-4 px-5 py-4 text-sm sm:grid-cols-2 lg:grid-cols-4"><div><p className="text-xs text-muted">Produktionsstart</p><p className="mt-1 font-semibold text-ink">{meta.start} Uhr</p></div><div><p className="text-xs text-muted">Fertig bis</p><p className="mt-1 font-semibold text-ink">{meta.fertigBis} Uhr</p></div><div><p className="text-xs text-muted">Chargengröße</p><p className="mt-1 font-semibold text-ink">ca. {meta.portionenJeCharge} Portionen</p></div><div><p className="text-xs text-muted">Besonderheiten</p><div className="mt-1 flex flex-wrap gap-1">{meta.varianten.map((variante) => <Tag key={variante} tone="amber">{variante}</Tag>)}</div></div></div></Card> : null}
+      {(position.startTime || position.finishByTime || position.verantwortlich) ? (
+        <Card className="mb-6">
+          <CardHeader title="Produktionsauftrag" hint={position.verantwortlich ? `Verantwortlich: ${position.verantwortlich}` : undefined} />
+          <div className="grid gap-4 px-5 py-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div><p className="text-xs text-muted">Produktionsstart</p><p className="mt-1 font-semibold text-ink">{position.startTime ? `${position.startTime} Uhr` : "—"}</p></div>
+            <div><p className="text-xs text-muted">Fertig bis</p><p className="mt-1 font-semibold text-ink">{position.finishByTime ? `${position.finishByTime} Uhr` : "—"}</p></div>
+            <div><p className="text-xs text-muted">Chargengröße</p><p className="mt-1 font-semibold text-ink">{position.portionenJeCharge ? `ca. ${position.portionenJeCharge} Portionen` : "—"}</p></div>
+          </div>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="h-fit">
@@ -79,7 +96,7 @@ export async function RecipeRequirement({ planId, recipeId }: { planId: string; 
           />
           <Table head={["Zutat", `Menge für ${portionen} Portionen`, "Rezeptbasis"]}>
             {rezept.zutaten.map((rezeptZutat) => {
-              const zutat = zutatById(rezeptZutat.zutatId);
+              const zutat = zutaten.find((z) => z.id === rezeptZutat.zutatId);
               const bedarf = rundeMenge(rezeptZutat.menge * faktor);
 
               return (
@@ -126,7 +143,7 @@ export async function RecipeRequirement({ planId, recipeId }: { planId: string; 
               </dl>
             </Card>
           )}
-          <CompletionReport planId={plan.id} rezeptId={recipeId} sollMenge={portionen} />
+          <CompletionReport planId={plan.id} itemId={position.id} sollMenge={portionen} />
         </div>
       </div>
     </>

@@ -1,48 +1,7 @@
-import { PageHeader, Card, CardHeader, DummyNote } from "@/components/ui";
-import { SaveButton } from "@/components/ui/save-button";
-import { BrandingCard } from "./branding-card";
+import { CompanyContent } from "./company-content";
 
 export const metadata = { title: "Unternehmen" };
 
-function Field({ label, value, id }: { label: string; value: string; id: string }) {
-  return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">{label}</label>
-      <input id={id} defaultValue={value} className="min-h-10 w-full rounded-lg border border-line bg-surface px-3.5 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-basil" />
-    </div>
-  );
-}
-
 export default function CompanyPage() {
-  return (
-    <>
-      <PageHeader title="Unternehmen" subtitle="Stammdaten und Branding von Daily Gourmet." actions={<SaveButton label="Änderungen speichern" />} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Stammdaten" />
-          <div className="grid gap-4 px-5 py-5 sm:grid-cols-2">
-            <Field id="name" label="Unternehmensname" value="Daily Gourmet GmbH" />
-            <Field id="ust" label="USt-IdNr." value="DE 123 456 789" />
-            <Field id="strasse" label="Straße und Hausnummer" value="Eiland 2" />
-            <Field id="plz" label="PLZ und Ort" value="42103 Wuppertal" />
-            <Field id="tel" label="Telefon" value="(0)202 – 479 47 001" />
-            <Field id="mail" label="E-Mail" value="info@daily-gourmet.de" />
-          </div>
-        </Card>
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader title="Standardwerte" />
-            <div className="grid gap-4 px-5 py-5 sm:grid-cols-2">
-              <Field id="tz" label="Zeitzone" value="Europe/Berlin" />
-              <Field id="cur" label="Währung" value="EUR" />
-              <Field id="frist" label="Standard-Bestellfrist" value="Vortag, 09:00 Uhr" />
-              <Field id="portion" label="Standardportion" value="1 Portion = 1 Essen" />
-            </div>
-          </Card>
-          <BrandingCard />
-        </div>
-      </div>
-      <DummyNote />
-    </>
-  );
+  return <CompanyContent />;
 }

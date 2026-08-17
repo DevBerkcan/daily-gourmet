@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardHeader, Button } from "@/components/ui";
 import { TextField, NumberField, SelectField, CheckboxRow, CheckboxGroup } from "@/components/ui/form-fields";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE, ZUSATZSTOFFE_LISTE } from "../data";
-import type { Zutat } from "../types";
+import type { Zutat } from "@/lib/services/ingredients";
 import type { Einheit } from "@/lib/types";
 
 const EINHEITEN: Einheit[] = ["g", "kg", "ml", "l", "Stück"];

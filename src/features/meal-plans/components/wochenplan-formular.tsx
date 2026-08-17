@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, Card, CardHeader, Button, StatusBadge, DummyNote } from "@/components/ui";
-import { standorte, einrichtungen } from "@/lib/data";
+import { PageHeader, Card, CardHeader, Button, StatusBadge } from "@/components/ui";
+import { useStandorte } from "@/lib/services/locations";
+import { useEinrichtungen } from "@/lib/services/facilities";
 import { nextUpcomingWeeks } from "@/lib/isoWeek";
-import { addPlan, useSpeiseplaene } from "../store";
+import { useCreateSpeiseplan, useSpeiseplaene } from "@/lib/services/meal-plans";
 
 const HEUTE = "2026-08-06";
 
@@ -28,6 +29,9 @@ function CheckboxRow({ checked, onChange, label, sub, status }: { checked: boole
 export function WochenplanFormular() {
   const router = useRouter();
   const plaene = useSpeiseplaene();
+  const standorte = useStandorte();
+  const einrichtungen = useEinrichtungen();
+  const createSpeiseplan = useCreateSpeiseplan();
 
   const wochen = useMemo(() => {
     const takenKeys = new Set(plaene.map((p) => `${p.jahr}-${p.kalenderwoche}`));
@@ -53,8 +57,10 @@ export function WochenplanFormular() {
     e.preventDefault();
     if (!kannAbsenden) return;
     const [jahr, kalenderwoche] = weekKey.split("-").map(Number);
-    const plan = addPlan({ kalenderwoche, jahr, standortIds, einrichtungIds });
-    router.push(`/admin/meal-plans/${plan.id}`);
+    createSpeiseplan.mutate(
+      { kalenderwoche, jahr, standortIds, einrichtungIds },
+      { onSuccess: (plan) => router.push(`/admin/meal-plans/${plan.id}`) }
+    );
   };
 
   return (
@@ -124,8 +130,6 @@ export function WochenplanFormular() {
           <Button type="submit" disabled={!kannAbsenden}>Wochenplan anlegen</Button>
         </div>
       </form>
-
-      <DummyNote />
     </>
   );
 }

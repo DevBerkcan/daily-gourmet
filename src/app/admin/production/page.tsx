@@ -1,4 +1,4 @@
-import { PageHeader, Button, DummyNote } from "@/components/ui";
+import { PageHeader, Button } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { Produktionstabelle } from "@/features/production/components/produktionstabelle";
 
@@ -13,7 +13,6 @@ export default function ProductionPage() {
         actions={<Button href="/admin/production/new"><Plus size={16} aria-hidden /> Produktionsplan erstellen</Button>}
       />
       <Produktionstabelle />
-      <DummyNote />
     </>
   );
 }
