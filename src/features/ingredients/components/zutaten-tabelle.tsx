@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, Table, Td, StatusBadge, Tag, SearchInput } from "@/components/ui";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE } from "../data";
-import { useZutaten } from "../store";
+import { useZutaten } from "@/lib/services/ingredients";
 
 export function ZutatenTabelle() {
   const zutaten = useZutaten();

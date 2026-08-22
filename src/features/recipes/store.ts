@@ -1,65 +1,7 @@
-import { createStore } from "@/lib/store/create-store";
-import { rezepte } from "./data";
 import type { Rezept, RezeptNaehrwerte100 } from "./types";
 import type { Zutat } from "@/features/ingredients/types";
 
-/**
- * Session-Store für im Admin erstellte/bearbeitete Rezepte (Client-only, kein Backend).
- * Seed ist ein Deep Clone der statischen Mock-Daten — Mutatoren dürfen nur aus
- * Client-Event-Handlern aufgerufen werden, nie aus Server-Code, da das Modul
- * serverseitig prozessweit resident bleibt.
- */
-const store = createStore<Rezept[]>(
-  rezepte.map((r) => ({
-    ...r,
-    zubereitungsschritte: [...r.zubereitungsschritte],
-    zutaten: r.zutaten.map((rz) => ({ ...rz })),
-    zielgruppen: [...r.zielgruppen],
-    naehrwertePro100g: r.naehrwertePro100g ? { ...r.naehrwertePro100g } : undefined,
-    allergeneErfasst: r.allergeneErfasst ? [...r.allergeneErfasst] : undefined,
-    zusatzstoffeErfasst: r.zusatzstoffeErfasst ? [...r.zusatzstoffeErfasst] : undefined,
-    naehrwertbezogeneAngaben: r.naehrwertbezogeneAngaben ? [...r.naehrwertbezogeneAngaben] : undefined,
-  }))
-);
-
-export function addRezept(input: Omit<Rezept, "id" | "version">): Rezept {
-  const neu: Rezept = { ...input, id: `r-${String(store.get().length + 1).padStart(3, "0")}`, version: 1 };
-  store.set((alle) => [neu, ...alle]);
-  return neu;
-}
-
-export function updateRezept(id: string, updates: Omit<Rezept, "id" | "version">) {
-  store.set((alle) => alle.map((r) => (r.id === id ? { ...updates, id, version: r.version + 1 } : r)));
-}
-
-export function duplicateRezept(id: string): Rezept | undefined {
-  const original = store.get().find((r) => r.id === id);
-  if (!original) return undefined;
-  const heute = new Date().toISOString().slice(0, 10);
-  const kopie: Rezept = {
-    ...original,
-    id: `r-${String(store.get().length + 1).padStart(3, "0")}`,
-    name: `${original.name} (Kopie)`,
-    version: 1,
-    erstelltAm: heute,
-    aktualisiertAm: undefined,
-    zubereitungsschritte: [...original.zubereitungsschritte],
-    zutaten: original.zutaten.map((rz) => ({ ...rz })),
-    zielgruppen: [...original.zielgruppen],
-    naehrwertePro100g: original.naehrwertePro100g ? { ...original.naehrwertePro100g } : undefined,
-    allergeneErfasst: original.allergeneErfasst ? [...original.allergeneErfasst] : undefined,
-    zusatzstoffeErfasst: original.zusatzstoffeErfasst ? [...original.zusatzstoffeErfasst] : undefined,
-    naehrwertbezogeneAngaben: original.naehrwertbezogeneAngaben ? [...original.naehrwertbezogeneAngaben] : undefined,
-  };
-  store.set((alle) => [kopie, ...alle]);
-  return kopie;
-}
-
-export function useRezepte(): Rezept[] {
-  return store.useValue();
-}
-
-/* ---------- Live-Berechnungshelfer (arbeiten auf der aktuellen Session-Zutatenliste) ---------- */
+/* ---------- Live-Berechnungshelfer (arbeiten auf der aktuell geladenen Zutatenliste) ---------- */
 
 function zutatByIdIn(zutaten: Zutat[], id: string) {
   return zutaten.find((z) => z.id === id);

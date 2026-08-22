@@ -1,4 +1,4 @@
-import { PageHeader, Card, Button, DummyNote } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { RezepteTabelle } from "@/features/recipes/components/rezepte-tabelle";
 
@@ -15,7 +15,6 @@ export default function RecipesPage() {
       <Card>
         <RezepteTabelle />
       </Card>
-      <DummyNote />
     </>
   );
 }

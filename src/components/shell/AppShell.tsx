@@ -2,8 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, Menu, X, LogOut, type LucideIcon } from "lucide-react";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export interface NavItem {
   label: string;
@@ -30,8 +31,15 @@ const toneStyles = {
 
 export function AppShell({ areaLabel, areaTone, nav, userName, userRole, children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
   const [open, setOpen] = useState(false);
   const tone = toneStyles[areaTone];
+
+  function handleLogout() {
+    logout();
+    router.push("/login");
+  }
 
   const navList = (
     <nav aria-label="Hauptnavigation" className="flex flex-col gap-1 px-3">
@@ -74,9 +82,9 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         <div className="border-t border-line px-6 py-4">
           <p className="text-sm font-medium text-ink">{userName}</p>
           <p className="text-xs text-muted">{userRole}</p>
-          <Link href="/login" className="mt-3 flex items-center gap-2 text-xs font-medium text-muted hover:text-danger">
+          <button type="button" onClick={handleLogout} className="mt-3 flex items-center gap-2 text-xs font-medium text-muted hover:text-danger">
             <LogOut size={14} aria-hidden /> Abmelden
-          </Link>
+          </button>
         </div>
       </aside>
       <div className="hidden lg:block" aria-hidden />

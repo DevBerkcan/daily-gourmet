@@ -3,22 +3,23 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, ChefHat, Clock3, Play, RotateCcw, Users } from "lucide-react";
 import { Button, Card, CardHeader, StatCard } from "@/components/ui";
-import { produktionsplaene } from "@/features/production/data";
-import { rezeptById } from "@/features/recipes/data";
-import { aenderungen, geraeteBelegung, produktionsMetaFuer, workStatusOrder } from "../data";
-import { setWorkStatus, useWorkStatuses } from "../store";
+import { useStandorte } from "@/lib/services/locations";
+import { useProduktionsplanByDatum, useUpdateProduktionsposition, type KitchenWorkStatus } from "@/lib/services/production";
+import { aenderungen, geraeteBelegung, workStatusOrder } from "../data";
 import { KitchenStatus } from "./kitchen-status";
 
-const plan = produktionsplaene[0];
+const HEUTE = "2026-08-06";
 
 export function TodayBoard() {
-  const statuses = useWorkStatuses();
+  const standorte = useStandorte();
+  const plan = useProduktionsplanByDatum(HEUTE, standorte[0]?.id ?? "");
+  const updateStatus = useUpdateProduktionsposition();
+
+  if (!plan) return null;
+
   const gesamt = plan.positionen.reduce((summe, position) => summe + position.bestellteMenge + position.zusatzMenge, 0);
-  const fertig = plan.positionen.filter((position) => {
-    const status = statuses.get(`${plan.id}:${position.rezeptId}`) ?? "OFFEN";
-    return status === "FERTIG" || status === "VERPACKT" || status === "ABHOLBEREIT";
-  }).length;
-  const laufend = plan.positionen.filter((position) => statuses.get(`${plan.id}:${position.rezeptId}`) === "ZUBEREITUNG").length;
+  const fertig = plan.positionen.filter((position) => ["FERTIG", "VERPACKT", "ABHOLBEREIT"].includes(position.workStatus)).length;
+  const laufend = plan.positionen.filter((position) => position.workStatus === "ZUBEREITUNG").length;
 
   return (
     <>
@@ -37,36 +38,38 @@ export function TodayBoard() {
           </div>
 
           {plan.positionen.map((position) => {
-            const rezept = rezeptById(position.rezeptId);
-            const meta = produktionsMetaFuer(position.rezeptId, rezept?.standardPortionen ?? 10);
-            const key = `${plan.id}:${position.rezeptId}`;
-            const status = statuses.get(key) ?? "OFFEN";
-            const statusIndex = workStatusOrder.indexOf(status);
+            const statusIndex = workStatusOrder.indexOf(position.workStatus);
             const nextStatus = workStatusOrder[Math.min(statusIndex + 1, 3)];
             const portions = position.bestellteMenge + position.zusatzMenge;
 
             return (
-              <Card key={position.rezeptId}>
+              <Card key={position.id}>
                 <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2"><KitchenStatus status={status} /><span className="text-xs font-medium text-muted">{meta?.start} – {meta?.fertigBis} Uhr</span></div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <KitchenStatus status={position.workStatus} />
+                      {(position.startTime || position.finishByTime) && (
+                        <span className="text-xs font-medium text-muted">{position.startTime ?? "—"} – {position.finishByTime ?? "—"} Uhr</span>
+                      )}
+                    </div>
                     <Link href={`/kitchen/plans/${plan.id}/recipes/${position.rezeptId}`} className="mt-2 block font-display text-xl font-semibold text-ink hover:text-basil hover:underline">
-                      {rezept?.name}
+                      {position.rezeptName}
                     </Link>
                     <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
                       <span className="inline-flex items-center gap-1.5"><Users size={15} aria-hidden /><strong className="text-ink">{portions}</strong> Portionen</span>
-                      <span className="inline-flex items-center gap-1.5"><ChefHat size={15} aria-hidden />{meta?.arbeitsplatz}</span>
-                      <span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{meta?.chargen} Chargen à ca. {meta?.portionenJeCharge}</span>
+                      <span className="inline-flex items-center gap-1.5"><ChefHat size={15} aria-hidden />{position.workstation ?? "Arbeitsplatz nicht festgelegt"}</span>
+                      {position.batchCount && (
+                        <span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{position.batchCount} Chargen{position.portionenJeCharge ? ` à ca. ${position.portionenJeCharge}` : ""}</span>
+                      )}
                     </div>
-                    {meta?.varianten.length ? <p className="mt-3 rounded-lg bg-saffron-soft px-3 py-2 text-xs font-medium text-warn">Besonderheiten: {meta.varianten.join(" · ")}</p> : null}
                   </div>
                   <div className="flex shrink-0 flex-col gap-2">
                     {statusIndex < 3 ? (
-                      <Button onClick={() => setWorkStatus(plan.id, position.rezeptId, nextStatus)}>
+                      <Button onClick={() => updateStatus.mutate({ planId: plan.id, itemId: position.id, updates: { workStatus: nextStatus } })}>
                         <Play size={15} aria-hidden /> {nextStatus === "BEREITSTELLUNG" ? "Bereitstellung starten" : nextStatus === "ZUBEREITUNG" ? "Zubereitung starten" : "Fertig melden"}
                       </Button>
                     ) : (
-                      <Button variant="secondary" onClick={() => setWorkStatus(plan.id, position.rezeptId, "ZUBEREITUNG")}><RotateCcw size={15} aria-hidden /> Wieder öffnen</Button>
+                      <Button variant="secondary" onClick={() => updateStatus.mutate({ planId: plan.id, itemId: position.id, updates: { workStatus: "ZUBEREITUNG" as KitchenWorkStatus } })}><RotateCcw size={15} aria-hidden /> Wieder öffnen</Button>
                     )}
                     <Button href={`/kitchen/plans/${plan.id}/recipes/${position.rezeptId}`} variant="ghost">Details öffnen <ArrowRight size={15} aria-hidden /></Button>
                   </div>
@@ -93,12 +96,15 @@ export function TodayBoard() {
           <Card>
             <CardHeader title="Gerätebelegung" hint="Heute Vormittag" />
             <div className="divide-y divide-line">
-              {geraeteBelegung.map((slot) => (
-                <div key={`${slot.zeit}-${slot.geraet}`} className="px-5 py-3.5 text-sm">
-                  <div className="flex justify-between gap-3"><span className="font-semibold text-ink">{slot.zeit}</span><span className="text-xs text-muted">{slot.charge}</span></div>
-                  <p className="mt-1 text-basil">{slot.geraet}</p><p className="text-xs text-muted">{rezeptById(slot.rezeptId)?.name}</p>
-                </div>
-              ))}
+              {geraeteBelegung.map((slot) => {
+                const position = plan.positionen.find((p) => p.rezeptId === slot.rezeptId);
+                return (
+                  <div key={`${slot.zeit}-${slot.geraet}`} className="px-5 py-3.5 text-sm">
+                    <div className="flex justify-between gap-3"><span className="font-semibold text-ink">{slot.zeit}</span><span className="text-xs text-muted">{slot.charge}</span></div>
+                    <p className="mt-1 text-basil">{slot.geraet}</p><p className="text-xs text-muted">{position?.rezeptName}</p>
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>

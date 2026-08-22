@@ -4,8 +4,7 @@ import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { Lock, Pencil, RotateCcw, X } from "lucide-react";
 import { Button, Card, CardHeader, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
-import { auditLog, benutzer } from "@/lib/data";
-import { updateTenant, updateTenantStatus, useTenants } from "../store";
+import { useTenants, useUpdateTenant, useLockTenant, useUnlockTenant, useTenantUsers, useGlobalAuditLog } from "@/lib/services/super-admin";
 import { SupportAccess } from "./support-access";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
@@ -13,6 +12,11 @@ const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-
 export function TenantDetailView({ tenantId }: { tenantId: string }) {
   const tenants = useTenants();
   const tenant = tenants.find((entry) => entry.id === tenantId);
+  const updateTenant = useUpdateTenant();
+  const lockTenant = useLockTenant();
+  const unlockTenant = useUnlockTenant();
+  const tenantUsers = useTenantUsers(tenantId);
+  const tenantAudit = useGlobalAuditLog({ tenantId });
   const [bearbeiten, setBearbeiten] = useState(false);
   const [name, setName] = useState(tenant?.name ?? "");
   const [ansprechpartner, setAnsprechpartner] = useState(tenant?.ansprechpartner ?? "");
@@ -22,14 +26,11 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
     return (
       <Card className="p-8 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">Mandant nicht gefunden</h1>
-        <p className="mt-2 text-sm text-muted">Dieser Mandant ist in der aktuellen Frontend-Sitzung nicht vorhanden.</p>
+        <p className="mt-2 text-sm text-muted">Dieser Mandant existiert nicht (mehr).</p>
         <div className="mt-5"><Button href="/super-admin/tenants">Zur Mandantenübersicht</Button></div>
       </Card>
     );
   }
-
-  const tenantUsers = benutzer.filter((user) => user.tenantId === tenant.id);
-  const tenantAudit = auditLog.filter((entry) => entry.tenant === tenant.name);
 
   function editierenStarten() {
     setName(tenant!.name);
@@ -40,8 +41,17 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
 
   function speichern(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    updateTenant(tenant!.id, { name: name.trim(), ansprechpartner: ansprechpartner.trim(), email: email.trim() });
-    setBearbeiten(false);
+    updateTenant.mutate({ id: tenant!.id, input: { name: name.trim(), ansprechpartner: ansprechpartner.trim(), email: email.trim() } }, { onSuccess: () => setBearbeiten(false) });
+  }
+
+  function sperren() {
+    const grund = window.prompt("Begründung für die Sperrung:");
+    if (grund?.trim()) lockTenant.mutate({ id: tenant!.id, grund: grund.trim() });
+  }
+
+  function reaktivieren() {
+    const grund = window.prompt("Begründung für die Reaktivierung:");
+    if (grund?.trim()) unlockTenant.mutate({ id: tenant!.id, grund: grund.trim() });
   }
 
   return (
@@ -54,14 +64,14 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
 
       <PageHeader
         title={tenant.name}
-        subtitle={`Angelegt am ${tenant.erstelltAm} · Tenant Owner: ${tenant.ansprechpartner} (${tenant.email})`}
+        subtitle={`Angelegt am ${new Date(tenant.erstelltAm).toLocaleDateString("de-DE")} · Tenant Owner: ${tenant.ansprechpartner} (${tenant.email})`}
         actions={
           <>
             <Button variant="secondary" onClick={editierenStarten}><Pencil size={15} aria-hidden /> Bearbeiten</Button>
             {tenant.status === "AKTIV" ? (
-              <Button variant="danger" onClick={() => updateTenantStatus(tenant.id, "GESPERRT")}><Lock size={15} aria-hidden /> Mandant sperren</Button>
+              <Button variant="danger" onClick={sperren}><Lock size={15} aria-hidden /> Mandant sperren</Button>
             ) : (
-              <Button onClick={() => updateTenantStatus(tenant.id, "AKTIV")}><RotateCcw size={15} aria-hidden /> Reaktivieren</Button>
+              <Button onClick={reaktivieren}><RotateCcw size={15} aria-hidden /> Reaktivieren</Button>
             )}
           </>
         }
@@ -97,7 +107,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
                     <Td><span className="font-medium text-ink">{user.name}</span><span className="block text-xs text-muted">{user.email}</span></Td>
                     <Td><Tag tone="green">{user.rolle}</Tag></Td>
                     <Td><StatusBadge status={user.status} /></Td>
-                    <Td className="text-muted">{user.letzteAnmeldung ?? "—"}</Td>
+                    <Td className="text-muted">{user.letzteAnmeldung ? new Date(user.letzteAnmeldung).toLocaleString("de-DE") : "—"}</Td>
                   </tr>
                 ))}
               </Table>

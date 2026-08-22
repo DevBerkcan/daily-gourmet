@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { Card, Table, Td, StatusBadge } from "@/components/ui";
-import { standortById } from "@/lib/data";
-import { rezeptById } from "@/features/recipes/data";
-import { useProduktionsplaene } from "../store";
+import { useProduktionsplaene } from "@/lib/services/production";
 
 export function Produktionstabelle() {
   const plaene = useProduktionsplaene();
@@ -20,14 +18,14 @@ export function Produktionstabelle() {
                 <Link href={`/admin/production/${pp.id}`} className="text-sm font-semibold text-basil hover:underline">
                   {new Date(pp.datum).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}
                 </Link>
-                <p className="text-xs text-muted">{standortById(pp.standortId)?.name}</p>
+                <p className="text-xs text-muted">{pp.standortName}</p>
               </div>
               <p className="text-sm text-muted">Gesamt: <span className="font-display text-lg font-semibold text-ink">{gesamt}</span> Portionen</p>
             </div>
             <Table head={["Gericht", "Bestellt", "Zusatzmenge", "Produktion", "Status"]}>
               {pp.positionen.map((pos) => (
-                <tr key={pos.rezeptId} className="hover:bg-paper">
-                  <Td className="font-medium text-ink">{rezeptById(pos.rezeptId)?.name}</Td>
+                <tr key={pos.id} className="hover:bg-paper">
+                  <Td className="font-medium text-ink">{pos.rezeptName}</Td>
                   <Td>{pos.bestellteMenge}</Td>
                   <Td>
                     {pos.zusatzMenge > 0 ? (

@@ -1,14 +1,6 @@
-import Link from "next/link";
-import { ChefHat, Soup, School, Truck } from "lucide-react";
+import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Anmelden" };
-
-const rollen = [
-  { href: "/admin/dashboard", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
-  { href: "/kitchen", icon: Soup, label: "Küche", hint: "Daily Gourmet · Produktion" },
-  { href: "/driver", icon: Truck, label: "Fahrer", hint: "Daily Gourmet · Auslieferung" },
-  { href: "/portal/dashboard", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
-];
 
 export default function LoginPage() {
   return (
@@ -37,40 +29,7 @@ export default function LoginPage() {
           <h2 className="font-display text-2xl font-semibold text-ink">Anmelden</h2>
           <p className="mt-1 text-sm text-muted">Melden Sie sich mit Ihrer geschäftlichen E-Mail-Adresse an.</p>
 
-          <form className="mt-7 flex flex-col gap-4">
-            <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">E-Mail-Adresse</label>
-              <input id="email" type="email" autoComplete="email" placeholder="name@unternehmen.de"
-                className="min-h-11 w-full rounded-lg border border-line bg-surface px-3.5 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-basil" />
-            </div>
-            <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium text-ink">Passwort</label>
-                <span className="cursor-pointer text-xs font-medium text-basil hover:underline">Passwort vergessen?</span>
-              </div>
-              <input id="password" type="password" autoComplete="current-password" placeholder="••••••••"
-                className="min-h-11 w-full rounded-lg border border-line bg-surface px-3.5 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-basil" />
-            </div>
-            <button type="button" className="min-h-11 cursor-pointer rounded-lg bg-basil text-sm font-semibold text-white transition-colors hover:bg-basil-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil">
-              Anmelden
-            </button>
-          </form>
-
-          <div className="mt-9">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted">Demo-Ansichten (Phase 1)</p>
-            <div className="mt-3 grid gap-2">
-              {rollen.map((r) => (
-                <Link key={r.href} href={r.href}
-                  className="group flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-colors hover:border-basil hover:bg-basil-soft">
-                  <r.icon size={18} className="text-basil" aria-hidden />
-                  <span>
-                    <span className="block text-sm font-medium text-ink">{r.label}</span>
-                    <span className="block text-xs text-muted">{r.hint}</span>
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <LoginForm />
         </div>
       </div>
     </div>

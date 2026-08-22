@@ -1,9 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MapPin } from "lucide-react";
 import { Card } from "@/components/ui";
-import { standortById } from "@/lib/data";
-import { produktionsplaene } from "@/features/production/data";
-import { rezeptById } from "@/features/recipes/data";
+import { useProduktionsplaene } from "@/lib/services/production";
 import { PlanStatus } from "./plan-status";
 
 function datumLabel(datum: string) {
@@ -16,6 +16,8 @@ function datumLabel(datum: string) {
 }
 
 export function PlansBoard() {
+  const produktionsplaene = useProduktionsplaene();
+
   return (
     <div className="flex flex-col gap-6">
       {produktionsplaene.map((plan, index) => {
@@ -40,7 +42,7 @@ export function PlansBoard() {
                   )}
                 </div>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
-                  <MapPin size={13} aria-hidden /> {standortById(plan.standortId)?.name}
+                  <MapPin size={13} aria-hidden /> {plan.standortName}
                 </p>
               </div>
               <div className="text-right">
@@ -51,19 +53,18 @@ export function PlansBoard() {
 
             <div className="divide-y divide-line">
               {plan.positionen.map((position) => {
-                const rezept = rezeptById(position.rezeptId);
                 const produktionsmenge = position.bestellteMenge + position.zusatzMenge;
 
                 return (
                   <Link
-                    key={position.rezeptId}
+                    key={position.id}
                     href={`/kitchen/plans/${plan.id}/recipes/${position.rezeptId}`}
                     className="group flex min-h-20 items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-basil"
                   >
                     <div className="min-w-0">
-                      <p className="font-semibold text-ink group-hover:text-basil">{rezept?.name}</p>
+                      <p className="font-semibold text-ink group-hover:text-basil">{position.rezeptName}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                        <PlanStatus planId={plan.id} rezeptId={position.rezeptId} />
+                        <PlanStatus status={position.workStatus} />
                         <span>{position.bestellteMenge} bestellt</span>
                         {position.zusatzMenge > 0 && <span>+ {position.zusatzMenge} Zusatzmenge</span>}
                       </div>

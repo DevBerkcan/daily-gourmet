@@ -1,5 +1,11 @@
 # API-Endpunkte — /api/v1 (Phase 2)
 
+> **Status 2026-08-15: durch `BACKEND_IMPLEMENTATION_PLAN.md` (Repo-Root, Abschnitt 6) ersetzt.**
+> Der neue Plan nutzt Pfade ohne `/v1`-Präfix und ein `{ success, data, message }`-Antwortformat
+> statt `{ error: { code, message, details? } }`. Die Endpunktliste unten war die Basis für die
+> Analyse, ist aber nicht mehr die verbindliche Quelle — siehe `BACKEND_IMPLEMENTATION_PLAN.md`
+> Abschnitt 6 für den aktuellen Stand.
+
 Konventionen: JSON, Pagination via `?page&pageSize&sort&dir`, Fehlerformat `{ error: { code, message, details? } }`.
 Jeder Endpunkt prüft **Authentifizierung → Mandant → Permission** in dieser Reihenfolge. In Klammern: benötigte Permission.
 

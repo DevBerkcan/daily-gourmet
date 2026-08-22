@@ -1,6 +1,8 @@
 export type SpeiseplanStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "CLOSED" | "ARCHIVED";
 
 export interface SpeiseplanTag {
+  /** Backend-Tages-Id (GUID) — nötig, um gezielt einen Tag per PUT zu aktualisieren. */
+  id?: string;
   wochentag: string;
   datum: string;
   rezeptIds: string[];

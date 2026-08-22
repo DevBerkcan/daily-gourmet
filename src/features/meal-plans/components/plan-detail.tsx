@@ -2,21 +2,37 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState, DummyNote } from "@/components/ui";
+import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
-import { einrichtungById } from "@/lib/data";
+import { useEinrichtungen } from "@/lib/services/facilities";
 import type { Speiseplan, SpeiseplanTag } from "../types";
-import { umsatzUebersicht } from "../data";
 import type { Rezept } from "@/features/recipes/types";
 import { Eye, Send, X } from "lucide-react";
-import { useSpeiseplaene, addRezeptZuTag, removeRezeptVonTag, updatePlanStatus } from "../store";
-import { useRezepte, rezeptAllergeneLive } from "@/features/recipes/store";
-import { useZutaten } from "@/features/ingredients/store";
+import {
+  useSpeiseplaene,
+  useUpdateSpeiseplanTag,
+  useSubmitReviewSpeiseplan,
+  usePublishSpeiseplan,
+  useUnpublishSpeiseplan,
+} from "@/lib/services/meal-plans";
+import { useBestellungen } from "@/lib/services/orders";
+import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
+import { useZutaten } from "@/lib/services/ingredients";
 
 const HEUTE = "2026-08-06";
+const BINDENDE_STATUS = ["SUBMITTED", "CONFIRMED", "LOCKED"];
 
-function TagRezeptHinzufuegen({ plan, tag, rezepte }: { plan: Speiseplan; tag: SpeiseplanTag; rezepte: Rezept[] }) {
+function TagRezeptHinzufuegen({
+  plan,
+  tag,
+  rezepte,
+}: {
+  plan: Speiseplan;
+  tag: SpeiseplanTag;
+  rezepte: Rezept[];
+}) {
   const [offen, setOffen] = useState(false);
+  const updateTag = useUpdateSpeiseplanTag();
   const verfuegbar = rezepte.filter((r) => !tag.rezeptIds.includes(r.id));
 
   if (verfuegbar.length === 0) return null;
@@ -40,8 +56,8 @@ function TagRezeptHinzufuegen({ plan, tag, rezepte }: { plan: Speiseplan; tag: S
         aria-label={`Rezept für ${tag.wochentag} hinzufügen`}
         defaultValue=""
         onChange={(e) => {
-          if (e.target.value) {
-            addRezeptZuTag(plan.id, tag.datum, e.target.value);
+          if (e.target.value && tag.id) {
+            updateTag.mutate({ plan, tagId: tag.id, rezeptIds: [...tag.rezeptIds, e.target.value], hinweis: tag.hinweis });
             setOffen(false);
           }
         }}
@@ -63,21 +79,33 @@ export function PlanDetail({ id }: { id: string }) {
   const plaene = useSpeiseplaene();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
+  const einrichtungen = useEinrichtungen();
+  const bestellungen = useBestellungen({ speiseplanId: id });
   const plan = plaene.find((p) => p.id === id);
-  const umsatz = plan ? umsatzUebersicht().filter((z) => z.speiseplanId === plan.id).reduce((s, z) => s + z.umsatz, 0) : 0;
+  const updateTag = useUpdateSpeiseplanTag();
+  const submitReview = useSubmitReviewSpeiseplan();
+  const publish = usePublishSpeiseplan();
+  const unpublish = useUnpublishSpeiseplan();
+
+  const umsatz = bestellungen
+    .filter((b) => BINDENDE_STATUS.includes(b.status))
+    .reduce((summe, b) => {
+      const einrichtung = einrichtungen.find((e) => e.id === b.einrichtungId);
+      const portionen = b.positionen.reduce((s, p) => s + p.portionen, 0);
+      return summe + portionen * (einrichtung?.portionspreis ?? 0);
+    }, 0);
+
+  const bearbeitbar = plan?.status === "DRAFT" || plan?.status === "REVIEW";
 
   if (!plan) {
     return (
-      <>
-        <Card>
-          <EmptyState
-            title="Speiseplan nicht gefunden"
-            text="Dieser Wochenplan existiert nicht (mehr) in dieser Sitzung."
-            action={<Button href="/admin/meal-plans">Zurück zur Übersicht</Button>}
-          />
-        </Card>
-        <DummyNote />
-      </>
+      <Card>
+        <EmptyState
+          title="Speiseplan nicht gefunden"
+          text="Dieser Wochenplan existiert nicht (mehr)."
+          action={<Button href="/admin/meal-plans">Zurück zur Übersicht</Button>}
+        />
+      </Card>
     );
   }
 
@@ -91,13 +119,13 @@ export function PlanDetail({ id }: { id: string }) {
 
       <PageHeader
         title={`Speiseplan KW ${plan.kalenderwoche}`}
-        subtitle={`Veröffentlicht für: ${plan.einrichtungIds.map((f) => einrichtungById(f)?.name).join(", ") || "—"}`}
+        subtitle={`Veröffentlicht für: ${plan.einrichtungIds.map((f) => einrichtungen.find((e) => e.id === f)?.name).join(", ") || "—"}`}
         actions={
           <>
             <Button variant="secondary" href="/portal/meal-plans"><Eye size={15} aria-hidden /> Vorschau als Einrichtung</Button>
-            {plan.status === "DRAFT" && <Button onClick={() => updatePlanStatus(plan.id, "REVIEW")}><Send size={15} aria-hidden /> Zur Prüfung senden</Button>}
-            {plan.status === "REVIEW" && <Button onClick={() => updatePlanStatus(plan.id, "PUBLISHED")}><Send size={15} aria-hidden /> Veröffentlichen</Button>}
-            {plan.status === "PUBLISHED" && <Button variant="secondary" onClick={() => updatePlanStatus(plan.id, "REVIEW")}>Veröffentlichung zurückziehen</Button>}
+            {plan.status === "DRAFT" && <Button onClick={() => submitReview.mutate(plan.id)}><Send size={15} aria-hidden /> Zur Prüfung senden</Button>}
+            {plan.status === "REVIEW" && <Button onClick={() => publish.mutate(plan.id)}><Send size={15} aria-hidden /> Veröffentlichen</Button>}
+            {plan.status === "PUBLISHED" && <Button variant="secondary" onClick={() => unpublish.mutate(plan.id)}>Veröffentlichung zurückziehen</Button>}
           </>
         }
       />
@@ -127,7 +155,7 @@ export function PlanDetail({ id }: { id: string }) {
               datum={tag.datum}
               isToday={tag.datum === HEUTE}
               hinweis={tag.hinweis}
-              footer={<TagRezeptHinzufuegen plan={plan} tag={tag} rezepte={rezepte} />}
+              footer={bearbeitbar && <TagRezeptHinzufuegen plan={plan} tag={tag} rezepte={rezepte} />}
             >
               {tag.rezeptIds.map((rid) => {
                 const r = rezepte.find((rz) => rz.id === rid);
@@ -144,14 +172,16 @@ export function PlanDetail({ id }: { id: string }) {
                       </>
                     }
                     aside={
-                      <button
-                        type="button"
-                        onClick={() => removeRezeptVonTag(plan.id, tag.datum, rid)}
-                        aria-label={`${r.name} entfernen`}
-                        className="cursor-pointer text-muted hover:text-danger no-print"
-                      >
-                        <X size={14} aria-hidden />
-                      </button>
+                      bearbeitbar && (
+                        <button
+                          type="button"
+                          onClick={() => tag.id && updateTag.mutate({ plan, tagId: tag.id, rezeptIds: tag.rezeptIds.filter((x) => x !== rid), hinweis: tag.hinweis })}
+                          aria-label={`${r.name} entfernen`}
+                          className="cursor-pointer text-muted hover:text-danger no-print"
+                        >
+                          <X size={14} aria-hidden />
+                        </button>
+                      )
                     }
                   />
                 );
@@ -160,8 +190,6 @@ export function PlanDetail({ id }: { id: string }) {
           ))}
         </WeekCalendar>
       )}
-
-      <DummyNote />
     </>
   );
 }

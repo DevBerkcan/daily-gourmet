@@ -2,17 +2,12 @@
 
 import { useState } from "react";
 import { Card, CardHeader, Table, Td } from "@/components/ui";
-import type { Zutat } from "@/features/ingredients/types";
+import { useRezeptSkaliert } from "@/lib/services/recipes";
 import type { Rezept } from "../types";
 
-/**
- * Interaktive Hochrechnung (Phase 1 im Client).
- * In Phase 2 rechnet das Backend mit decimal-Arithmetik —
- * das Ergebnis dieser Ansicht ist eine Vorschau.
- */
-export function RezeptSkalierung({ rezept, zutaten }: { rezept: Rezept; zutaten: Zutat[] }) {
+export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
   const [portionen, setPortionen] = useState(rezept.standardPortionen * 25);
-  const faktor = portionen / rezept.standardPortionen;
+  const skaliert = useRezeptSkaliert(rezept.id, portionen);
 
   const rund = (n: number) => Math.round(n * 100) / 100;
 
@@ -20,7 +15,7 @@ export function RezeptSkalierung({ rezept, zutaten }: { rezept: Rezept; zutaten:
     <Card>
       <CardHeader
         title="Mengen hochrechnen"
-        hint={`Standardrezept: ${rezept.standardPortionen} Portionen · Faktor ${rund(faktor).toLocaleString("de-DE")}`}
+        hint={`Standardrezept: ${rezept.standardPortionen} Portionen${skaliert ? ` · Faktor ${rund(skaliert.faktor).toLocaleString("de-DE")}` : ""}`}
         actions={
           <label className="flex items-center gap-2 text-sm no-print">
             <span className="text-muted">Zielportionen</span>
@@ -36,16 +31,13 @@ export function RezeptSkalierung({ rezept, zutaten }: { rezept: Rezept; zutaten:
         }
       />
       <Table head={["Zutat", "Originalmenge", "Hochgerechnet"]}>
-        {rezept.zutaten.map((rz) => {
-          const z = zutaten.find((zt) => zt.id === rz.zutatId);
-          return (
-            <tr key={rz.zutatId}>
-              <Td className="font-medium text-ink">{z?.name ?? rz.zutatId}</Td>
-              <Td className="text-muted">{rz.menge.toLocaleString("de-DE")} {rz.einheit}</Td>
-              <Td className="font-semibold text-basil">{rund(rz.menge * faktor).toLocaleString("de-DE")} {rz.einheit}</Td>
-            </tr>
-          );
-        })}
+        {(skaliert?.zutaten ?? rezept.zutaten.map((rz) => ({ zutatId: rz.zutatId, name: rz.zutatId, originalMenge: rz.menge, hochgerechnet: rz.menge, einheit: rz.einheit }))).map((rz) => (
+          <tr key={rz.zutatId}>
+            <Td className="font-medium text-ink">{rz.name}</Td>
+            <Td className="text-muted">{rz.originalMenge.toLocaleString("de-DE")} {rz.einheit}</Td>
+            <Td className="font-semibold text-basil">{rund(rz.hochgerechnet).toLocaleString("de-DE")} {rz.einheit}</Td>
+          </tr>
+        ))}
       </Table>
     </Card>
   );

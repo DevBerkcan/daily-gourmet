@@ -3,29 +3,38 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState, DummyNote } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState } from "@/components/ui";
 import { Copy, Printer } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
-import { useRezepte, updateRezept, duplicateRezept, rezeptAllergeneLive, rezeptZusatzstoffeLive, rezeptBioAnteilLive, rezeptRegionalAnteilLive, rezeptWareneinsatzLive, naehrwerteProPortion } from "../store";
-import { useZutaten } from "@/features/ingredients/store";
+import {
+  useRezepte,
+  useUpdateRezept,
+  useDuplicateRezept,
+  rezeptAllergeneLive,
+  rezeptZusatzstoffeLive,
+  rezeptBioAnteilLive,
+  rezeptRegionalAnteilLive,
+  rezeptWareneinsatzLive,
+  naehrwerteProPortion,
+} from "@/lib/services/recipes";
+import { useZutaten } from "@/lib/services/ingredients";
 
 export function RezeptDetail({ id }: { id: string }) {
   const router = useRouter();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
   const rezept = rezepte.find((r) => r.id === id);
+  const updateRezept = useUpdateRezept();
+  const duplicateRezept = useDuplicateRezept();
   const [bearbeiten, setBearbeiten] = useState(false);
   const [naehrwertModus, setNaehrwertModus] = useState<"portion" | "100g">("portion");
 
   if (!rezept) {
     return (
-      <>
-        <Card>
-          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr) in dieser Sitzung." action={<Button href="/admin/recipes">Zurück zur Übersicht</Button>} />
-        </Card>
-        <DummyNote />
-      </>
+      <Card>
+        <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button href="/admin/recipes">Zurück zur Übersicht</Button>} />
+      </Card>
     );
   }
 
@@ -41,8 +50,7 @@ export function RezeptDetail({ id }: { id: string }) {
         <RezeptFormular
           initial={rezept}
           onSubmit={(input: RezeptFormDaten) => {
-            updateRezept(rezept.id, { ...input, erstelltVon: rezept.erstelltVon, erstelltAm: rezept.erstelltAm, aktualisiertAm: new Date().toISOString().slice(0, 10) });
-            setBearbeiten(false);
+            updateRezept.mutate({ id: rezept.id, input }, { onSuccess: () => setBearbeiten(false) });
           }}
           onAbbrechen={() => setBearbeiten(false)}
         />
@@ -73,8 +81,9 @@ export function RezeptDetail({ id }: { id: string }) {
             <Button
               variant="secondary"
               onClick={() => {
-                const kopie = duplicateRezept(rezept.id);
-                if (kopie) router.push(`/admin/recipes/${kopie.id}`);
+                duplicateRezept.mutate(rezept.id, {
+                  onSuccess: (kopie) => router.push(`/admin/recipes/${kopie.id}`),
+                });
               }}
             >
               <Copy size={15} aria-hidden /> Duplizieren
@@ -103,7 +112,7 @@ export function RezeptDetail({ id }: { id: string }) {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col gap-6">
-          <RezeptSkalierung rezept={rezept} zutaten={zutaten} />
+          <RezeptSkalierung rezept={rezept} />
 
           <Card>
             <CardHeader title="Zubereitung" hint={rezept.produktionshinweise ? `Produktionshinweis: ${rezept.produktionshinweise}` : undefined} />
@@ -201,13 +210,11 @@ export function RezeptDetail({ id }: { id: string }) {
                 <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.proPortion.toLocaleString("de-DE")} €</span>
               </div>
             ) : (
-              <p className="px-5 py-4 text-sm text-muted">Noch keine Einkaufspreise hinterlegt — die Zutaten dieses Rezepts kommen aus dem Rezepturimport und warten auf die Anbindung der Zutaten-API.</p>
+              <p className="px-5 py-4 text-sm text-muted">Für die Zutaten dieses Rezepts sind noch keine Einkaufspreise hinterlegt.</p>
             )}
           </Card>
         </div>
       </div>
-
-      <DummyNote />
     </>
   );
 }

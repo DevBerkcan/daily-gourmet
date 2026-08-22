@@ -1,16 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag, DummyNote } from "@/components/ui";
+import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag } from "@/components/ui";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
-import { standorte, standortById } from "@/lib/data";
-import { useEinrichtungen, addEinrichtung } from "@/lib/einrichtungenStore";
+import { useStandorte } from "@/lib/services/locations";
+import { useEinrichtungen, useCreateEinrichtung } from "@/lib/services/facilities";
 import { Plus, X } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 export function FacilitiesManager() {
   const einrichtungen = useEinrichtungen();
+  const standorte = useStandorte();
   const [suche, setSuche] = useState("");
   const [standortFilter, setStandortFilter] = useState("");
   const [formularOffen, setFormularOffen] = useState(false);
@@ -32,7 +33,7 @@ export function FacilitiesManager() {
         actions={<Button onClick={() => setFormularOffen(true)}><Plus size={16} aria-hidden /> Einrichtung anlegen</Button>}
       />
 
-      {formularOffen && <NeueEinrichtungFormular onClose={() => setFormularOffen(false)} />}
+      {formularOffen && <NeueEinrichtungFormular standorte={standorte} onClose={() => setFormularOffen(false)} />}
 
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3.5 no-print">
@@ -59,7 +60,7 @@ export function FacilitiesManager() {
                 <span>{e.ansprechpartner}</span>
                 <span className="block text-xs text-muted">{e.email}</span>
               </Td>
-              <Td className="text-muted">{standortById(e.standortId)?.name}</Td>
+              <Td className="text-muted">{e.standortName}</Td>
               <Td className="text-muted">{e.bestellfrist}</Td>
               <Td><span className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</span></Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
@@ -71,12 +72,12 @@ export function FacilitiesManager() {
           <p className="px-5 py-8 text-center text-sm text-muted">Keine Einrichtung gefunden.</p>
         )}
       </Card>
-      <DummyNote />
     </>
   );
 }
 
-function NeueEinrichtungFormular({ onClose }: { onClose: () => void }) {
+function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType<typeof useStandorte>; onClose: () => void }) {
+  const createEinrichtung = useCreateEinrichtung();
   const [name, setName] = useState("");
   const [anschrift, setAnschrift] = useState("");
   const [ansprechpartner, setAnsprechpartner] = useState("");
@@ -84,27 +85,26 @@ function NeueEinrichtungFormular({ onClose }: { onClose: () => void }) {
   const [telefon, setTelefon] = useState("");
   const [standortId, setStandortId] = useState(standorte[0]?.id ?? "");
   const [portionspreis, setPortionspreis] = useState(5);
-  const [bestellfrist, setBestellfrist] = useState("Vortag, 09:00 Uhr");
   const [wochentage, setWochentage] = useState<string[]>(["Mo", "Di", "Mi", "Do", "Fr"]);
 
-  const kannSpeichern = name.trim() !== "" && standortId !== "";
+  const kannSpeichern = name.trim() !== "" && standortId !== "" && !createEinrichtung.isPending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!kannSpeichern) return;
-    addEinrichtung({
-      name: name.trim(),
-      anschrift: anschrift.trim(),
-      ansprechpartner: ansprechpartner.trim(),
-      email: email.trim(),
-      telefon: telefon.trim(),
-      standortId,
-      bestellfrist,
-      aktiveWochentage: wochentage,
-      portionspreis,
-      status: "AKTIV",
-    });
-    onClose();
+    createEinrichtung.mutate(
+      {
+        name: name.trim(),
+        anschrift: anschrift.trim(),
+        ansprechpartner: ansprechpartner.trim(),
+        email: email.trim(),
+        telefon: telefon.trim(),
+        standortId,
+        aktiveWochentage: wochentage,
+        portionspreis,
+      },
+      { onSuccess: onClose }
+    );
   }
 
   return (
@@ -132,13 +132,13 @@ function NeueEinrichtungFormular({ onClose }: { onClose: () => void }) {
               {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
-          <TextField label="Bestellfrist" value={bestellfrist} onChange={setBestellfrist} />
           <NumberField label="Preis je Portion" value={portionspreis} onChange={setPortionspreis} min={0} step={0.1} suffix="€" />
         </div>
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
+        {createEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2 no-print">
           <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
-          <Button type="submit" disabled={!kannSpeichern}>Einrichtung speichern</Button>
+          <Button type="submit" disabled={!kannSpeichern}>{createEinrichtung.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
         </div>
       </form>
     </Card>

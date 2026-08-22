@@ -2,42 +2,36 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardHeader, StatCard, Table, Td } from "@/components/ui";
-import { umsatzUebersicht } from "@/features/meal-plans/data";
+import { useRevenue } from "@/lib/services/dashboard";
 
 const EUR = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
 export function UmsatzUebersicht() {
-  const zeilen = useMemo(() => umsatzUebersicht(), []);
+  const { woechentlich, bestellungen } = useRevenue();
 
   const wochen = useMemo(() => {
     const map = new Map<string, { key: string; label: string; jahr: number; kalenderwoche: number }>();
-    zeilen.forEach((z) => {
+    bestellungen.forEach((z) => {
       const key = `${z.jahr}-${z.kalenderwoche}`;
       if (!map.has(key)) map.set(key, { key, label: `KW ${z.kalenderwoche} / ${z.jahr}`, jahr: z.jahr, kalenderwoche: z.kalenderwoche });
     });
     return [...map.values()].sort((a, b) => b.jahr - a.jahr || b.kalenderwoche - a.kalenderwoche);
-  }, [zeilen]);
+  }, [bestellungen]);
 
   const [zeitraum, setZeitraum] = useState("alle");
 
-  const gefiltert = zeitraum === "alle" ? zeilen : zeilen.filter((z) => `${z.jahr}-${z.kalenderwoche}` === zeitraum);
+  const gefiltert = zeitraum === "alle" ? bestellungen : bestellungen.filter((z) => `${z.jahr}-${z.kalenderwoche}` === zeitraum);
 
   const gesamtUmsatz = gefiltert.reduce((s, z) => s + z.umsatz, 0);
   const gesamtPortionen = gefiltert.reduce((s, z) => s + z.portionen, 0);
   const anzahlWochen = new Set(gefiltert.map((z) => `${z.jahr}-${z.kalenderwoche}`)).size;
-  const anzahlEinrichtungen = new Set(gefiltert.map((z) => z.einrichtungId)).size;
+  const anzahlEinrichtungen = new Set(gefiltert.map((z) => z.einrichtungName)).size;
   const umsatzJeWoche = anzahlWochen > 0 ? gesamtUmsatz / anzahlWochen : 0;
 
   const balken = useMemo(() => {
-    const map = new Map<string, { label: string; jahr: number; kalenderwoche: number; umsatz: number }>();
-    gefiltert.forEach((z) => {
-      const key = `${z.jahr}-${z.kalenderwoche}`;
-      const eintrag = map.get(key) ?? { label: `KW ${z.kalenderwoche} / ${z.jahr}`, jahr: z.jahr, kalenderwoche: z.kalenderwoche, umsatz: 0 };
-      eintrag.umsatz += z.umsatz;
-      map.set(key, eintrag);
-    });
-    return [...map.values()].sort((a, b) => b.jahr - a.jahr || b.kalenderwoche - a.kalenderwoche);
-  }, [gefiltert]);
+    const gefilterteWochen = zeitraum === "alle" ? woechentlich : woechentlich.filter((w) => `${w.jahr}-${w.kalenderwoche}` === zeitraum);
+    return [...gefilterteWochen].sort((a, b) => b.jahr - a.jahr || b.kalenderwoche - a.kalenderwoche);
+  }, [woechentlich, zeitraum]);
   const maxUmsatz = Math.max(1, ...balken.map((b) => b.umsatz));
 
   return (
@@ -66,7 +60,7 @@ export function UmsatzUebersicht() {
         <div className="flex flex-col gap-2.5 px-5 py-4">
           {balken.map((b) => (
             <div key={`${b.jahr}-${b.kalenderwoche}`} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-xs text-muted">{b.label}</span>
+              <span className="w-24 shrink-0 text-xs text-muted">KW {b.kalenderwoche} / {b.jahr}</span>
               <div className="h-6 flex-1 overflow-hidden rounded bg-paper">
                 <div className="h-full rounded-r bg-basil" style={{ width: `${Math.max(2, (b.umsatz / maxUmsatz) * 100)}%` }} />
               </div>

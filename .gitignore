@@ -9,3 +9,12 @@ next-env.d.ts
 
 # Backend lebt in einem eigenen Git-Repository (siehe backend/README.md)
 /backend/
+
+# DailyGourmet.Api (.NET) — build output & local/deploy secrets, never committed
+DailyGourmet.Api/bin/
+DailyGourmet.Api/obj/
+DailyGourmet.Api/publish/
+*.user
+*.PublishSettings
+*.pubxml
+appsettings.*.local.json
