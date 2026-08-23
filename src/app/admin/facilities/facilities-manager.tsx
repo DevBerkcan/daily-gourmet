@@ -48,7 +48,7 @@ export function FacilitiesManager() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>
+        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>
           {gefiltert.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
@@ -61,6 +61,7 @@ export function FacilitiesManager() {
                 <span className="block text-xs text-muted">{e.email}</span>
               </Td>
               <Td className="text-muted">{e.standortName}</Td>
+              <Td className="text-muted">{e.routeNummer ?? "—"}</Td>
               <Td className="text-muted">{e.bestellfrist}</Td>
               <Td><span className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</span></Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
@@ -84,6 +85,7 @@ function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
   const [standortId, setStandortId] = useState(standorte[0]?.id ?? "");
+  const [routeNummer, setRouteNummer] = useState("");
   const [portionspreis, setPortionspreis] = useState(5);
   const [wochentage, setWochentage] = useState<string[]>(["Mo", "Di", "Mi", "Do", "Fr"]);
 
@@ -102,6 +104,7 @@ function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType
         standortId,
         aktiveWochentage: wochentage,
         portionspreis,
+        routeNummer: routeNummer.trim() || undefined,
       },
       { onSuccess: onClose }
     );
@@ -133,6 +136,7 @@ function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType
             </select>
           </label>
           <NumberField label="Preis je Portion" value={portionspreis} onChange={setPortionspreis} min={0} step={0.1} suffix="€" />
+          <TextField label="Tour" value={routeNummer} onChange={setRouteNummer} placeholder="z. B. RT1" hint="Nummernkreis siehe Einstellungen" />
         </div>
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
         {createEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}

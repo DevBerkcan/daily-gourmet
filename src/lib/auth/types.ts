@@ -2,8 +2,6 @@ export type Rolle =
   | "SUPER_ADMIN"
   | "TENANT_OWNER"
   | "TENANT_ADMIN"
-  | "KITCHEN_MANAGER"
-  | "KITCHEN_STAFF"
   | "FACILITY_ADMIN"
   | "FACILITY_USER"
   | "READ_ONLY"

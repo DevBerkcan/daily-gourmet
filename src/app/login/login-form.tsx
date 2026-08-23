@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChefHat, Soup, School, Truck, ShieldCheck } from "lucide-react";
+import { ChefHat, School, Truck, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/client";
 import type { Rolle } from "@/lib/auth/types";
@@ -11,8 +11,6 @@ const landingByRole: Record<Rolle, string> = {
   SUPER_ADMIN: "/super-admin/dashboard",
   TENANT_OWNER: "/admin/dashboard",
   TENANT_ADMIN: "/admin/dashboard",
-  KITCHEN_MANAGER: "/kitchen",
-  KITCHEN_STAFF: "/kitchen",
   FACILITY_ADMIN: "/portal/dashboard",
   FACILITY_USER: "/portal/dashboard",
   DRIVER: "/driver",
@@ -23,7 +21,6 @@ const landingByRole: Record<Rolle, string> = {
  * development. All seeded accounts share the same dev password. */
 const devAccounts = [
   { email: "miriam.hoffmann@daily-gourmet.de", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
-  { email: "petra.salomon@daily-gourmet.de", icon: Soup, label: "Küche", hint: "Daily Gourmet · Produktion" },
   { email: "markus.becker@daily-gourmet.de", icon: Truck, label: "Fahrer", hint: "Daily Gourmet · Auslieferung" },
   { email: "claudia.winter@musterschule-nord.example.de", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
   { email: "berkcan@gentle-webdesign.com", icon: ShieldCheck, label: "Plattform", hint: "Gentle Group · Super Admin" },

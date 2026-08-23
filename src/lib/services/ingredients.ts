@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
+import { api, apiFetchUpload } from "@/lib/api/client";
 import type { PagedResult } from "@/lib/api/types";
 import type { Einheit } from "@/lib/types";
 
@@ -11,6 +11,17 @@ export interface Naehrwerte {
   zuckerG: number;
   salzG: number;
   quelle: "Open Food Facts" | "USDA FoodData Central" | "Manuell";
+}
+
+export interface ZutatLieferantenpreis {
+  id: string;
+  zutatId: string;
+  lieferantId: string;
+  lieferantName: string;
+  lieferantArtikelnummer: string;
+  preis: number;
+  einheit: Einheit;
+  verfuegbarkeitshinweis?: string;
 }
 
 export interface Zutat {
@@ -31,6 +42,12 @@ export interface Zutat {
   regional: boolean;
   aktiv: boolean;
   naehrwertePro100: Naehrwerte;
+  /** "Rezeptrechner" (importiert) oder "Manuell" (von Fee angelegt/bearbeitet). */
+  quelle: "Rezeptrechner" | "Manuell";
+  manuellBearbeitet: boolean;
+  lieferantenpreise: ZutatLieferantenpreis[];
+  guenstigsterLieferantName?: string;
+  guenstigsterPreis?: number;
 }
 
 interface LookupDto {
@@ -59,6 +76,38 @@ interface IngredientDto {
   allergenNames: string[];
   allergenIds: string[];
   additives: string[];
+  source: string;
+  externalRefId: string | null;
+  isManuallyEdited: boolean;
+  lastSyncedAt: string | null;
+  supplierPrices: IngredientSupplierPriceDto[];
+  cheapestSupplierPriceId: string | null;
+  cheapestSupplierName: string | null;
+  cheapestPrice: number | null;
+}
+
+interface IngredientSupplierPriceDto {
+  id: string;
+  ingredientId: string;
+  supplierId: string;
+  supplierName: string;
+  supplierArticleNumber: string;
+  price: number;
+  unit: string;
+  availabilityNote: string | null;
+}
+
+function toZutatLieferantenpreis(dto: IngredientSupplierPriceDto): ZutatLieferantenpreis {
+  return {
+    id: dto.id,
+    zutatId: dto.ingredientId,
+    lieferantId: dto.supplierId,
+    lieferantName: dto.supplierName,
+    lieferantArtikelnummer: dto.supplierArticleNumber,
+    preis: dto.price,
+    einheit: unitToFrontend(dto.unit),
+    verfuegbarkeitshinweis: dto.availabilityNote ?? undefined,
+  };
 }
 
 // Backend enum member "Stueck" (C# identifiers can't hold umlauts) <-> frontend literal "Stück".
@@ -103,6 +152,11 @@ function toZutat(dto: IngredientDto): Zutat {
       salzG: dto.nutrition.saltG,
       quelle: quelleToFrontend[dto.nutrition.source] ?? "Manuell",
     },
+    quelle: dto.source === "Rezeptrechner" ? "Rezeptrechner" : "Manuell",
+    manuellBearbeitet: dto.isManuallyEdited,
+    lieferantenpreise: dto.supplierPrices.map(toZutatLieferantenpreis),
+    guenstigsterLieferantName: dto.cheapestSupplierName ?? undefined,
+    guenstigsterPreis: dto.cheapestPrice ?? undefined,
   };
 }
 
@@ -114,6 +168,22 @@ export function useIngredientCategories() {
 export function useAllergensLookup() {
   const query = useQuery({ queryKey: ["allergens"], queryFn: () => api.get<LookupDto[]>("/allergens") });
   return query.data ?? [];
+}
+
+export function useSuppliers() {
+  const query = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: () => api.get<PagedResult<LookupDto>>("/suppliers?pageSize=200"),
+  });
+  return query.data?.items ?? [];
+}
+
+export function useCreateSupplier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api.post<{ id: string; name: string }>("/suppliers", { name }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
+  });
 }
 
 export function useZutaten(): Zutat[] {
@@ -190,6 +260,116 @@ export function useUpdateZutat() {
     mutationFn: async ({ id, input }: { id: string; input: Omit<Zutat, "id"> }) => {
       const dto = await toSaveDto(input, categories, allergens);
       return api.put<IngredientDto>(`/ingredients/${id}`, dto);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
+  });
+}
+
+// ---- Rezeptrechner-Sync (überschreibt nie manuell bearbeitete Zutaten) ----
+
+export interface SyncErgebnis {
+  hinzugefuegt: number;
+  aktualisiert: number;
+  uebersprungenManuell: number;
+}
+
+interface SyncResultDto {
+  added: number;
+  updated: number;
+  skippedManuallyEdited: number;
+}
+
+/** Nimmt Zeilen im Rezeptrechner-Exportformat entgegen — Form noch ungeklärt (Fee hat noch kein
+ * Beispiel geschickt), deshalb hier als offener JSON-Body statt Datei-Upload. */
+export function useSyncIngredients() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: unknown[]) => api.post<SyncResultDto>("/ingredients/sync", rows),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
+    // Nur zur Anzeige im UI in die deutsche Form gebracht — Backend liefert bereits Englisch.
+  });
+}
+
+export function mapSyncResult(dto: { added: number; updated: number; skippedManuallyEdited: number }): SyncErgebnis {
+  return { hinzugefuegt: dto.added, aktualisiert: dto.updated, uebersprungenManuell: dto.skippedManuallyEdited };
+}
+
+// ---- Lieferantenpreise ----
+
+export function useIngredientSupplierPrices(zutatId: string) {
+  const query = useQuery({
+    queryKey: ["ingredient-prices", zutatId],
+    queryFn: () => api.get<IngredientSupplierPriceDto[]>(`/ingredients/${zutatId}/prices`),
+    enabled: !!zutatId,
+  });
+  return (query.data ?? []).map(toZutatLieferantenpreis);
+}
+
+export interface SaveLieferantenpreisInput {
+  lieferantId: string;
+  lieferantArtikelnummer: string;
+  preis: number;
+  einheit: Einheit;
+  verfuegbarkeitshinweis?: string;
+}
+
+function toSavePriceDto(input: SaveLieferantenpreisInput) {
+  return {
+    supplierId: input.lieferantId,
+    supplierArticleNumber: input.lieferantArtikelnummer,
+    price: input.preis,
+    unit: unitToBackend(input.einheit),
+    availabilityNote: input.verfuegbarkeitshinweis || null,
+  };
+}
+
+export function useSaveSupplierPrice(zutatId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SaveLieferantenpreisInput) => api.post<IngredientSupplierPriceDto>(`/ingredients/${zutatId}/prices`, toSavePriceDto(input)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+    },
+  });
+}
+
+export function useUpdateSupplierPrice(zutatId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ preisId, input }: { preisId: string; input: SaveLieferantenpreisInput }) =>
+      api.put<IngredientSupplierPriceDto>(`/ingredients/${zutatId}/prices/${preisId}`, toSavePriceDto(input)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+    },
+  });
+}
+
+export function useDeleteSupplierPrice(zutatId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (preisId: string) => api.delete(`/ingredients/${zutatId}/prices/${preisId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+    },
+  });
+}
+
+// ---- Preislisten-Import (CSV/XLSX) je Lieferant ----
+
+export interface PreislistenImportErgebnis {
+  gefunden: number;
+  nichtGefunden: { zeile: number; grund: string }[];
+}
+
+export function useImportSupplierPriceList(lieferantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File): Promise<PreislistenImportErgebnis> => {
+      const result = await apiFetchUpload<{ matched: number; unmatched: { rowNumber: number; reason: string }[] }>(`/suppliers/${lieferantId}/price-import`, file);
+      return { gefunden: result.matched, nichtGefunden: result.unmatched.map((u) => ({ zeile: u.rowNumber, grund: u.reason })) };
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
   });

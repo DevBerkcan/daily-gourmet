@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
 import { ZutatFormular } from "./zutat-formular";
+import { PreisePanel } from "./preise-panel";
 import { useZutaten, useUpdateZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function ZutatDetail({ id }: { id: string }) {
@@ -58,6 +59,8 @@ export function ZutatDetail({ id }: { id: string }) {
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <StatusBadge status={zutat.aktiv ? "AKTIV" : "INAKTIV"} />
+        <Tag tone={zutat.quelle === "Rezeptrechner" ? "neutral" : "green"}>{zutat.quelle}</Tag>
+        {zutat.manuellBearbeitet && zutat.quelle === "Rezeptrechner" && <Tag tone="amber">manuell angepasst</Tag>}
         {zutat.vegan ? <Tag tone="green">vegan</Tag> : zutat.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : null}
         {zutat.bio && <Tag tone="green">Bio</Tag>}
         {zutat.regional && <Tag tone="green">Regional</Tag>}
@@ -67,12 +70,15 @@ export function ZutatDetail({ id }: { id: string }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Einheiten & Preis" />
+          <CardHeader title="Einheiten & Standardpreis" hint="Fällt zurück, solange kein Lieferantenpreis hinterlegt ist" />
           <Table head={["Feld", "Wert"]}>
             <tr><Td className="font-medium text-ink">Basiseinheit</Td><Td>{zutat.basiseinheit}</Td></tr>
             <tr><Td className="font-medium text-ink">Einkaufseinheit</Td><Td>{zutat.einkaufseinheit || "—"}</Td></tr>
             <tr><Td className="font-medium text-ink">Umrechnungsfaktor</Td><Td>{zutat.umrechnungsfaktor}</Td></tr>
-            <tr><Td className="font-medium text-ink">Einkaufspreis</Td><Td>{zutat.einkaufspreis != null ? `${zutat.einkaufspreis.toLocaleString("de-DE")} €` : "—"}</Td></tr>
+            <tr><Td className="font-medium text-ink">Standardpreis</Td><Td>{zutat.einkaufspreis != null ? `${zutat.einkaufspreis.toLocaleString("de-DE")} €` : "—"}</Td></tr>
+            {zutat.guenstigsterPreis != null && (
+              <tr><Td className="font-medium text-ink">Günstigster Lieferant</Td><Td>{zutat.guenstigsterLieferantName} · {zutat.guenstigsterPreis.toLocaleString("de-DE")} €</Td></tr>
+            )}
           </Table>
         </Card>
 
@@ -87,6 +93,10 @@ export function ZutatDetail({ id }: { id: string }) {
             <tr><Td className="font-medium text-ink">Salz</Td><Td>{zutat.naehrwertePro100.salzG} g</Td></tr>
           </Table>
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <PreisePanel zutatId={zutat.id} />
       </div>
     </>
   );

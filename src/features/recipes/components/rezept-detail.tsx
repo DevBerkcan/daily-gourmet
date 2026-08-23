@@ -7,6 +7,7 @@ import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState } from
 import { Copy, Printer } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
+import { EtikettButton } from "./etikett-button";
 import {
   useRezepte,
   useUpdateRezept,
@@ -15,7 +16,6 @@ import {
   rezeptZusatzstoffeLive,
   rezeptBioAnteilLive,
   rezeptRegionalAnteilLive,
-  rezeptWareneinsatzLive,
   naehrwerteProPortion,
 } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
@@ -62,7 +62,6 @@ export function RezeptDetail({ id }: { id: string }) {
   const zusatzstoffe = rezeptZusatzstoffeLive(rezept, zutaten);
   const bioAnteil = rezeptBioAnteilLive(rezept, zutaten);
   const regionalAnteil = rezeptRegionalAnteilLive(rezept, zutaten);
-  const wareneinsatz = rezeptWareneinsatzLive(rezept, zutaten);
 
   return (
     <>
@@ -78,6 +77,7 @@ export function RezeptDetail({ id }: { id: string }) {
         actions={
           <>
             <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
+            <EtikettButton rezeptId={rezept.id} rezeptName={rezept.name} />
             <Button
               variant="secondary"
               onClick={() => {
@@ -102,6 +102,9 @@ export function RezeptDetail({ id }: { id: string }) {
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {rezept.vegan ? <Tag tone="green">vegan</Tag> : rezept.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : null}
+        {rezept.glutenfrei && <Tag tone="green">glutenfrei</Tag>}
+        {rezept.laktosefrei && <Tag tone="green">laktosefrei</Tag>}
+        {rezept.dgeZertifiziert && <Tag tone="green">DGE-zertifiziert</Tag>}
         {rezept.zielgruppen.map((z) => <Tag key={z}>{z}</Tag>)}
         {bioAnteil > 0 && <Tag tone="green">Bio-Anteil {bioAnteil} %</Tag>}
         {regionalAnteil > 0 && <Tag tone="green">Regional-Anteil {regionalAnteil} %</Tag>}
@@ -201,13 +204,13 @@ export function RezeptDetail({ id }: { id: string }) {
           )}
 
           <Card className="h-fit">
-            <CardHeader title="Kalkulation" hint="Wareneinsatz auf Basis der aktuellen Einkaufspreise" />
-            {rezept.zutaten.some((rz) => zutaten.find((z) => z.id === rz.zutatId)?.einkaufspreis != null) ? (
+            <CardHeader title="Kalkulation" hint="Geschätzt anhand der günstigsten hinterlegten Lieferantenpreise, ersatzweise Standardpreis" />
+            {rezept.geschaetzteKostenProPortion != null ? (
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 text-sm">
                 <span className="text-muted">Wareneinsatz gesamt:</span>
-                <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.gesamt.toLocaleString("de-DE")} €</span>
+                <span className="font-display text-lg font-semibold text-basil">{(rezept.geschaetzteKostenProPortion * rezept.standardPortionen).toLocaleString("de-DE")} €</span>
                 <span className="ml-auto text-muted">je Portion:</span>
-                <span className="font-display text-lg font-semibold text-basil">{wareneinsatz.proPortion.toLocaleString("de-DE")} €</span>
+                <span className="font-display text-lg font-semibold text-basil">{rezept.geschaetzteKostenProPortion.toLocaleString("de-DE")} €</span>
               </div>
             ) : (
               <p className="px-5 py-4 text-sm text-muted">Für die Zutaten dieses Rezepts sind noch keine Einkaufspreise hinterlegt.</p>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthContext";
 import type { Rolle } from "./types";
 
-/** Wraps an area layout (admin/kitchen/portal/driver/super-admin) — redirects to /login when
+/** Wraps an area layout (admin/portal/driver/super-admin) — redirects to /login when
  * there's no authenticated user, or the user's role isn't allowed in this area. Renders nothing
  * while the initial /auth/me check is in flight or a redirect is about to happen, so protected
  * pages never flash their content to an unauthorized visitor. */

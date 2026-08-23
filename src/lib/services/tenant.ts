@@ -36,22 +36,26 @@ export function useUpdateCurrentTenant() {
 export interface TenantSettings {
   bestellfristTageVorher: number;
   bestellfristUhrzeit: string;
+  sameDayAnpassungFrist: string;
   wochenendenAusschliessen: boolean;
   pruefungVorVeroeffentlichung: boolean;
   zurueckziehenNurOhneBestellungen: boolean;
   praefixEinrichtungen: string;
   praefixArtikel: string;
+  praefixTouren: string;
   benachrichtigungen: { eventKey: string; aktiv: boolean }[];
 }
 
 interface TenantSettingsDto {
   defaultOrderDeadlineOffsetDays: number;
   defaultOrderDeadlineTime: string;
+  sameDayAdjustmentDeadlineTime: string;
   excludeWeekendsFromDeadline: boolean;
   requireReviewBeforePublish: boolean;
   unpublishRequiresNoOrders: boolean;
   facilityNumberPrefix: string;
   articleNumberPrefix: string;
+  routeNumberPrefix: string;
   notificationSettings: { eventKey: string; enabled: boolean }[];
 }
 
@@ -59,11 +63,13 @@ function toTenantSettings(dto: TenantSettingsDto): TenantSettings {
   return {
     bestellfristTageVorher: dto.defaultOrderDeadlineOffsetDays,
     bestellfristUhrzeit: dto.defaultOrderDeadlineTime.slice(0, 5),
+    sameDayAnpassungFrist: dto.sameDayAdjustmentDeadlineTime.slice(0, 5),
     wochenendenAusschliessen: dto.excludeWeekendsFromDeadline,
     pruefungVorVeroeffentlichung: dto.requireReviewBeforePublish,
     zurueckziehenNurOhneBestellungen: dto.unpublishRequiresNoOrders,
     praefixEinrichtungen: dto.facilityNumberPrefix,
     praefixArtikel: dto.articleNumberPrefix,
+    praefixTouren: dto.routeNumberPrefix,
     benachrichtigungen: dto.notificationSettings.map((n) => ({ eventKey: n.eventKey, aktiv: n.enabled })),
   };
 }

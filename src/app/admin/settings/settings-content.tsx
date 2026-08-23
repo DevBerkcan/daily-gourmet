@@ -30,6 +30,10 @@ export function SettingsContent() {
               <span>Wochenenden von Fristberechnung ausnehmen</span>
               <Tag tone={settings?.wochenendenAusschliessen ? "green" : "neutral"}>{settings ? (settings.wochenendenAusschliessen ? "Aktiv" : "Inaktiv") : "…"}</Tag>
             </div>
+            <div className="flex items-center justify-between gap-3">
+              <span>Anpassung am Liefertag (nur reduzieren)</span>
+              <span className="font-medium text-ink">{settings ? `bis ${settings.sameDayAnpassungFrist} Uhr` : "…"}</span>
+            </div>
           </div>
         </Card>
         <Card>
@@ -63,6 +67,10 @@ export function SettingsContent() {
             <div className="flex items-center justify-between gap-3">
               <span>Nummernkreis Artikel</span>
               <span className="font-medium text-ink">{settings?.praefixArtikel || "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span>Nummernkreis Touren</span>
+              <span className="font-medium text-ink">{settings?.praefixTouren || "—"}</span>
             </div>
           </div>
         </Card>

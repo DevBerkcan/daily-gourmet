@@ -1,11 +1,21 @@
 export type SpeiseplanStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "CLOSED" | "ARCHIVED";
 
+/** Menülinie — die parallele Ernährungsschiene, der ein Gericht an diesem Tag zugeordnet ist. Ein
+ * Tag/Linie kann mehr als ein Gericht enthalten (z. B. Hauptgericht + gemeinsames Dessert). */
+export type Menuelinie = "Normalkost" | "Veggie" | "Glutenfrei-Laktosefrei" | "Alternativ";
+export const MENUELINIEN: Menuelinie[] = ["Normalkost", "Veggie", "Glutenfrei-Laktosefrei", "Alternativ"];
+
+export interface SpeiseplanGericht {
+  rezeptId: string;
+  menuelinie: Menuelinie;
+}
+
 export interface SpeiseplanTag {
   /** Backend-Tages-Id (GUID) — nötig, um gezielt einen Tag per PUT zu aktualisieren. */
   id?: string;
   wochentag: string;
   datum: string;
-  rezeptIds: string[];
+  gerichte: SpeiseplanGericht[];
   hinweis?: string;
 }
 
@@ -17,6 +27,9 @@ export interface Speiseplan {
   standortIds: string[];
   einrichtungIds: string[];
   tage: SpeiseplanTag[];
+  /** Eine von bis zu 8 wiederverwendbaren Grundwochen ("Vorlage 1-8") statt einer echten Woche. */
+  istVorlage?: boolean;
+  vorlagenSlot?: number;
 }
 
 /** Aufbereitete Umsatz-Zeile für das Reporting (aus Bestellung + Speiseplan + Einrichtung verknüpft). */

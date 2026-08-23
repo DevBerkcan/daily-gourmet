@@ -17,6 +17,9 @@ export interface Einrichtung {
   portionspreis: number;
   status: "AKTIV" | "INAKTIV";
   notizen?: string;
+  /** Stabile Standard-Tour, z. B. "RT1" (Nummernkreis, siehe Einstellungen) — Grundlage für die
+   * Gruppierung im gedruckten Produktionsplan. */
+  routeNummer?: string;
 }
 
 interface FacilityDto {
@@ -33,6 +36,7 @@ interface FacilityDto {
   portionPrice: number;
   status: string;
   notes: string | null;
+  routeNumber: string | null;
 }
 
 export interface CreateEinrichtungInput {
@@ -45,6 +49,7 @@ export interface CreateEinrichtungInput {
   aktiveWochentage: string[];
   portionspreis: number;
   notizen?: string;
+  routeNummer?: string;
 }
 
 function toEinrichtung(dto: FacilityDto): Einrichtung {
@@ -65,6 +70,7 @@ function toEinrichtung(dto: FacilityDto): Einrichtung {
     portionspreis: dto.portionPrice,
     status: dto.status as Einrichtung["status"],
     notizen: dto.notes ?? undefined,
+    routeNummer: dto.routeNumber ?? undefined,
   };
 }
 
@@ -100,7 +106,82 @@ export function useCreateEinrichtung() {
         activeWeekdays: input.aktiveWochentage.join(","),
         portionPrice: input.portionspreis,
         notes: input.notizen,
+        routeNumber: input.routeNummer,
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["facilities"] }),
+  });
+}
+
+// ---- Schließtage/Abwesenheit ----
+
+export interface EinrichtungSchliesstag {
+  id: string;
+  einrichtungId: string;
+  von: string;
+  bis: string;
+  hinweis?: string;
+  vonVerwaltungErfasst: boolean;
+}
+
+interface FacilityClosureDto {
+  id: string;
+  facilityId: string;
+  startDate: string;
+  endDate: string;
+  note: string | null;
+  addedByAdmin: boolean;
+}
+
+function toSchliesstag(dto: FacilityClosureDto): EinrichtungSchliesstag {
+  return { id: dto.id, einrichtungId: dto.facilityId, von: dto.startDate, bis: dto.endDate, hinweis: dto.note ?? undefined, vonVerwaltungErfasst: dto.addedByAdmin };
+}
+
+/** Für Verwaltung: Schließtage einer beliebigen Einrichtung. */
+export function useEinrichtungSchliesstage(facilityId: string | undefined): EinrichtungSchliesstag[] {
+  const query = useQuery({
+    queryKey: ["facility-closures", facilityId],
+    queryFn: () => api.get<FacilityClosureDto[]>(`/facilities/${facilityId}/closures`),
+    enabled: !!facilityId,
+  });
+  return (query.data ?? []).map(toSchliesstag);
+}
+
+export function useAddEinrichtungSchliesstag(facilityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { von: string; bis: string; hinweis?: string }) =>
+      api.post<FacilityClosureDto>(`/facilities/${facilityId}/closures`, { startDate: input.von, endDate: input.bis, note: input.hinweis }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["facility-closures", facilityId] }),
+  });
+}
+
+export function useDeleteEinrichtungSchliesstag(facilityId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (closureId: string) => api.delete(`/facilities/${facilityId}/closures/${closureId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["facility-closures", facilityId] }),
+  });
+}
+
+/** Portal-Selbstbedienung: Schließtage der eigenen Einrichtung, ohne facilityId. */
+export function usePortalSchliesstage(): EinrichtungSchliesstag[] {
+  const query = useQuery({ queryKey: ["portal-facility-closures"], queryFn: () => api.get<FacilityClosureDto[]>("/portal/facility-closures") });
+  return (query.data ?? []).map(toSchliesstag);
+}
+
+export function useAddPortalSchliesstag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { von: string; bis: string; hinweis?: string }) =>
+      api.post<FacilityClosureDto>("/portal/facility-closures", { startDate: input.von, endDate: input.bis, note: input.hinweis }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["portal-facility-closures"] }),
+  });
+}
+
+export function useDeletePortalSchliesstag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (closureId: string) => api.delete(`/portal/facility-closures/${closureId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["portal-facility-closures"] }),
   });
 }

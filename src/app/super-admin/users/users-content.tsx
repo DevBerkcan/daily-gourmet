@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PageHeader, Card, Table, Td, StatusBadge, SearchInput, Tag } from "@/components/ui";
 import { useTenants, useGlobalUsers } from "@/lib/services/super-admin";
 
-const ROLLEN = ["TENANT_OWNER", "TENANT_ADMIN", "KITCHEN_MANAGER", "KITCHEN_STAFF", "FACILITY_ADMIN", "FACILITY_USER", "DRIVER", "READ_ONLY"];
+const ROLLEN = ["TENANT_OWNER", "TENANT_ADMIN", "FACILITY_ADMIN", "FACILITY_USER", "DRIVER", "READ_ONLY"];
 
 export function UsersContent() {
   const tenants = useTenants();

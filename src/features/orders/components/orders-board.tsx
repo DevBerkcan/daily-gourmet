@@ -13,14 +13,16 @@ const statusOptionen: { value: "ALLE" | BestellStatus; label: string }[] = [
 ];
 
 export function OrdersBoard() {
-  const bestellungen = useBestellungen();
-  const einrichtungen = useEinrichtungen();
   const speiseplaene = useSpeiseplaene();
+  const [kalenderwoche, setKalenderwoche] = useState<"ALLE" | number>("ALLE");
+  const bestellungen = useBestellungen(kalenderwoche === "ALLE" ? undefined : { kalenderwoche });
+  const einrichtungen = useEinrichtungen();
   const confirmBestellung = useConfirmBestellung();
   const lockBestellung = useLockBestellung();
   const overrideBestellung = useOverrideBestellung();
   const [suche, setSuche] = useState("");
   const [status, setStatus] = useState<"ALLE" | BestellStatus>("ALLE");
+  const verfuegbareWochen = Array.from(new Set(speiseplaene.map((p) => p.kalenderwoche))).sort((a, b) => a - b);
   const [korrekturId, setKorrekturId] = useState<string | null>(null);
   const [begruendung, setBegruendung] = useState("");
   const [meldung, setMeldung] = useState<string | null>(null);
@@ -54,6 +56,10 @@ export function OrdersBoard() {
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3.5 no-print">
           <label className="relative min-w-56 flex-1"><Search size={16} className="pointer-events-none absolute left-3 top-3 text-muted" aria-hidden /><span className="sr-only">Bestellung suchen</span><input type="search" value={suche} onChange={(event) => setSuche(event.target.value)} placeholder="Einrichtung oder Bestellnummer suchen …" className="min-h-10 w-full rounded-lg border border-line bg-surface pl-9 pr-3 text-sm" /></label>
           <select value={status} onChange={(event) => setStatus(event.target.value as "ALLE" | BestellStatus)} aria-label="Bestellstatus filtern" className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">{statusOptionen.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+          <select value={kalenderwoche} onChange={(event) => setKalenderwoche(event.target.value === "ALLE" ? "ALLE" : Number(event.target.value))} aria-label="Kalenderwoche filtern" className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
+            <option value="ALLE">Alle Kalenderwochen</option>
+            {verfuegbareWochen.map((w) => <option key={w} value={w}>KW {w}</option>)}
+          </select>
           <Button variant="secondary" onClick={csvExportieren}><Download size={15} aria-hidden /> CSV exportieren</Button>
         </div>
         <Table head={["Bestellung & Einrichtung", "Woche", "Portionen", "Status", "Abgesendet", "Frist", "Aktion"]}>

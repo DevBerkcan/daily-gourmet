@@ -46,13 +46,18 @@ export interface LieferRoute {
   id: string;
   name: string;
   datum: string;
-  fahrerId: string;
-  fahrerName: string;
+  /** Undefined solange kein Fahrer die Route übernommen hat — siehe useRouteUebernehmen. */
+  fahrerId?: string;
+  fahrerName?: string;
   standortId?: string;
   start: string;
   rueckkehr?: string;
   kilometer?: number;
   status: RouteStatus;
+  handoffWarmBestaetigt: boolean;
+  handoffKaltBestaetigt: boolean;
+  handoffDessertBestaetigt: boolean;
+  handoffBestaetigtAm?: string;
   stopps: RoutenStopp[];
 }
 
@@ -98,14 +103,18 @@ interface DeliveryRouteDto {
   id: string;
   name: string;
   date: string;
-  driverId: string;
-  driverName: string;
+  driverId: string | null;
+  driverName: string | null;
   locationId: string | null;
   locationName: string | null;
   plannedDepartureTime: string;
   plannedReturnTime: string | null;
   distanceKm: number | null;
   status: string;
+  handoffWarmConfirmed: boolean;
+  handoffKaltConfirmed: boolean;
+  handoffDessertConfirmed: boolean;
+  handoffConfirmedAt: string | null;
   stops: RouteStopDto[];
 }
 
@@ -116,13 +125,17 @@ function toLieferRoute(dto: DeliveryRouteDto): LieferRoute {
     id: dto.id,
     name: dto.name,
     datum: dto.date,
-    fahrerId: dto.driverId,
-    fahrerName: dto.driverName,
+    fahrerId: dto.driverId ?? undefined,
+    fahrerName: dto.driverName ?? undefined,
     standortId: dto.locationId ?? undefined,
     start: trimTime(dto.plannedDepartureTime) ?? "",
     rueckkehr: trimTime(dto.plannedReturnTime),
     kilometer: dto.distanceKm ?? undefined,
     status: dto.status as RouteStatus,
+    handoffWarmBestaetigt: dto.handoffWarmConfirmed,
+    handoffKaltBestaetigt: dto.handoffKaltConfirmed,
+    handoffDessertBestaetigt: dto.handoffDessertConfirmed,
+    handoffBestaetigtAm: dto.handoffConfirmedAt ?? undefined,
     stopps: dto.stops.map((s) => ({
       id: s.id,
       einrichtungId: s.facilityId,
@@ -193,17 +206,26 @@ export function useAktuelleFahrerRouten(nurHeute = false): LieferRoute[] {
 export function useCreateLieferRoute() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; datum: string; fahrerId: string; standortId?: string; start: string; einrichtungIds: string[] }) =>
+    mutationFn: (input: { name: string; datum: string; fahrerId?: string; standortId?: string; start: string; einrichtungIds: string[] }) =>
       api.post<DeliveryRouteDto>("/routes", {
         name: input.name,
         date: input.datum,
-        driverId: input.fahrerId,
+        driverId: input.fahrerId || null,
         locationId: input.standortId,
         plannedDepartureTime: input.start,
         facilityIds: input.einrichtungIds,
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["routes"] }),
   });
+}
+
+/** Pool nicht übernommener Routen, die ein Fahrer sich selbst nehmen kann. */
+export function useVerfuegbareRouten(datum?: string): LieferRoute[] {
+  const query = useQuery({
+    queryKey: ["routes-available", datum],
+    queryFn: () => api.get<PagedResult<DeliveryRouteDto>>(`/routes${toQueryString({ date: datum, unassigned: true, pageSize: 100 })}`),
+  });
+  return (query.data?.items ?? []).map(toLieferRoute);
 }
 
 function invalidateRoutes(queryClient: ReturnType<typeof useQueryClient>) {
@@ -235,6 +257,28 @@ export function useAdvanceRouteStatus() {
       }
       return ergebnis;
     },
+    onSuccess: () => invalidateRoutes(queryClient),
+  });
+}
+
+/** Selbstständige Übernahme einer noch unvergebenen Route ("Route übernehmen"). */
+export function useRouteUebernehmen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (routeId: string) => api.post<DeliveryRouteDto>(`/routes/${routeId}/claim`),
+    onSuccess: () => {
+      invalidateRoutes(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["routes-available"] });
+    },
+  });
+}
+
+/** Ersetzt die entfallene Küchen-Bestätigung: warm/kalt/Dessert je Route, vor Ladebeginn. */
+export function useHandoffBestaetigen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, warm, kalt, dessert }: { routeId: string; warm: boolean; kalt: boolean; dessert: boolean }) =>
+      api.put<DeliveryRouteDto>(`/routes/${routeId}/handoff`, { warmConfirmed: warm, kaltConfirmed: kalt, dessertConfirmed: dessert }),
     onSuccess: () => invalidateRoutes(queryClient),
   });
 }

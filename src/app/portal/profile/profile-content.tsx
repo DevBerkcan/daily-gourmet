@@ -4,6 +4,7 @@ import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Tag, EmptyState }
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useEinrichtung } from "@/lib/services/facilities";
 import { useUsers } from "@/lib/services/users";
+import { SchliesstagePanel } from "@/features/facilities/components/schliesstage-panel";
 
 export function ProfileContent() {
   const { user } = useAuth();
@@ -47,6 +48,9 @@ export function ProfileContent() {
             ))}
           </Table>
         </Card>
+      </div>
+      <div className="mt-6">
+        <SchliesstagePanel />
       </div>
     </>
   );

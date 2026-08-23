@@ -56,7 +56,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return (payload?.data ?? (undefined as T)) as T;
 }
 
-/** For endpoints returning a raw file (CSV export) rather than the JSON envelope. */
+/** For endpoints returning a raw file (CSV/PDF export) rather than the JSON envelope. */
 export async function apiFetchBlob(path: string): Promise<Blob> {
   const token = getToken();
   const headers: Record<string, string> = {};
@@ -65,6 +65,24 @@ export async function apiFetchBlob(path: string): Promise<Blob> {
   const response = await fetch(`${BASE_URL}${path}`, { headers });
   if (!response.ok) throw new ApiError(`Anfrage fehlgeschlagen (${response.status}).`, response.status);
   return response.blob();
+}
+
+/** For multipart file uploads (e.g. a supplier price-list import) — no Content-Type header is set
+ * so the browser attaches its own multipart boundary; response still unwraps the usual envelope. */
+export async function apiFetchUpload<T>(path: string, file: File): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${BASE_URL}${path}`, { method: "POST", headers, body: formData });
+  const payload: ApiEnvelope<T> = await response.json();
+  if (!response.ok || payload.success === false) {
+    throw new ApiError(payload?.message ?? `Anfrage fehlgeschlagen (${response.status}).`, response.status);
+  }
+  return payload.data as T;
 }
 
 export const api = {

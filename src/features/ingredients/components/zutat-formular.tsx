@@ -15,6 +15,7 @@ function leer(): Omit<Zutat, "id"> {
     name: "", artikelnummer: "", kategorie: ZUTAT_KATEGORIEN[0], basiseinheit: "kg", einkaufseinheit: "", umrechnungsfaktor: 1,
     einkaufspreis: undefined, lieferant: "", allergene: [], zusatzstoffe: [], vegetarisch: true, vegan: true, bio: false, regional: false, aktiv: true,
     naehrwertePro100: { kcal: 0, eiweissG: 0, fettG: 0, kohlenhydrateG: 0, zuckerG: 0, salzG: 0, quelle: "Manuell" },
+    quelle: "Manuell", manuellBearbeitet: false, lieferantenpreise: [],
   };
 }
 

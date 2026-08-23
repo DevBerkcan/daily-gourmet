@@ -39,6 +39,15 @@ export interface Rezept {
   zutaten: RezeptZutat[];
   vegetarisch: boolean;
   vegan: boolean;
+  /** Optional statt boolean, damit der große importierte Dummy-Datensatz (data.ts) nicht für jedes
+   * der 91 Gerichte von Hand nachgepflegt werden muss — echte API-Daten liefern immer true/false. */
+  glutenfrei?: boolean;
+  laktosefrei?: boolean;
+  /** Erfüllt die DGE-Zertifizierung, die der Betrieb hält — Grundlage für das Logo im Speiseplan. */
+  dgeZertifiziert?: boolean;
+  /** Serverseitig berechnet aus den aktuellen (günstigsten) Zutatenpreisen — nie gespeichert, siehe
+   * RecipeHandler.ComputeEstimatedCostPerPortion. Undefined, solange keine Preise hinterlegt sind. */
+  geschaetzteKostenProPortion?: number;
   produktionshinweise?: string;
   /** DGE-"Lebenswelten", für die das Rezept freigegeben ist. */
   zielgruppen: string[];

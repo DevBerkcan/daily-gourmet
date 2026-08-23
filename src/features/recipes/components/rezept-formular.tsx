@@ -14,7 +14,8 @@ function leer(erstesZutatId: string): RezeptFormDaten {
   return {
     name: "", beschreibung: "", kategorie: REZEPT_KATEGORIEN[0], standardPortionen: 10, zubereitungszeitMin: 30, schwierigkeit: "Einfach",
     zubereitungsschritte: [""], zutaten: erstesZutatId ? [{ zutatId: erstesZutatId, menge: 1, einheit: "kg" }] : [],
-    vegetarisch: true, vegan: true, produktionshinweise: "", zielgruppen: [], bildUrl: undefined,
+    vegetarisch: true, vegan: true, glutenfrei: false, laktosefrei: false, dgeZertifiziert: false,
+    produktionshinweise: "", zielgruppen: [], bildUrl: undefined,
     kerntemperaturC: undefined, lagerhinweis: "", haltbarkeitNachZubereitung: "", aktiv: true,
   };
 }
@@ -76,9 +77,12 @@ export function RezeptFormular({
           <NumberField label="Anzahl Portionen" value={r.standardPortionen} onChange={(v) => set("standardPortionen", v)} min={1} required />
           <NumberField label="Zubereitungszeit" value={r.zubereitungszeitMin} onChange={(v) => set("zubereitungszeitMin", v)} min={1} suffix="Min." />
           <div className="sm:col-span-2"><ImageField label="Foto" value={r.bildUrl} onChange={(v) => set("bildUrl", v)} /></div>
-          <div className="flex gap-4 sm:col-span-2">
+          <div className="flex flex-wrap gap-4 sm:col-span-2">
             <CheckboxRow checked={r.vegetarisch} onChange={() => set("vegetarisch", !r.vegetarisch)} label="Vegetarisch" />
             <CheckboxRow checked={r.vegan} onChange={() => set("vegan", !r.vegan)} label="Vegan" />
+            <CheckboxRow checked={r.glutenfrei ?? false} onChange={() => set("glutenfrei", !r.glutenfrei)} label="Glutenfrei" />
+            <CheckboxRow checked={r.laktosefrei ?? false} onChange={() => set("laktosefrei", !r.laktosefrei)} label="Laktosefrei" />
+            <CheckboxRow checked={r.dgeZertifiziert ?? false} onChange={() => set("dgeZertifiziert", !r.dgeZertifiziert)} label="DGE-zertifiziert" />
             <CheckboxRow checked={r.aktiv} onChange={() => set("aktiv", !r.aktiv)} label="Aktiv" />
           </div>
         </div>

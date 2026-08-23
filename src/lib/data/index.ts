@@ -14,8 +14,6 @@ export const benutzer: Benutzer[] = [
   { id: "u-001", tenantId: null, name: "Berk-Can Aydin", email: "admin@gentle-group.de", rolle: "SUPER_ADMIN", status: "AKTIV", letzteAnmeldung: "heute, 08:12", fehlgeschlageneLogins: 0 },
   { id: "u-002", tenantId: "t-001", name: "Miriam Hoffmann", email: "m.hoffmann@dailygourmet.de", rolle: "TENANT_OWNER", status: "AKTIV", letzteAnmeldung: "heute, 07:45", fehlgeschlageneLogins: 0 },
   { id: "u-003", tenantId: "t-001", name: "Jan Berger", email: "j.berger@dailygourmet.de", rolle: "TENANT_ADMIN", status: "AKTIV", letzteAnmeldung: "gestern, 16:20", fehlgeschlageneLogins: 1 },
-  { id: "u-004", tenantId: "t-001", name: "Petra Salomon", email: "p.salomon@dailygourmet.de", rolle: "KITCHEN_MANAGER", status: "AKTIV", letzteAnmeldung: "heute, 05:58", fehlgeschlageneLogins: 0 },
-  { id: "u-005", tenantId: "t-001", name: "Ali Demir", email: "a.demir@dailygourmet.de", rolle: "KITCHEN_STAFF", status: "AKTIV", letzteAnmeldung: "heute, 06:03", fehlgeschlageneLogins: 0 },
   { id: "u-006", tenantId: "t-001", name: "Claudia Winter", email: "sekretariat@musterschule-nord.de", rolle: "FACILITY_ADMIN", status: "AKTIV", letzteAnmeldung: "gestern, 09:12", fehlgeschlageneLogins: 0, einrichtungId: "f-001" },
   { id: "u-007", tenantId: "t-001", name: "Frank Otten", email: "verwaltung@musterschule-sued.de", rolle: "FACILITY_USER", status: "EINGELADEN", letzteAnmeldung: null, fehlgeschlageneLogins: 0, einrichtungId: "f-002" },
   { id: "u-008", tenantId: "t-001", name: "Ruth Sander", email: "r.sander@dailygourmet.de", rolle: "READ_ONLY", status: "DEAKTIVIERT", letzteAnmeldung: "12.06.2026", fehlgeschlageneLogins: 0 },

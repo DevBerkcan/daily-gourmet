@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
+import { ProduktionsplanDruckButton } from "./produktionsplan-druck-button";
 import { useEinrichtungen } from "@/lib/services/facilities";
-import type { Speiseplan, SpeiseplanTag } from "../types";
+import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
+import { MENUELINIEN } from "../types";
 import type { Rezept } from "@/features/recipes/types";
 import { Eye, Send, X } from "lucide-react";
 import {
@@ -25,15 +27,18 @@ const BINDENDE_STATUS = ["SUBMITTED", "CONFIRMED", "LOCKED"];
 function TagRezeptHinzufuegen({
   plan,
   tag,
+  menuelinie,
   rezepte,
 }: {
   plan: Speiseplan;
   tag: SpeiseplanTag;
+  menuelinie: Menuelinie;
   rezepte: Rezept[];
 }) {
   const [offen, setOffen] = useState(false);
   const updateTag = useUpdateSpeiseplanTag();
-  const verfuegbar = rezepte.filter((r) => !tag.rezeptIds.includes(r.id));
+  const inDieserLinie = new Set(tag.gerichte.filter((g) => g.menuelinie === menuelinie).map((g) => g.rezeptId));
+  const verfuegbar = rezepte.filter((r) => !inDieserLinie.has(r.id));
 
   if (verfuegbar.length === 0) return null;
 
@@ -53,11 +58,11 @@ function TagRezeptHinzufuegen({
     <div className="mt-1 flex flex-col gap-1.5 no-print">
       <select
         autoFocus
-        aria-label={`Rezept für ${tag.wochentag} hinzufügen`}
+        aria-label={`Rezept für ${tag.wochentag} (${menuelinie}) hinzufügen`}
         defaultValue=""
         onChange={(e) => {
           if (e.target.value && tag.id) {
-            updateTag.mutate({ plan, tagId: tag.id, rezeptIds: [...tag.rezeptIds, e.target.value], hinweis: tag.hinweis });
+            updateTag.mutate({ plan, tagId: tag.id, gerichte: [...tag.gerichte, { rezeptId: e.target.value, menuelinie }], hinweis: tag.hinweis });
             setOffen(false);
           }
         }}
@@ -155,35 +160,52 @@ export function PlanDetail({ id }: { id: string }) {
               datum={tag.datum}
               isToday={tag.datum === HEUTE}
               hinweis={tag.hinweis}
-              footer={bearbeitbar && <TagRezeptHinzufuegen plan={plan} tag={tag} rezepte={rezepte} />}
+              footer={plan.status !== "DRAFT" && <ProduktionsplanDruckButton mealPlanId={plan.id} datum={tag.datum} wochentag={tag.wochentag} />}
             >
-              {tag.rezeptIds.map((rid) => {
-                const r = rezepte.find((rz) => rz.id === rid);
-                if (!r) return null;
-                const allergene = rezeptAllergeneLive(r, zutaten);
+              {MENUELINIEN.map((linie) => {
+                const gerichteInLinie = tag.gerichte.filter((g) => g.menuelinie === linie);
                 return (
-                  <MealTile
-                    key={rid}
-                    rezept={r}
-                    tags={
-                      <>
-                        {r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">veg.</Tag> : null}
-                        {allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}
-                      </>
-                    }
-                    aside={
-                      bearbeitbar && (
-                        <button
-                          type="button"
-                          onClick={() => tag.id && updateTag.mutate({ plan, tagId: tag.id, rezeptIds: tag.rezeptIds.filter((x) => x !== rid), hinweis: tag.hinweis })}
-                          aria-label={`${r.name} entfernen`}
-                          className="cursor-pointer text-muted hover:text-danger no-print"
-                        >
-                          <X size={14} aria-hidden />
-                        </button>
-                      )
-                    }
-                  />
+                  <div key={linie} className="flex flex-col gap-1.5">
+                    <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-muted">{linie}</p>
+                    {gerichteInLinie.map((gericht) => {
+                      const r = rezepte.find((rz) => rz.id === gericht.rezeptId);
+                      if (!r) return null;
+                      const allergene = rezeptAllergeneLive(r, zutaten);
+                      return (
+                        <MealTile
+                          key={`${linie}-${gericht.rezeptId}`}
+                          rezept={r}
+                          tags={
+                            <>
+                              {r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">veg.</Tag> : null}
+                              {allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}
+                            </>
+                          }
+                          aside={
+                            bearbeitbar && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  tag.id &&
+                                  updateTag.mutate({
+                                    plan,
+                                    tagId: tag.id,
+                                    gerichte: tag.gerichte.filter((g) => !(g.rezeptId === gericht.rezeptId && g.menuelinie === linie)),
+                                    hinweis: tag.hinweis,
+                                  })
+                                }
+                                aria-label={`${r.name} entfernen`}
+                                className="cursor-pointer text-muted hover:text-danger no-print"
+                              >
+                                <X size={14} aria-hidden />
+                              </button>
+                            )
+                          }
+                        />
+                      );
+                    })}
+                    {bearbeitbar && <TagRezeptHinzufuegen plan={plan} tag={tag} menuelinie={linie} rezepte={rezepte} />}
+                  </div>
                 );
               })}
             </DayColumn>

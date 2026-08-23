@@ -7,8 +7,6 @@ export type Rolle =
   | "SUPER_ADMIN"
   | "TENANT_OWNER"
   | "TENANT_ADMIN"
-  | "KITCHEN_MANAGER"
-  | "KITCHEN_STAFF"
   | "FACILITY_ADMIN"
   | "FACILITY_USER"
   | "READ_ONLY";
@@ -56,6 +54,9 @@ export interface Einrichtung {
 }
 
 export interface BestellPosition {
+  /** Backend-Positions-Id (GUID) — nötig für die Anpassung am Liefertag (nur Reduzieren, siehe
+   * useAdjustBestellungSameDay); beim Speichern eines ganzen Entwurfs/Absendens ungenutzt. */
+  id?: string;
   datum: string;
   rezeptId: string;
   portionen: number;

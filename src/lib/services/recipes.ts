@@ -39,6 +39,10 @@ interface RecipeDto {
   difficulty: string;
   vegetarian: boolean;
   vegan: boolean;
+  glutenFree: boolean;
+  lactoseFree: boolean;
+  dgeCertified: boolean;
+  estimatedCostPerPortion: number | null;
   productionNotes: string | null;
   imageUrl: string | null;
   coreTemperatureC: number | null;
@@ -94,6 +98,10 @@ function toRezept(dto: RecipeDto): Rezept {
     zutaten: dto.ingredients.map((i) => ({ zutatId: i.ingredientId, menge: i.quantity, einheit: unitToFrontend(i.unit) })),
     vegetarisch: dto.vegetarian,
     vegan: dto.vegan,
+    glutenfrei: dto.glutenFree,
+    laktosefrei: dto.lactoseFree,
+    dgeZertifiziert: dto.dgeCertified,
+    geschaetzteKostenProPortion: dto.estimatedCostPerPortion ?? undefined,
     produktionshinweise: dto.productionNotes ?? undefined,
     zielgruppen: dto.targetGroupNames,
     bildUrl: dto.imageUrl ?? undefined,
@@ -148,6 +156,9 @@ function toSaveDto(input: RezeptFormDaten, categories: LookupDto[], targetGroups
     difficulty: input.schwierigkeit,
     vegetarian: input.vegetarisch,
     vegan: input.vegan,
+    glutenFree: input.glutenfrei,
+    lactoseFree: input.laktosefrei,
+    dgeCertified: input.dgeZertifiziert,
     active: input.aktiv,
     productionNotes: input.produktionshinweise || null,
     imageUrl: input.bildUrl || null,

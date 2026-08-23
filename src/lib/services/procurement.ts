@@ -4,7 +4,7 @@ import type { PagedResult } from "@/lib/api/types";
 import type { Einheit } from "@/lib/types";
 import { unitToFrontend } from "./ingredients";
 
-export type EinkaufslistenStatus = "DRAFT" | "REVIEWED" | "ORDERED" | "COMPLETED";
+export type EinkaufslistenStatus = "DRAFT" | "REVIEWED" | "READY_FOR_APPROVAL" | "APPROVED" | "ORDERED" | "COMPLETED";
 
 export interface EinkaufslistenPosition {
   id: string;
@@ -24,6 +24,10 @@ export interface Einkaufsliste {
   kalenderwoche: number;
   standortId: string;
   standortName: string;
+  /** Jede Liste gehört zu genau einem Lieferanten ("pro Einkaufsliste ein Lieferant") — undefined
+   * nur für die Sammelliste ohne bekannten Lieferantenpreis. */
+  lieferantId?: string;
+  lieferantName?: string;
   status: EinkaufslistenStatus;
   positionen: EinkaufslistenPosition[];
 }
@@ -46,6 +50,8 @@ interface ProcurementListDto {
   calendarWeek: number;
   locationId: string;
   locationName: string;
+  supplierId: string | null;
+  supplierName: string | null;
   status: string;
   items: ProcurementListItemDto[];
 }
@@ -57,6 +63,8 @@ function toEinkaufsliste(dto: ProcurementListDto): Einkaufsliste {
     kalenderwoche: dto.calendarWeek,
     standortId: dto.locationId,
     standortName: dto.locationName,
+    lieferantId: dto.supplierId ?? undefined,
+    lieferantName: dto.supplierName ?? undefined,
     status: dto.status as EinkaufslistenStatus,
     positionen: dto.items.map((i) => ({
       id: i.id,
@@ -114,12 +122,20 @@ export function useUpdateEinkaufslistenStatus() {
   });
 }
 
-export async function exportEinkaufslisteCsv(id: string, dateiname: string) {
-  const blob = await apiFetchBlob(`/procurement-lists/${id}/export`);
+export async function exportEinkaufsliste(id: string, format: "csv" | "pdf", dateiname: string) {
+  const blob = await apiFetchBlob(`/procurement-lists/${id}/export?format=${format}`);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = dateiname;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+/** Token-Freigabe aus der E-Mail — funktioniert ohne Login, siehe
+ * ProcurementListHandler.ApproveAsync auf dem Backend. */
+export function useApproveEinkaufsliste() {
+  return useMutation({
+    mutationFn: ({ id, token }: { id: string; token: string }) => api.post<ProcurementListDto>(`/procurement-lists/${id}/approve?token=${encodeURIComponent(token)}`),
+  });
 }

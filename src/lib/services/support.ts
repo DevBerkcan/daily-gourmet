@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, toQueryString } from "@/lib/api/client";
+import { api, apiFetchUpload, toQueryString } from "@/lib/api/client";
 import type { PagedResult } from "@/lib/api/types";
 import type { SupportKategorie, SupportPrioritaet, SupportStatus } from "@/features/support/types";
 
@@ -11,6 +11,13 @@ export interface SupportAntwort {
   rolle: "SUPER_ADMIN" | "TENANT_OWNER";
   text: string;
   zeitpunkt: string;
+}
+
+export interface SupportAnhang {
+  id: string;
+  dateiname: string;
+  contentType: string;
+  groesseBytes: number;
 }
 
 export interface SupportTicket {
@@ -27,6 +34,7 @@ export interface SupportTicket {
   status: SupportStatus;
   erstelltAm: string;
   antworten: SupportAntwort[];
+  anhaenge: SupportAnhang[];
 }
 
 interface SupportTicketReplyDto {
@@ -35,6 +43,13 @@ interface SupportTicketReplyDto {
   role: string;
   text: string;
   createdAt: string;
+}
+
+interface SupportTicketAttachmentDto {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
 }
 
 interface SupportTicketDto {
@@ -51,6 +66,7 @@ interface SupportTicketDto {
   createdByUserName: string;
   createdAt: string;
   replies: SupportTicketReplyDto[];
+  attachments: SupportTicketAttachmentDto[];
 }
 
 const formatDateTime = (iso: string) =>
@@ -71,6 +87,7 @@ function toSupportTicket(dto: SupportTicketDto): SupportTicket {
     status: dto.status as SupportStatus,
     erstelltAm: formatDateTime(dto.createdAt),
     antworten: dto.replies.map((r) => ({ id: r.id, autor: r.authorName, rolle: r.role as SupportAntwort["rolle"], text: r.text, zeitpunkt: formatDateTime(r.createdAt) })),
+    anhaenge: dto.attachments.map((a) => ({ id: a.id, dateiname: a.fileName, contentType: a.contentType, groesseBytes: a.sizeBytes })),
   };
 }
 
@@ -98,6 +115,16 @@ export function useAddSupportAntwort() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, text }: { id: string; text: string }) => api.post<SupportTicketDto>(`/support/tickets/${id}/replies`, { text }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["support-tickets"] }),
+  });
+}
+
+/** Manueller Datei-Upload (z. B. Screenshot) statt Live-Bildschirmaufnahme — es gibt aktuell keine
+ * Capture-Bibliothek im Projekt, ein Upload-Feld deckt den gleichen Bedarf für den MVP ab. */
+export function useUploadSupportAnhang() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, file }: { ticketId: string; file: File }) => apiFetchUpload<SupportTicketAttachmentDto>(`/support/tickets/${ticketId}/attachments`, file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["support-tickets"] }),
   });
 }

@@ -34,18 +34,18 @@ function toBestellung(dto: OrderDto): Bestellung {
     einrichtungId: dto.facilityId,
     speiseplanId: dto.mealPlanId,
     status: dto.status as BestellStatus,
-    positionen: dto.items.map((i) => ({ datum: i.date, rezeptId: i.recipeId, portionen: i.portions, hinweis: i.note ?? undefined })),
+    positionen: dto.items.map((i) => ({ id: i.id, datum: i.date, rezeptId: i.recipeId, portionen: i.portions, hinweis: i.note ?? undefined })),
     abgesendetAm: dto.submittedAt ? formatDateTime(dto.submittedAt) : undefined,
     frist: formatDateTime(dto.deadlineAtUtc),
   };
 }
 
-export function useBestellungen(filters?: { einrichtungId?: string; speiseplanId?: string; status?: BestellStatus }): Bestellung[] {
+export function useBestellungen(filters?: { einrichtungId?: string; speiseplanId?: string; kalenderwoche?: number; status?: BestellStatus }): Bestellung[] {
   const query = useQuery({
     queryKey: ["orders", filters],
     queryFn: () =>
       api.get<PagedResult<OrderDto>>(
-        `/orders${toQueryString({ facilityId: filters?.einrichtungId, mealPlanId: filters?.speiseplanId, status: filters?.status, pageSize: 500 })}`
+        `/orders${toQueryString({ facilityId: filters?.einrichtungId, mealPlanId: filters?.speiseplanId, calendarWeek: filters?.kalenderwoche, status: filters?.status, pageSize: 500 })}`
       ),
   });
   return (query.data?.items ?? []).map(toBestellung);
@@ -75,6 +75,23 @@ function useOrderAction(action: "submit" | "confirm" | "lock") {
 export const useSubmitBestellung = () => useOrderAction("submit");
 export const useConfirmBestellung = () => useOrderAction("confirm");
 export const useLockBestellung = () => useOrderAction("lock");
+
+export interface AnpassungPosition {
+  positionId: string;
+  portionen: number;
+  hinweis: string;
+}
+
+/** Anpassung am Liefertag selbst — nur Reduzieren möglich, nie erhöhen oder neu hinzufügen, bis zur
+ * tagesaktuellen Frist (Standard 9 Uhr, siehe TenantSettings.SameDayAdjustmentDeadlineTime). */
+export function useAdjustBestellungSameDay() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, positionen }: { id: string; positionen: AnpassungPosition[] }) =>
+      api.put<OrderDto>(`/orders/${id}/adjust`, { items: positionen.map((p) => ({ itemId: p.positionId, portions: p.portionen, note: p.hinweis })) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders"] }),
+  });
+}
 
 export function useOverrideBestellung() {
   const queryClient = useQueryClient();
