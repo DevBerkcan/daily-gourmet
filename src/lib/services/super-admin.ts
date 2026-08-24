@@ -125,6 +125,18 @@ export function useGlobalUsers(filters?: { tenantId?: string; role?: string; sta
   return (query.data?.items ?? []).map(toGlobalUser);
 }
 
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; email: string; role: string; tenantId?: string }) =>
+      api.post<UserDto>("/super-admin/users", { name: input.name, email: input.email, role: input.role, tenantId: input.tenantId || undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenants"] });
+    },
+  });
+}
+
 export function useTenantUsers(tenantId: string): GlobalUser[] {
   const query = useQuery({
     queryKey: ["super-admin-tenant-users", tenantId],
