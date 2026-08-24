@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Table, Td, StatusBadge } from "@/components/ui";
+import { Table, Td, StatusBadge, Pagination } from "@/components/ui";
 import { useStandorte } from "@/lib/services/locations";
 import { useSpeiseplaene, useDuplicateSpeiseplan, useDeleteSpeiseplan, useSubmitReviewSpeiseplan, usePublishSpeiseplan } from "@/lib/services/meal-plans";
+import { usePagination } from "@/lib/use-pagination";
 
 export function WochenplanTabelle() {
   const plaene = useSpeiseplaene();
@@ -12,10 +13,12 @@ export function WochenplanTabelle() {
   const deleteSpeiseplan = useDeleteSpeiseplan();
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(plaene);
 
   return (
-    <Table head={["Kalenderwoche", "Status", "Standorte", "Einrichtungen", "Gerichte", "Aktionen"]}>
-      {plaene.map((p) => (
+    <>
+      <Table head={["Kalenderwoche", "Status", "Standorte", "Einrichtungen", "Gerichte", "Aktionen"]}>
+        {pageItems.map((p) => (
         <tr key={p.id} className="hover:bg-paper">
           <Td>
             <Link href={`/admin/meal-plans/${p.id}`} className="font-medium text-basil hover:underline">KW {p.kalenderwoche} / {p.jahr}</Link>
@@ -41,7 +44,12 @@ export function WochenplanTabelle() {
             </div>
           </Td>
         </tr>
-      ))}
-    </Table>
+        ))}
+      </Table>
+      <Pagination
+        page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+        onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+      />
+    </>
   );
 }

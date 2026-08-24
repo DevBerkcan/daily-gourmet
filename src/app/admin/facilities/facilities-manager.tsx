@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag } from "@/components/ui";
+import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag, Pagination } from "@/components/ui";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen, useCreateEinrichtung } from "@/lib/services/facilities";
+import { usePagination } from "@/lib/use-pagination";
 import { Plus, X } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -24,6 +25,7 @@ export function FacilitiesManager() {
       return treffer && amStandort;
     });
   }, [einrichtungen, suche, standortFilter]);
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   return (
     <>
@@ -49,7 +51,7 @@ export function FacilitiesManager() {
           </select>
         </div>
         <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>
-          {gefiltert.map((e) => (
+          {pageItems.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
                 <span className="font-medium text-ink">{e.name}</span>
@@ -72,6 +74,10 @@ export function FacilitiesManager() {
         {gefiltert.length === 0 && (
           <p className="px-5 py-8 text-center text-sm text-muted">Keine Einrichtung gefunden.</p>
         )}
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
       </Card>
     </>
   );

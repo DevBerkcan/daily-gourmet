@@ -53,7 +53,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(payload?.message ?? `Anfrage fehlgeschlagen (${response.status}).`, response.status);
   }
 
-  return (payload?.data ?? (undefined as T)) as T;
+  // Not `payload?.data ?? undefined` — that coerces a legitimate `data: null` (e.g. "no active
+  // support session") into `undefined`, which TanStack Query v5 rejects from a queryFn. Only an
+  // absent payload (non-JSON response) should become undefined here.
+  return (payload ? payload.data : undefined) as T;
 }
 
 /** For endpoints returning a raw file (CSV/PDF export) rather than the JSON envelope. */
@@ -76,6 +79,25 @@ export async function apiFetchUpload<T>(path: string, file: File): Promise<T> {
 
   const formData = new FormData();
   formData.append("file", file);
+
+  const response = await fetch(`${BASE_URL}${path}`, { method: "POST", headers, body: formData });
+  const payload: ApiEnvelope<T> = await response.json();
+  if (!response.ok || payload.success === false) {
+    throw new ApiError(payload?.message ?? `Anfrage fehlgeschlagen (${response.status}).`, response.status);
+  }
+  return payload.data as T;
+}
+
+/** Like apiFetchUpload, but for endpoints that take several named files in one request (e.g. the
+ * Rezeptrechner import, which needs the Zutaten-Mengen and Artikeldaten exports together) — keys
+ * of `files` must match the backend action's IFormFile parameter names exactly. */
+export async function apiFetchUploadMulti<T>(path: string, files: Record<string, File>): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const formData = new FormData();
+  for (const [field, file] of Object.entries(files)) formData.append(field, file);
 
   const response = await fetch(`${BASE_URL}${path}`, { method: "POST", headers, body: formData });
   const payload: ApiEnvelope<T> = await response.json();

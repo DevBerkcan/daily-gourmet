@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Table, Td, StatusBadge } from "@/components/ui";
+import { Card, Table, Td, StatusBadge, Pagination } from "@/components/ui";
 import { useProduktionsplaene } from "@/lib/services/production";
+import { usePagination } from "@/lib/use-pagination";
 
 export function Produktionstabelle() {
   const plaene = useProduktionsplaene();
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(plaene);
 
   return (
     <div className="flex flex-col gap-6">
-      {plaene.map((pp) => {
+      {pageItems.map((pp) => {
         const gesamt = pp.positionen.reduce((s, p) => s + p.bestellteMenge + p.zusatzMenge, 0);
         return (
           <Card key={pp.id}>
@@ -43,6 +45,12 @@ export function Produktionstabelle() {
           </Card>
         );
       })}
+      <Card>
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
+      </Card>
     </div>
   );
 }

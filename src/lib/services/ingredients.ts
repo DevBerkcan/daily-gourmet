@@ -265,35 +265,6 @@ export function useUpdateZutat() {
   });
 }
 
-// ---- Rezeptrechner-Sync (überschreibt nie manuell bearbeitete Zutaten) ----
-
-export interface SyncErgebnis {
-  hinzugefuegt: number;
-  aktualisiert: number;
-  uebersprungenManuell: number;
-}
-
-interface SyncResultDto {
-  added: number;
-  updated: number;
-  skippedManuallyEdited: number;
-}
-
-/** Nimmt Zeilen im Rezeptrechner-Exportformat entgegen — Form noch ungeklärt (Fee hat noch kein
- * Beispiel geschickt), deshalb hier als offener JSON-Body statt Datei-Upload. */
-export function useSyncIngredients() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (rows: unknown[]) => api.post<SyncResultDto>("/ingredients/sync", rows),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
-    // Nur zur Anzeige im UI in die deutsche Form gebracht — Backend liefert bereits Englisch.
-  });
-}
-
-export function mapSyncResult(dto: { added: number; updated: number; skippedManuallyEdited: number }): SyncErgebnis {
-  return { hinzugefuegt: dto.added, aktualisiert: dto.updated, uebersprungenManuell: dto.skippedManuallyEdited };
-}
-
 // ---- Lieferantenpreise ----
 
 export function useIngredientSupplierPrices(zutatId: string) {

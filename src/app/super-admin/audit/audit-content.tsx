@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PageHeader, Card, Table, Td, SearchInput } from "@/components/ui";
+import { PageHeader, Card, Table, Td, SearchInput, Pagination } from "@/components/ui";
 import { useTenants, useGlobalAuditLog } from "@/lib/services/super-admin";
+import { usePagination } from "@/lib/use-pagination";
 
 export function AuditContent() {
   const tenants = useTenants();
@@ -10,6 +11,7 @@ export function AuditContent() {
   const [tenantId, setTenantId] = useState("");
   const eintraege = useGlobalAuditLog({ tenantId: tenantId || undefined });
   const gefiltert = eintraege.filter((a) => `${a.benutzer} ${a.aktion}`.toLowerCase().includes(suche.toLowerCase()));
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   return (
     <>
@@ -23,7 +25,7 @@ export function AuditContent() {
           </select>
         </div>
         <Table head={["Zeitpunkt", "Mandant", "Benutzer", "Aktion", "Entität", "Begründung"]}>
-          {gefiltert.map((a) => (
+          {pageItems.map((a) => (
             <tr key={a.id} className="hover:bg-paper">
               <Td className="whitespace-nowrap text-muted">{a.zeitpunkt}</Td>
               <Td>{a.tenantName ?? "Plattform"}</Td>
@@ -34,6 +36,10 @@ export function AuditContent() {
             </tr>
           ))}
         </Table>
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
       </Card>
     </>
   );

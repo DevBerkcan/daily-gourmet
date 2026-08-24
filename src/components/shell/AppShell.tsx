@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, X, LogOut, type LucideIcon } from "lucide-react";
+import { Menu, X, LogOut, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export interface NavItem {
@@ -33,12 +33,30 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
   const router = useRouter();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const tone = toneStyles[areaTone];
 
   function handleLogout() {
     logout();
     router.push("/login");
   }
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) setProfileOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setProfileOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileOpen]);
 
   const navList = (
     <nav aria-label="Hauptnavigation" className="flex flex-col gap-1 px-3">
@@ -105,14 +123,36 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               KW 32 · Donnerstag, 06. August 2026
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button type="button" aria-label="Benachrichtigungen" className="relative flex size-10 items-center justify-center rounded-lg text-ink hover:bg-paper">
-              <Bell size={18} />
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-saffron" aria-hidden />
-            </button>
-            <div className={`hidden size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink sm:flex`} aria-hidden>
+          <div className="relative" ref={profileRef}>
+            <button
+              type="button"
+              onClick={() => setProfileOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              aria-label="Profilmenü"
+              className={`flex size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink transition-colors hover:bg-basil-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil`}
+            >
               {userName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-            </div>
+            </button>
+            {profileOpen && (
+              <div role="menu" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
+                <div className="border-b border-line px-4 py-3">
+                  <p className="truncate text-sm font-medium text-ink">{userName}</p>
+                  <p className="text-xs text-muted">{userRole}</p>
+                </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setProfileOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex min-h-10 w-full cursor-pointer items-center gap-2 px-4 text-sm font-medium text-danger hover:bg-danger-soft"
+                >
+                  <LogOut size={15} aria-hidden /> Abmelden
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

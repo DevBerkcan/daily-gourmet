@@ -2,9 +2,10 @@
 
 import { type FormEvent, useState } from "react";
 import { Plus } from "lucide-react";
-import { PageHeader, Card, CardHeader, Button, Table, Td, StatusBadge, SearchInput, Tag } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { useTenants, useGlobalUsers, useCreateUser } from "@/lib/services/super-admin";
 import { ApiError } from "@/lib/api/client";
+import { usePagination } from "@/lib/use-pagination";
 
 const ROLLEN = ["TENANT_OWNER", "TENANT_ADMIN", "FACILITY_ADMIN", "FACILITY_USER", "DRIVER", "READ_ONLY"];
 const ANLEGBARE_ROLLEN = ["SUPER_ADMIN", ...ROLLEN];
@@ -74,6 +75,7 @@ export function UsersContent() {
   const [formularOffen, setFormularOffen] = useState(false);
   const benutzer = useGlobalUsers({ tenantId: tenantId || undefined, role: rolle || undefined });
   const gefiltert = benutzer.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(suche.toLowerCase()));
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   return (
     <>
@@ -96,7 +98,7 @@ export function UsersContent() {
           </select>
         </div>
         <Table head={["Benutzer", "Mandant", "Rolle", "Status", "Letzte Anmeldung", "Fehlversuche"]}>
-          {gefiltert.map((u) => (
+          {pageItems.map((u) => (
             <tr key={u.id} className="hover:bg-paper">
               <Td>
                 <span className="font-medium text-ink">{u.name}</span>
@@ -110,6 +112,10 @@ export function UsersContent() {
             </tr>
           ))}
         </Table>
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
       </Card>
     </>
   );

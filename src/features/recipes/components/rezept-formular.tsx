@@ -72,6 +72,7 @@ export function RezeptFormular({
         <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><TextField label="Name" value={r.name} onChange={(v) => set("name", v)} required /></div>
           <div className="sm:col-span-2"><TextareaField label="Beschreibung" value={r.beschreibung} onChange={(v) => set("beschreibung", v)} /></div>
+          <TextField label="Rezeptnummer" value={r.rezeptnummer ?? ""} onChange={(v) => set("rezeptnummer", v || undefined)} placeholder="z. B. Woche 3" />
           <SelectField label="Kategorie" value={r.kategorie} onChange={(v) => set("kategorie", v)} options={REZEPT_KATEGORIEN} />
           <SelectField label="Schwierigkeitsgrad" value={r.schwierigkeit} onChange={(v) => set("schwierigkeit", v as Schwierigkeitsgrad)} options={SCHWIERIGKEITSGRADE} />
           <NumberField label="Anzahl Portionen" value={r.standardPortionen} onChange={(v) => set("standardPortionen", v)} min={1} required />

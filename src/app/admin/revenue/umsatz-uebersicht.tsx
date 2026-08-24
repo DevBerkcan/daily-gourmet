@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, CardHeader, StatCard, Table, Td } from "@/components/ui";
+import { Card, CardHeader, StatCard, Table, Td, Pagination } from "@/components/ui";
 import { useRevenue } from "@/lib/services/dashboard";
+import { usePagination } from "@/lib/use-pagination";
 
 const EUR = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
@@ -33,6 +34,7 @@ export function UmsatzUebersicht() {
     return [...gefilterteWochen].sort((a, b) => b.jahr - a.jahr || b.kalenderwoche - a.kalenderwoche);
   }, [woechentlich, zeitraum]);
   const maxUmsatz = Math.max(1, ...balken.map((b) => b.umsatz));
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   return (
     <>
@@ -73,7 +75,7 @@ export function UmsatzUebersicht() {
       <Card>
         <CardHeader title="Umsatz je Bestellung" />
         <Table head={["Woche", "Einrichtung", "Standort", "Portionen", "Preis/Portion", "Umsatz"]}>
-          {gefiltert.map((z) => (
+          {pageItems.map((z) => (
             <tr key={z.bestellungId} className="hover:bg-paper">
               <Td className="text-muted">KW {z.kalenderwoche} / {z.jahr}</Td>
               <Td className="font-medium text-ink">{z.einrichtungName}</Td>
@@ -84,6 +86,10 @@ export function UmsatzUebersicht() {
             </tr>
           ))}
         </Table>
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
       </Card>
     </>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChefHat, School, Truck, ShieldCheck } from "lucide-react";
+import { ChefHat, School, Truck } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/client";
 import type { Rolle } from "@/lib/auth/types";
@@ -23,7 +23,6 @@ const devAccounts = [
   { email: "miriam.hoffmann@daily-gourmet.de", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
   { email: "markus.becker@daily-gourmet.de", icon: Truck, label: "Fahrer", hint: "Daily Gourmet · Auslieferung" },
   { email: "claudia.winter@musterschule-nord.example.de", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
-  { email: "berkcan@gentle-webdesign.com", icon: ShieldCheck, label: "Plattform", hint: "Gentle Group · Super Admin" },
 ];
 const DEV_PASSWORD = "Passwort123!";
 

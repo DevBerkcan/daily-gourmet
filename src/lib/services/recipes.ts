@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
+import { api, apiFetchUploadMulti } from "@/lib/api/client";
 import type { PagedResult } from "@/lib/api/types";
 import type { Rezept, NutriScore } from "@/features/recipes/types";
 import { unitToFrontend, unitToBackend } from "./ingredients";
@@ -205,6 +205,52 @@ export function useArchiveRezept() {
   return useMutation({
     mutationFn: (id: string) => api.post(`/recipes/${id}/archive`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+  });
+}
+
+// ---- Rezeptrechner-Import (Rezepte + die darin verwendeten Zutaten in einem Schritt) ----
+
+export interface RezeptImportErgebnis {
+  rezepteNeu: number;
+  rezepteAktualisiert: number;
+  zutatenNeu: number;
+  zutatenAktualisiert: number;
+  zutatenUebersprungenManuell: number;
+  hinweise: string[];
+}
+
+interface RecipeImportResultDto {
+  recipesAdded: number;
+  recipesUpdated: number;
+  ingredientsAdded: number;
+  ingredientsUpdated: number;
+  ingredientsSkippedManuallyEdited: number;
+  warnings: { reason: string }[];
+}
+
+/** Nimmt die beiden Rezeptrechner-Exportdateien entgegen ("Rezepte-Zutaten-Mengen" und
+ * "Artikeldaten-Kennzeichnung") und legt/aktualisiert Rezepte plus die darin referenzierten Zutaten
+ * in einem Rutsch an — siehe RecipeHandler.ImportFromRezeptrechnerAsync. Bereits manuell bearbeitete
+ * Zutaten werden nie überschrieben. Die dritte mögliche Exportdatei (Preise-Wareneinsatz) wird nicht
+ * eingelesen: Preise gehören auf die einzelne Zutat (Lieferantenpreise-Screen), nicht aufs Rezept. */
+export function useImportRezeptrechner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ zutatenMengenFile, artikeldatenFile }: { zutatenMengenFile: File; artikeldatenFile: File }): Promise<RezeptImportErgebnis> => {
+      const result = await apiFetchUploadMulti<RecipeImportResultDto>("/recipes/import", { zutatenMengenFile, artikeldatenFile });
+      return {
+        rezepteNeu: result.recipesAdded,
+        rezepteAktualisiert: result.recipesUpdated,
+        zutatenNeu: result.ingredientsAdded,
+        zutatenAktualisiert: result.ingredientsUpdated,
+        zutatenUebersprungenManuell: result.ingredientsSkippedManuallyEdited,
+        hinweise: result.warnings.map((w) => w.reason),
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+    },
   });
 }
 

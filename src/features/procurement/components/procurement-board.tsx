@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, Download, Printer, Send } from "lucide-react";
-import { Button, Card, CardHeader, EmptyState, StatCard, StatusBadge, Table, Td, Tag } from "@/components/ui";
+import { Button, Card, CardHeader, EmptyState, StatCard, StatusBadge, Table, Td, Tag, Pagination } from "@/components/ui";
 import {
   useEinkaufslisten,
   useUpdateEinkaufsmenge,
@@ -11,6 +11,7 @@ import {
   type EinkaufslistenStatus,
 } from "@/lib/services/procurement";
 import { useZutaten } from "@/lib/services/ingredients";
+import { usePagination } from "@/lib/use-pagination";
 
 const NEXT_STATUS: Record<EinkaufslistenStatus, EinkaufslistenStatus | null> = {
   DRAFT: "REVIEWED",
@@ -36,13 +37,14 @@ export function ProcurementBoard() {
   const updateStatus = useUpdateEinkaufslistenStatus();
   const [bearbeiteteMengen, setBearbeiteteMengen] = useState<Record<string, number>>({});
   const [ausgewaehlteId, setAusgewaehlteId] = useState<string | null>(null);
+  const aktuelleWocheSicher = listen[0]?.kalenderwoche;
+  const aeltereListen = listen.filter((l) => l.kalenderwoche !== aktuelleWocheSicher);
+  const aeltereListenSeite = usePagination(aeltereListen);
 
   if (listen.length === 0) {
     return <Card><EmptyState title="Keine Einkaufsliste vorhanden" text="Für den aktuellen Standort wurde noch keine Bedarfsliste aus einem Produktionsplan erzeugt." /></Card>;
   }
-  const aktuelleWoche = listen[0].kalenderwoche;
-  const listenDieserWoche = listen.filter((l) => l.kalenderwoche === aktuelleWoche);
-  const aeltereListen = listen.filter((l) => l.kalenderwoche !== aktuelleWoche);
+  const listenDieserWoche = listen.filter((l) => l.kalenderwoche === aktuelleWocheSicher);
   const aktuelle = listenDieserWoche.find((l) => l.id === ausgewaehlteId) ?? listenDieserWoche[0];
 
   const mengeFuer = (position: (typeof aktuelle.positionen)[number]) => bearbeiteteMengen[position.id] ?? position.einkaufsmenge;
@@ -120,7 +122,25 @@ export function ProcurementBoard() {
         </div>
       </Card>
       {aeltereListen.length > 0 && (
-        <Card className="mt-6"><CardHeader title="Frühere Listen" /><Table head={["Bezeichnung", "KW", "Standort", "Lieferant", "Status"]}>{aeltereListen.map((liste) => <tr key={liste.id}><Td className="font-medium text-ink">{liste.bezeichnung}</Td><Td>{liste.kalenderwoche}</Td><Td className="text-muted">{liste.standortName}</Td><Td className="text-muted">{liste.lieferantName ?? "—"}</Td><Td><StatusBadge status={liste.status} /></Td></tr>)}</Table></Card>
+        <Card className="mt-6">
+          <CardHeader title="Frühere Listen" />
+          <Table head={["Bezeichnung", "KW", "Standort", "Lieferant", "Status"]}>
+            {aeltereListenSeite.pageItems.map((liste) => (
+              <tr key={liste.id}>
+                <Td className="font-medium text-ink">{liste.bezeichnung}</Td>
+                <Td>{liste.kalenderwoche}</Td>
+                <Td className="text-muted">{liste.standortName}</Td>
+                <Td className="text-muted">{liste.lieferantName ?? "—"}</Td>
+                <Td><StatusBadge status={liste.status} /></Td>
+              </tr>
+            ))}
+          </Table>
+          <Pagination
+            page={aeltereListenSeite.page} totalPages={aeltereListenSeite.totalPages} pageSize={aeltereListenSeite.pageSize}
+            totalItems={aeltereListenSeite.totalItems} onPageChange={aeltereListenSeite.setPage} onPageSizeChange={aeltereListenSeite.setPageSize}
+            pageSizeOptions={aeltereListenSeite.pageSizeOptions}
+          />
+        </Card>
       )}
     </>
   );

@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, Table, Td, StatusBadge, Tag, SearchInput } from "@/components/ui";
+import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination } from "@/components/ui";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
+import { usePagination } from "@/lib/use-pagination";
 
 export function ZutatenTabelle() {
   const zutaten = useZutaten();
@@ -21,6 +22,8 @@ export function ZutatenTabelle() {
       return true;
     });
   }, [zutaten, suche, kategorie, allergen]);
+
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   const csvExport = () => {
     const head = ["Name", "Artikelnummer", "Kategorie", "Basiseinheit", "Einkaufseinheit", "Einkaufspreis", "Lieferant", "Allergene", "Aktiv"];
@@ -49,36 +52,52 @@ export function ZutatenTabelle() {
         </select>
         <button type="button" onClick={csvExport} className="ml-auto cursor-pointer text-xs font-medium text-basil hover:underline">CSV-Export</button>
       </div>
-      <Table head={["Zutat", "Kategorie", "Basiseinheit", "Einkaufseinheit", "kcal / 100", "Allergene", "Ernährung", "Lieferant", "Status"]}>
-        {gefiltert.map((z) => (
+      <Table
+        head={[
+          "Zutat",
+          { label: "Kategorie", className: "hidden sm:table-cell" },
+          { label: "Basiseinheit", className: "hidden lg:table-cell" },
+          { label: "Einkaufseinheit", className: "hidden lg:table-cell" },
+          { label: "kcal / 100", className: "hidden md:table-cell" },
+          { label: "Allergene", className: "hidden md:table-cell" },
+          { label: "Ernährung", className: "hidden lg:table-cell" },
+          { label: "Lieferant", className: "hidden lg:table-cell" },
+          "Status",
+        ]}
+      >
+        {pageItems.map((z) => (
           <tr key={z.id} className="hover:bg-paper">
             <Td>
               <Link href={`/admin/ingredients/${z.id}`} className="font-medium text-basil hover:underline">{z.name}</Link>
               <span className="block text-xs text-muted">{z.artikelnummer}</span>
             </Td>
-            <Td className="text-muted">{z.kategorie}</Td>
-            <Td>{z.basiseinheit}</Td>
-            <Td className="text-muted">{z.einkaufseinheit}</Td>
-            <Td>
+            <Td className="hidden text-muted sm:table-cell">{z.kategorie}</Td>
+            <Td className="hidden lg:table-cell">{z.basiseinheit}</Td>
+            <Td className="hidden text-muted lg:table-cell">{z.einkaufseinheit}</Td>
+            <Td className="hidden md:table-cell">
               <span className="font-medium">{z.naehrwertePro100.kcal}</span>
               <span className="block text-[11px] text-muted">{z.naehrwertePro100.quelle}</span>
             </Td>
-            <Td>
+            <Td className="hidden md:table-cell">
               {z.allergene.length > 0
                 ? <span className="flex flex-wrap gap-1">{z.allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}</span>
                 : <span className="text-muted">—</span>}
             </Td>
-            <Td>
+            <Td className="hidden lg:table-cell">
               <span className="flex gap-1">
                 {z.vegan ? <Tag tone="green">vegan</Tag> : z.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : <span className="text-muted">—</span>}
               </span>
             </Td>
-            <Td className="text-muted">{z.lieferant}</Td>
+            <Td className="hidden text-muted lg:table-cell">{z.lieferant}</Td>
             <Td><StatusBadge status={z.aktiv ? "AKTIV" : "INAKTIV"} /></Td>
           </tr>
         ))}
       </Table>
-      <p className="border-t border-line px-5 py-3 text-xs text-muted">{gefiltert.length} von {zutaten.length} Zutaten · Unzulässige Umrechnungen (z. B. kg → l) sind ohne individuellen Faktor gesperrt.</p>
+      <p className="border-t border-line px-5 py-2.5 text-xs text-muted">Unzulässige Umrechnungen (z. B. kg → l) sind ohne individuellen Faktor gesperrt.</p>
+      <Pagination
+        page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+        onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+      />
     </Card>
   );
 }

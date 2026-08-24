@@ -1,6 +1,7 @@
 import { PageHeader, Card, Button } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { RezepteTabelle } from "@/features/recipes/components/rezepte-tabelle";
+import { RezeptrechnerImportPanel } from "@/features/recipes/components/rezeptrechner-import-panel";
 
 export const metadata = { title: "Rezepte" };
 
@@ -15,6 +16,7 @@ export default function RecipesPage() {
       <Card>
         <RezepteTabelle />
       </Card>
+      <RezeptrechnerImportPanel />
     </>
   );
 }

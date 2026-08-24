@@ -2,10 +2,11 @@
 
 import { type FormEvent, useState } from "react";
 import { CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Plus, Route, Truck, UserRound } from "lucide-react";
-import { Button, Card, CardHeader, StatCard } from "@/components/ui";
+import { Button, Card, CardHeader, StatCard, Pagination } from "@/components/ui";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useStandorte } from "@/lib/services/locations";
 import { useFahrer, useLieferRouten, useCreateLieferRoute, portionenJeRoute, behaelterPositionenJeRoute } from "@/lib/services/logistics";
+import { usePagination } from "@/lib/use-pagination";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
@@ -23,6 +24,7 @@ export function RouteManager() {
   const [start, setStart] = useState("10:15");
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
   const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
 
   function toggleEinrichtung(id: string) {
     setEinrichtungIds((aktuell) => aktuell.includes(id) ? aktuell.filter((eintrag) => eintrag !== id) : [...aktuell, id]);
@@ -62,7 +64,7 @@ export function RouteManager() {
       ) : null}
 
       <div className="flex flex-col gap-5">
-        {routen.map((route) => {
+        {pageItems.map((route) => {
           const istOffen = details === route.id;
           const person = fahrer.find((f) => f.id === route.fahrerId);
           return <Card key={route.id}>
@@ -77,6 +79,12 @@ export function RouteManager() {
           </Card>;
         })}
       </div>
+      <Card className="mt-5">
+        <Pagination
+          page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
+          onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+        />
+      </Card>
     </>
   );
 }

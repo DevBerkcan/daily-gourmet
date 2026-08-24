@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /* ---------- Status-Badges ---------- */
 
@@ -127,18 +128,30 @@ export function SearchInput({ placeholder = "Suchen …", value, onChange }: { p
 
 /* ---------- Tabelle ---------- */
 
-export function Table({ head, children }: { head: string[]; children: ReactNode }) {
+type TableHead = string | { label: string; className?: string };
+
+export function Table({ head, children }: { head: TableHead[]; children: ReactNode }) {
   return (
     <div className="scroll-x">
-      <table className="w-full min-w-160 text-left text-sm">
+      {/* No forced min-width: a table with columns hidden on narrow screens (via a head entry's
+          className, e.g. "hidden sm:table-cell" — matched by the same className on that column's
+          <Td> in every row) should size to what's actually visible instead of scrolling needlessly. */}
+      <table className="w-full text-left text-sm">
         <thead>
+          {/* First column stays pinned while scrolling horizontally — on a phone every table here
+              can scroll, and without this the row you're looking at scrolls out of view with its
+              label. Costs nothing at desktop widths where nothing actually overflows. */}
           <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-            {head.map((h) => (
-              <th key={h} className="px-5 py-3 font-medium">{h}</th>
-            ))}
+            {head.map((h, i) => {
+              const label = typeof h === "string" ? h : h.label;
+              const extra = typeof h === "string" ? "" : (h.className ?? "");
+              return <th key={label} className={`px-5 py-3 font-medium ${i === 0 ? "sticky left-0 z-10 bg-surface" : ""} ${extra}`}>{label}</th>;
+            })}
           </tr>
         </thead>
-        <tbody className="divide-y divide-line">{children}</tbody>
+        <tbody className="divide-y divide-line [&>tr>td:first-child]:sticky [&>tr>td:first-child]:left-0 [&>tr>td:first-child]:z-10 [&>tr>td:first-child]:bg-surface">
+          {children}
+        </tbody>
       </table>
     </div>
   );
@@ -146,6 +159,57 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <td className={`px-5 py-3.5 align-middle ${className}`}>{children}</td>;
+}
+
+/** Pairs with lib/use-pagination.ts's usePagination() — page-size selector plus prev/next, stacked
+ * on narrow screens so it stays usable on a phone. */
+export function Pagination({
+  page, totalPages, pageSize, totalItems, onPageChange, onPageSizeChange, pageSizeOptions = [20, 50, 100],
+}: {
+  page: number;
+  totalPages: number;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  pageSizeOptions?: readonly number[];
+}) {
+  const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalItems);
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-line px-5 py-3.5 no-print sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs text-muted">{totalItems === 0 ? "Keine Einträge" : `${from}–${to} von ${totalItems}`}</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-xs text-muted">
+          Pro Seite
+          <select
+            aria-label="Einträge pro Seite"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="min-h-9 rounded-lg border border-line bg-surface px-2 text-sm text-ink"
+          >
+            {pageSizeOptions.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={15} aria-hidden />
+          </button>
+          <span className="min-w-[5.5rem] text-center text-xs text-muted">Seite {page} / {totalPages}</span>
+          <button
+            type="button" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} aria-label="Nächste Seite"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight size={15} aria-hidden />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ---------- Zustände ---------- */
