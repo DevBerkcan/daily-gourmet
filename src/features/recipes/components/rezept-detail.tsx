@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { Copy, Printer } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
@@ -22,6 +23,7 @@ import { useZutaten } from "@/lib/services/ingredients";
 
 export function RezeptDetail({ id }: { id: string }) {
   const router = useRouter();
+  const toast = useToast();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
   const rezept = rezepte.find((r) => r.id === id);
@@ -50,7 +52,13 @@ export function RezeptDetail({ id }: { id: string }) {
         <RezeptFormular
           initial={rezept}
           onSubmit={(input: RezeptFormDaten) => {
-            updateRezept.mutate({ id: rezept.id, input }, { onSuccess: () => setBearbeiten(false) });
+            updateRezept.mutate(
+              { id: rezept.id, input },
+              {
+                onSuccess: () => { setBearbeiten(false); toast.success("Rezept wurde gespeichert."); },
+                onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+              }
+            );
           }}
           onAbbrechen={() => setBearbeiten(false)}
         />
@@ -82,7 +90,8 @@ export function RezeptDetail({ id }: { id: string }) {
               variant="secondary"
               onClick={() => {
                 duplicateRezept.mutate(rezept.id, {
-                  onSuccess: (kopie) => router.push(`/admin/recipes/${kopie.id}`),
+                  onSuccess: (kopie) => { router.push(`/admin/recipes/${kopie.id}`); toast.success("Rezept wurde dupliziert."); },
+                  onError: () => toast.error("Duplizieren fehlgeschlagen. Bitte erneut versuchen."),
                 });
               }}
             >

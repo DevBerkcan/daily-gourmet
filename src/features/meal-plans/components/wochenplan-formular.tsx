@@ -8,8 +8,7 @@ import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { nextUpcomingWeeks } from "@/lib/isoWeek";
 import { useCreateSpeiseplan, useSpeiseplaene, useMealPlanTemplates, useDuplicateIntoWeek } from "@/lib/services/meal-plans";
-
-const HEUTE = "2026-08-06";
+import { HEUTE } from "@/lib/heute";
 
 function CheckboxRow({ checked, onChange, label, sub, status }: { checked: boolean; onChange: () => void; label: string; sub?: string; status?: string }) {
   return (

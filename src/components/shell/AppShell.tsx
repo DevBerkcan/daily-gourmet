@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { HEUTE } from "@/lib/heute";
+import { formatLangdatumDe, isoWeekInfo } from "@/lib/isoWeek";
 
 export interface NavItem {
   label: string;
@@ -36,6 +38,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const tone = toneStyles[areaTone];
+  const { week } = isoWeekInfo(new Date(`${HEUTE}T00:00:00Z`));
 
   function handleLogout() {
     logout();
@@ -120,7 +123,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               <Menu size={20} />
             </button>
             <p className="hidden text-sm text-muted sm:block">
-              KW 32 · Donnerstag, 06. August 2026
+              KW {week} · {formatLangdatumDe(HEUTE)}
             </p>
           </div>
           <div className="relative" ref={profileRef}>

@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { ZutatFormular } from "./zutat-formular";
 import { PreisePanel } from "./preise-panel";
 import { useZutaten, useUpdateZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function ZutatDetail({ id }: { id: string }) {
+  const toast = useToast();
   const zutaten = useZutaten();
   const zutat = zutaten.find((z) => z.id === id);
   const updateZutat = useUpdateZutat();
@@ -35,7 +37,13 @@ export function ZutatDetail({ id }: { id: string }) {
         <ZutatFormular
           initial={zutat}
           onSubmit={(input: Omit<Zutat, "id">) => {
-            updateZutat.mutate({ id: zutat.id, input }, { onSuccess: () => setBearbeiten(false) });
+            updateZutat.mutate(
+              { id: zutat.id, input },
+              {
+                onSuccess: () => { setBearbeiten(false); toast.success("Zutat wurde gespeichert."); },
+                onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+              }
+            );
           }}
           onAbbrechen={() => setBearbeiten(false)}
         />

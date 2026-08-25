@@ -112,6 +112,60 @@ export function useCreateEinrichtung() {
   });
 }
 
+export interface UpdateEinrichtungInput extends CreateEinrichtungInput {
+  status: Einrichtung["status"];
+}
+
+export function useUpdateEinrichtung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateEinrichtungInput }) =>
+      api.put<FacilityDto>(`/facilities/${id}`, {
+        name: input.name,
+        address: input.anschrift,
+        contactPerson: input.ansprechpartner,
+        email: input.email,
+        phone: input.telefon,
+        locationId: input.standortId,
+        activeWeekdays: input.aktiveWochentage.join(","),
+        portionPrice: input.portionspreis,
+        notes: input.notizen,
+        routeNumber: input.routeNummer,
+        status: input.status,
+      }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["facility", id] });
+    },
+  });
+}
+
+export interface UpdatePortalEinrichtungInput {
+  anschrift: string;
+  ansprechpartner: string;
+  email: string;
+  telefon: string;
+}
+
+/** Portal-Selbstbedienung: Einrichtungen dürfen nur ihre Kontaktdaten selbst pflegen — Preise,
+ * Tour und Status bleiben Verwaltungssache (siehe PortalFacilityController im Backend). */
+export function useUpdatePortalEinrichtung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdatePortalEinrichtungInput) =>
+      api.put<FacilityDto>("/portal/facility", {
+        address: input.anschrift,
+        contactPerson: input.ansprechpartner,
+        email: input.email,
+        phone: input.telefon,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["facility"] });
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+    },
+  });
+}
+
 // ---- Schließtage/Abwesenheit ----
 
 export interface EinrichtungSchliesstag {

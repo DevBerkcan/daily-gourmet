@@ -1,15 +1,56 @@
 "use client";
 
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Tag, EmptyState } from "@/components/ui";
+import { useState } from "react";
+import { PageHeader, Card, CardHeader, Table, Td, Button, StatusBadge, Tag, EmptyState } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
+import { TextField } from "@/components/ui/form-fields";
+import { Pencil } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useEinrichtung } from "@/lib/services/facilities";
+import { useEinrichtung, useUpdatePortalEinrichtung } from "@/lib/services/facilities";
 import { useUsers } from "@/lib/services/users";
 import { SchliesstagePanel } from "@/features/facilities/components/schliesstage-panel";
+
+function EinrichtungsdatenFormular({ e, onClose }: { e: NonNullable<ReturnType<typeof useEinrichtung>>; onClose: () => void }) {
+  const toast = useToast();
+  const updateEinrichtung = useUpdatePortalEinrichtung();
+  const [anschrift, setAnschrift] = useState(e.anschrift);
+  const [ansprechpartner, setAnsprechpartner] = useState(e.ansprechpartner);
+  const [email, setEmail] = useState(e.email);
+  const [telefon, setTelefon] = useState(e.telefon);
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    updateEinrichtung.mutate(
+      { anschrift: anschrift.trim(), ansprechpartner: ansprechpartner.trim(), email: email.trim(), telefon: telefon.trim() },
+      {
+        onSuccess: () => { onClose(); toast.success("Ihre Einrichtungsdaten wurden gespeichert."); },
+        onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+      }
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-5 py-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextField label="Anschrift" value={anschrift} onChange={setAnschrift} />
+        <TextField label="Ansprechpartner" value={ansprechpartner} onChange={setAnsprechpartner} />
+        <TextField label="E-Mail" value={email} onChange={setEmail} />
+        <TextField label="Telefon" value={telefon} onChange={setTelefon} />
+      </div>
+      {updateEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
+      <div className="flex justify-end gap-2 no-print">
+        <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
+        <Button type="submit" disabled={updateEinrichtung.isPending}>{updateEinrichtung.isPending ? "Wird gespeichert …" : "Speichern"}</Button>
+      </div>
+    </form>
+  );
+}
 
 export function ProfileContent() {
   const { user } = useAuth();
   const e = useEinrichtung(user?.facilityId);
   const benutzer = useUsers();
+  const [bearbeiten, setBearbeiten] = useState(false);
 
   if (!e) {
     return <Card><EmptyState title="Keine Einrichtung zugeordnet" text="Ihrem Konto ist derzeit keine Einrichtung zugeordnet." /></Card>;
@@ -22,16 +63,28 @@ export function ProfileContent() {
       <PageHeader title={e.name} subtitle={`Kundennummer ${e.kundennummer} · betreut durch Daily Gourmet`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Einrichtungsdaten" hint="Änderungen bitte an Daily Gourmet melden" />
-          <dl className="grid gap-y-3 px-5 py-5 text-sm sm:grid-cols-[10rem_1fr]">
-            <dt className="text-muted">Anschrift</dt><dd className="text-ink">{e.anschrift}</dd>
-            <dt className="text-muted">Ansprechpartner</dt><dd className="text-ink">{e.ansprechpartner}</dd>
-            <dt className="text-muted">E-Mail</dt><dd className="text-ink">{e.email}</dd>
-            <dt className="text-muted">Telefon</dt><dd className="text-ink">{e.telefon}</dd>
-            <dt className="text-muted">Bestellfrist</dt><dd className="text-ink">{e.bestellfrist}</dd>
-            <dt className="text-muted">Liefertage</dt>
-            <dd className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</dd>
-          </dl>
+          <CardHeader
+            title="Einrichtungsdaten"
+            hint={bearbeiten ? "Kontaktdaten Ihrer Einrichtung" : "Kontaktdaten können Sie hier selbst pflegen"}
+            actions={!bearbeiten && (
+              <button type="button" onClick={() => setBearbeiten(true)} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline no-print">
+                <Pencil size={13} aria-hidden /> Bearbeiten
+              </button>
+            )}
+          />
+          {bearbeiten ? (
+            <EinrichtungsdatenFormular e={e} onClose={() => setBearbeiten(false)} />
+          ) : (
+            <dl className="grid gap-y-3 px-5 py-5 text-sm sm:grid-cols-[10rem_1fr]">
+              <dt className="text-muted">Anschrift</dt><dd className="text-ink">{e.anschrift}</dd>
+              <dt className="text-muted">Ansprechpartner</dt><dd className="text-ink">{e.ansprechpartner}</dd>
+              <dt className="text-muted">E-Mail</dt><dd className="text-ink">{e.email}</dd>
+              <dt className="text-muted">Telefon</dt><dd className="text-ink">{e.telefon}</dd>
+              <dt className="text-muted">Bestellfrist</dt><dd className="text-ink">{e.bestellfrist}</dd>
+              <dt className="text-muted">Liefertage</dt>
+              <dd className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</dd>
+            </dl>
+          )}
         </Card>
         <Card>
           <CardHeader title="Benutzer Ihrer Einrichtung" hint="Als Facility Admin können Sie weitere Benutzer einladen" />

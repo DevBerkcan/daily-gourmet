@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
-import { ProduktionsplanDruckButton } from "./produktionsplan-druck-button";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
 import { MENUELINIEN } from "../types";
@@ -160,7 +159,6 @@ export function PlanDetail({ id }: { id: string }) {
               datum={tag.datum}
               isToday={tag.datum === HEUTE}
               hinweis={tag.hinweis}
-              footer={plan.status !== "DRAFT" && <ProduktionsplanDruckButton mealPlanId={plan.id} datum={tag.datum} wochentag={tag.wochentag} />}
             >
               {MENUELINIEN.map((linie) => {
                 const gerichteInLinie = tag.gerichte.filter((g) => g.menuelinie === linie);

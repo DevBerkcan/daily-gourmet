@@ -1,5 +1,17 @@
 const toIsoDateString = (d: Date) => d.toISOString().slice(0, 10);
 
+/** Formatiert ein ISO-Datum als "Donnerstag, 06. August 2026" (de-DE). */
+export function formatLangdatumDe(isoDatum: string): string {
+  const formatiert = new Date(`${isoDatum}T00:00:00Z`).toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return formatiert;
+}
+
 /** ISO-8601-Kalenderwoche und -Jahr für ein Datum (UTC, verschiebt auf den Donnerstag der Woche). */
 export function isoWeekInfo(date: Date): { week: number; year: number } {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));

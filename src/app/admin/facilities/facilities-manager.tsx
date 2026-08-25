@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag, Pagination } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
-import { useEinrichtungen, useCreateEinrichtung } from "@/lib/services/facilities";
+import { useEinrichtungen, useCreateEinrichtung, useUpdateEinrichtung, type Einrichtung } from "@/lib/services/facilities";
 import { usePagination } from "@/lib/use-pagination";
-import { Plus, X } from "lucide-react";
+import { Pencil, Plus, X } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -16,6 +17,7 @@ export function FacilitiesManager() {
   const [suche, setSuche] = useState("");
   const [standortFilter, setStandortFilter] = useState("");
   const [formularOffen, setFormularOffen] = useState(false);
+  const [bearbeiteEinrichtung, setBearbeiteEinrichtung] = useState<Einrichtung | null>(null);
 
   const gefiltert = useMemo(() => {
     const s = suche.trim().toLowerCase();
@@ -35,7 +37,10 @@ export function FacilitiesManager() {
         actions={<Button onClick={() => setFormularOffen(true)}><Plus size={16} aria-hidden /> Einrichtung anlegen</Button>}
       />
 
-      {formularOffen && <NeueEinrichtungFormular standorte={standorte} onClose={() => setFormularOffen(false)} />}
+      {formularOffen && <EinrichtungFormular standorte={standorte} onClose={() => setFormularOffen(false)} />}
+      {bearbeiteEinrichtung && (
+        <EinrichtungFormular standorte={standorte} initial={bearbeiteEinrichtung} onClose={() => setBearbeiteEinrichtung(null)} />
+      )}
 
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3.5 no-print">
@@ -50,7 +55,7 @@ export function FacilitiesManager() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status"]}>
+        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status", ""]}>
           {pageItems.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
@@ -68,6 +73,16 @@ export function FacilitiesManager() {
               <Td><span className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</span></Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
+              <Td className="no-print">
+                <button
+                  type="button"
+                  onClick={() => setBearbeiteEinrichtung(e)}
+                  aria-label={`${e.name} bearbeiten`}
+                  className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
+                >
+                  <Pencil size={13} aria-hidden /> Bearbeiten
+                </button>
+              </Td>
             </tr>
           ))}
         </Table>
@@ -83,43 +98,58 @@ export function FacilitiesManager() {
   );
 }
 
-function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType<typeof useStandorte>; onClose: () => void }) {
+function EinrichtungFormular({ standorte, initial, onClose }: { standorte: ReturnType<typeof useStandorte>; initial?: Einrichtung; onClose: () => void }) {
+  const toast = useToast();
   const createEinrichtung = useCreateEinrichtung();
-  const [name, setName] = useState("");
-  const [anschrift, setAnschrift] = useState("");
-  const [ansprechpartner, setAnsprechpartner] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefon, setTelefon] = useState("");
-  const [standortId, setStandortId] = useState(standorte[0]?.id ?? "");
-  const [routeNummer, setRouteNummer] = useState("");
-  const [portionspreis, setPortionspreis] = useState(5);
-  const [wochentage, setWochentage] = useState<string[]>(["Mo", "Di", "Mi", "Do", "Fr"]);
+  const updateEinrichtung = useUpdateEinrichtung();
+  const [name, setName] = useState(initial?.name ?? "");
+  const [anschrift, setAnschrift] = useState(initial?.anschrift ?? "");
+  const [ansprechpartner, setAnsprechpartner] = useState(initial?.ansprechpartner ?? "");
+  const [email, setEmail] = useState(initial?.email ?? "");
+  const [telefon, setTelefon] = useState(initial?.telefon ?? "");
+  const [standortId, setStandortId] = useState(initial?.standortId ?? standorte[0]?.id ?? "");
+  const [routeNummer, setRouteNummer] = useState(initial?.routeNummer ?? "");
+  const [portionspreis, setPortionspreis] = useState(initial?.portionspreis ?? 5);
+  const [wochentage, setWochentage] = useState<string[]>(initial?.aktiveWochentage ?? ["Mo", "Di", "Mi", "Do", "Fr"]);
+  const [status, setStatus] = useState<Einrichtung["status"]>(initial?.status ?? "AKTIV");
 
-  const kannSpeichern = name.trim() !== "" && standortId !== "" && !createEinrichtung.isPending;
+  const mutation = initial ? updateEinrichtung : createEinrichtung;
+  const kannSpeichern = name.trim() !== "" && standortId !== "" && !mutation.isPending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!kannSpeichern) return;
-    createEinrichtung.mutate(
-      {
-        name: name.trim(),
-        anschrift: anschrift.trim(),
-        ansprechpartner: ansprechpartner.trim(),
-        email: email.trim(),
-        telefon: telefon.trim(),
-        standortId,
-        aktiveWochentage: wochentage,
-        portionspreis,
-        routeNummer: routeNummer.trim() || undefined,
-      },
-      { onSuccess: onClose }
-    );
+    const werte = {
+      name: name.trim(),
+      anschrift: anschrift.trim(),
+      ansprechpartner: ansprechpartner.trim(),
+      email: email.trim(),
+      telefon: telefon.trim(),
+      standortId,
+      aktiveWochentage: wochentage,
+      portionspreis,
+      routeNummer: routeNummer.trim() || undefined,
+    };
+    if (initial) {
+      updateEinrichtung.mutate(
+        { id: initial.id, input: { ...werte, status } },
+        {
+          onSuccess: () => { onClose(); toast.success("Einrichtung wurde gespeichert."); },
+          onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+        }
+      );
+    } else {
+      createEinrichtung.mutate(werte, {
+        onSuccess: () => { onClose(); toast.success("Einrichtung wurde angelegt."); },
+        onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+      });
+    }
   }
 
   return (
     <Card className="mb-4">
       <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-ink">Neue Einrichtung</h2>
+        <h2 className="text-sm font-semibold text-ink">{initial ? `${initial.name} bearbeiten` : "Neue Einrichtung"}</h2>
         <button type="button" onClick={onClose} aria-label="Schließen" className="cursor-pointer text-muted hover:text-ink">
           <X size={18} aria-hidden />
         </button>
@@ -143,12 +173,25 @@ function NeueEinrichtungFormular({ standorte, onClose }: { standorte: ReturnType
           </label>
           <NumberField label="Preis je Portion" value={portionspreis} onChange={setPortionspreis} min={0} step={0.1} suffix="€" />
           <TextField label="Tour" value={routeNummer} onChange={setRouteNummer} placeholder="z. B. RT1" hint="Nummernkreis siehe Einstellungen" />
+          {initial && (
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-ink">Status</span>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as Einrichtung["status"])}
+                className="min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+              >
+                <option value="AKTIV">Aktiv</option>
+                <option value="INAKTIV">Inaktiv</option>
+              </select>
+            </label>
+          )}
         </div>
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
-        {createEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
+        {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2 no-print">
           <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
-          <Button type="submit" disabled={!kannSpeichern}>{createEinrichtung.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
+          <Button type="submit" disabled={!kannSpeichern}>{mutation.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
         </div>
       </form>
     </Card>

@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { ZutatFormular } from "@/features/ingredients/components/zutat-formular";
 import { useCreateZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function NeueZutat() {
   const router = useRouter();
+  const toast = useToast();
   const createZutat = useCreateZutat();
 
   return (
@@ -22,7 +24,10 @@ export function NeueZutat() {
 
       <ZutatFormular
         onSubmit={(input: Omit<Zutat, "id">) => {
-          createZutat.mutate(input, { onSuccess: (zutat) => router.push(`/admin/ingredients/${zutat.id}`) });
+          createZutat.mutate(input, {
+            onSuccess: (zutat) => { router.push(`/admin/ingredients/${zutat.id}`); toast.success("Zutat wurde angelegt."); },
+            onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+          });
         }}
         onAbbrechen={() => router.push("/admin/ingredients")}
       />

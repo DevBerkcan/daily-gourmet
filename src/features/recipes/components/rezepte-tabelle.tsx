@@ -2,26 +2,35 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { REZEPT_KATEGORIEN } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
 import { usePagination } from "@/lib/use-pagination";
 
+type Sortierung = "name" | "neu";
+
 export function RezepteTabelle() {
+  const router = useRouter();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
+  const [sortierung, setSortierung] = useState<Sortierung>("name");
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
-    return rezepte.filter((r) => {
+    const treffer = rezepte.filter((r) => {
       if (q && !r.name.toLowerCase().includes(q)) return false;
       if (kategorie !== "Alle Kategorien" && r.kategorie !== kategorie) return false;
       return true;
     });
-  }, [rezepte, suche, kategorie]);
+    const sortiert = [...treffer];
+    if (sortierung === "neu") sortiert.sort((a, b) => (b.erstelltAm ?? "").localeCompare(a.erstelltAm ?? ""));
+    else sortiert.sort((a, b) => a.name.localeCompare(b.name, "de"));
+    return sortiert;
+  }, [rezepte, suche, kategorie, sortierung]);
 
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
@@ -32,6 +41,10 @@ export function RezepteTabelle() {
         <select aria-label="Nach Kategorie filtern" value={kategorie} onChange={(e) => setKategorie(e.target.value)} className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
           <option>Alle Kategorien</option>
           {REZEPT_KATEGORIEN.map((k) => <option key={k}>{k}</option>)}
+        </select>
+        <select aria-label="Sortierung" value={sortierung} onChange={(e) => setSortierung(e.target.value as Sortierung)} className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
+          <option value="name">Name (A–Z)</option>
+          <option value="neu">Zuletzt hinzugefügt</option>
         </select>
       </div>
       <Table
@@ -49,8 +62,20 @@ export function RezepteTabelle() {
       >
         {pageItems.map((r) => {
           const allergene = rezeptAllergeneLive(r, zutaten);
+          const href = `/admin/recipes/${r.id}`;
           return (
-            <tr key={r.id} className="hover:bg-paper">
+            <tr
+              key={r.id}
+              tabIndex={0}
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest("a")) return;
+                router.push(href);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") router.push(href);
+              }}
+              className="cursor-pointer hover:bg-paper"
+            >
               <Td>
                 <Link href={`/admin/recipes/${r.id}`} className="font-medium text-basil hover:underline">{r.name}</Link>
                 <span className="block max-w-40 truncate text-xs text-muted sm:max-w-64">{r.rezeptnummer ? `${r.rezeptnummer} · ` : ""}{r.beschreibung}</span>

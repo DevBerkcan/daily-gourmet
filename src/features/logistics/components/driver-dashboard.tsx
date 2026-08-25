@@ -3,8 +3,7 @@
 import { AlertTriangle, Check, MapPin, Navigation, PackageCheck, Phone, Play, Route, Soup } from "lucide-react";
 import { Button, Card, CardHeader, StatCard } from "@/components/ui";
 import { useAktuelleFahrerRouten, useFahrer, useToggleGeladen, useAdvanceRouteStatus, useHandoffBestaetigen, useVerfuegbareRouten, useRouteUebernehmen, portionenJeRoute } from "@/lib/services/logistics";
-
-const HEUTE = "2026-08-06";
+import { HEUTE } from "@/lib/heute";
 
 function VerfuegbareRouten() {
   const verfuegbar = useVerfuegbareRouten(HEUTE);

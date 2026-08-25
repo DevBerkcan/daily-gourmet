@@ -8,8 +8,7 @@ import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useBestellungen } from "@/lib/services/orders";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { isoWeekInfo } from "@/lib/isoWeek";
-
-const HEUTE = "2026-08-06";
+import { HEUTE } from "@/lib/heute";
 
 export function DashboardContent() {
   const summary = useAdminDashboardSummary();
