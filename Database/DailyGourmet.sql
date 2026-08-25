@@ -1653,3 +1653,460 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Recipes] ADD [DgeCertified] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Recipes] ADD [GlutenFree] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Recipes] ADD [LactoseFree] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [ExternalRefId] nvarchar(max) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [IsManuallyEdited] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [LastSyncedAt] datetime2 NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [Source] int NOT NULL DEFAULT 1;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    CREATE TABLE [IngredientSupplierPrices] (
+        [Id] uniqueidentifier NOT NULL,
+        [IngredientId] uniqueidentifier NOT NULL,
+        [SupplierId] uniqueidentifier NOT NULL,
+        [SupplierArticleNumber] nvarchar(max) NOT NULL,
+        [Price] decimal(18,2) NOT NULL,
+        [Unit] int NOT NULL,
+        [AvailabilityNote] nvarchar(max) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_IngredientSupplierPrices] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_IngredientSupplierPrices_Ingredients_IngredientId] FOREIGN KEY ([IngredientId]) REFERENCES [Ingredients] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_IngredientSupplierPrices_Suppliers_SupplierId] FOREIGN KEY ([SupplierId]) REFERENCES [Suppliers] ([Id]) ON DELETE CASCADE
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    CREATE INDEX [IX_IngredientSupplierPrices_IngredientId] ON [IngredientSupplierPrices] ([IngredientId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    CREATE INDEX [IX_IngredientSupplierPrices_SupplierId] ON [IngredientSupplierPrices] ([SupplierId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823204916_AddIngredientProvenanceSupplierPricesAndRecipeDietaryFlags', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    ALTER TABLE [TenantSettings] ADD [SameDayAdjustmentDeadlineTime] time NOT NULL DEFAULT '09:00:00';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    ALTER TABLE [MealPlans] ADD [IsTemplate] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    ALTER TABLE [MealPlans] ADD [TemplateSlot] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    ALTER TABLE [MealPlanItems] ADD [DietLine] nvarchar(30) NOT NULL DEFAULT N'NORMALKOST';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [SameDayAdjustmentDeadlineTime] time NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_MealPlans_TenantId_TemplateSlot] ON [MealPlans] ([TenantId], [TemplateSlot]) WHERE [IsTemplate] = 1');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823210745_AddMealPlanDietLinesTemplatesAndTwoLayerDeadlines', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    ALTER TABLE [ProcurementLists] ADD [ApprovalToken] nvarchar(max) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    ALTER TABLE [ProcurementLists] ADD [ApprovalTokenExpiresAt] datetime2 NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    ALTER TABLE [ProcurementLists] ADD [SupplierId] uniqueidentifier NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    CREATE INDEX [IX_ProcurementLists_SupplierId] ON [ProcurementLists] ([SupplierId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    ALTER TABLE [ProcurementLists] ADD CONSTRAINT [FK_ProcurementLists_Suppliers_SupplierId] FOREIGN KEY ([SupplierId]) REFERENCES [Suppliers] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212301_AddProcurementSupplierSplitAndApproval'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823212301_AddProcurementSupplierSplitAndApproval', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [RouteNumber] nvarchar(20) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    CREATE TABLE [FacilityClosures] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [FacilityId] uniqueidentifier NOT NULL,
+        [StartDate] date NOT NULL,
+        [EndDate] date NOT NULL,
+        [Note] nvarchar(500) NULL,
+        [CreatedByUserId] uniqueidentifier NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_FacilityClosures] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_FacilityClosures_Facilities_FacilityId] FOREIGN KEY ([FacilityId]) REFERENCES [Facilities] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_FacilityClosures_Tenants_TenantId] FOREIGN KEY ([TenantId]) REFERENCES [Tenants] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_FacilityClosures_Users_CreatedByUserId] FOREIGN KEY ([CreatedByUserId]) REFERENCES [Users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    CREATE INDEX [IX_FacilityClosures_CreatedByUserId] ON [FacilityClosures] ([CreatedByUserId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    CREATE INDEX [IX_FacilityClosures_FacilityId] ON [FacilityClosures] ([FacilityId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    CREATE INDEX [IX_FacilityClosures_TenantId] ON [FacilityClosures] ([TenantId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212529_AddFacilityRouteNumberAndClosures'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823212529_AddFacilityRouteNumberAndClosures', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    DECLARE @var nvarchar(max);
+    SELECT @var = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Routes]') AND [c].[name] = N'DriverId');
+    IF @var IS NOT NULL EXEC(N'ALTER TABLE [Routes] DROP CONSTRAINT ' + @var + ';');
+    ALTER TABLE [Routes] ALTER COLUMN [DriverId] uniqueidentifier NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    ALTER TABLE [Routes] ADD [HandoffConfirmedAt] datetime2 NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    ALTER TABLE [Routes] ADD [HandoffDessertConfirmed] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    ALTER TABLE [Routes] ADD [HandoffKaltConfirmed] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    ALTER TABLE [Routes] ADD [HandoffWarmConfirmed] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823212816_MakeDriverIdNullableAndAddHandoff'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823212816_MakeDriverIdNullableAndAddHandoff', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments'
+)
+BEGIN
+    ALTER TABLE [TenantSettings] ADD [RouteNumberPrefix] nvarchar(max) NOT NULL DEFAULT N'RT';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments'
+)
+BEGIN
+    CREATE TABLE [SupportTicketAttachments] (
+        [Id] uniqueidentifier NOT NULL,
+        [TicketId] uniqueidentifier NOT NULL,
+        [UploadedByUserId] uniqueidentifier NOT NULL,
+        [FileName] nvarchar(260) NOT NULL,
+        [ContentType] nvarchar(100) NOT NULL,
+        [SizeBytes] bigint NOT NULL,
+        [StorageKey] nvarchar(500) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        CONSTRAINT [PK_SupportTicketAttachments] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_SupportTicketAttachments_SupportTickets_TicketId] FOREIGN KEY ([TicketId]) REFERENCES [SupportTickets] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_SupportTicketAttachments_Users_UploadedByUserId] FOREIGN KEY ([UploadedByUserId]) REFERENCES [Users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments'
+)
+BEGIN
+    CREATE INDEX [IX_SupportTicketAttachments_TicketId] ON [SupportTicketAttachments] ([TicketId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments'
+)
+BEGIN
+    CREATE INDEX [IX_SupportTicketAttachments_UploadedByUserId] ON [SupportTicketAttachments] ([UploadedByUserId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260823215310_AddRouteNumberPrefixAndSupportTicketAttachments', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    ALTER TABLE [Recipes] ADD [ReductionFactor] decimal(6,3) NOT NULL DEFAULT 1.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [Nutrition_AlcoholG] decimal(10,2) NOT NULL DEFAULT 0.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [Nutrition_FiberG] decimal(10,2) NOT NULL DEFAULT 0.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [Nutrition_Kj] decimal(10,2) NOT NULL DEFAULT 0.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    ALTER TABLE [Ingredients] ADD [Nutrition_SaturatedFatG] decimal(10,2) NOT NULL DEFAULT 0.0;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260825125442_AddRecipeReductionFactorAndFullIngredientNutrition', N'10.0.11');
+END;
+
+COMMIT;
+GO
+

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
@@ -86,6 +87,7 @@ export function PlanDetail({ id }: { id: string }) {
   const einrichtungen = useEinrichtungen();
   const bestellungen = useBestellungen({ speiseplanId: id });
   const plan = plaene.find((p) => p.id === id);
+  const ladend = useIsFetching({ queryKey: ["meal-plans"] }) > 0 && plaene.length === 0;
   const updateTag = useUpdateSpeiseplanTag();
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
@@ -104,11 +106,15 @@ export function PlanDetail({ id }: { id: string }) {
   if (!plan) {
     return (
       <Card>
-        <EmptyState
-          title="Speiseplan nicht gefunden"
-          text="Dieser Wochenplan existiert nicht (mehr)."
-          action={<Button href="/admin/meal-plans">Zurück zur Übersicht</Button>}
-        />
+        {ladend ? (
+          <LoadingState text="Speiseplan wird geladen …" />
+        ) : (
+          <EmptyState
+            title="Speiseplan nicht gefunden"
+            text="Dieser Wochenplan existiert nicht (mehr)."
+            action={<Button href="/admin/meal-plans">Zurück zur Übersicht</Button>}
+          />
+        )}
       </Card>
     );
   }

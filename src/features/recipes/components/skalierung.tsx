@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Card, CardHeader, Table, Td } from "@/components/ui";
 import { useRezeptSkaliert } from "@/lib/services/recipes";
+import { useZutaten } from "@/lib/services/ingredients";
 import type { Rezept } from "../types";
 
 export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
   const [portionen, setPortionen] = useState(rezept.standardPortionen * 25);
   const skaliert = useRezeptSkaliert(rezept.id, portionen);
+  const zutaten = useZutaten();
 
   const rund = (n: number) => Math.round(n * 100) / 100;
 
@@ -31,7 +33,16 @@ export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
         }
       />
       <Table head={["Zutat", "Originalmenge", "Hochgerechnet"]}>
-        {(skaliert?.zutaten ?? rezept.zutaten.map((rz) => ({ zutatId: rz.zutatId, name: rz.zutatId, originalMenge: rz.menge, hochgerechnet: rz.menge, einheit: rz.einheit }))).map((rz) => (
+        {(
+          skaliert?.zutaten ??
+          rezept.zutaten.map((rz) => ({
+            zutatId: rz.zutatId,
+            name: zutaten.find((z) => z.id === rz.zutatId)?.name ?? rz.zutatId,
+            originalMenge: rz.menge,
+            hochgerechnet: rz.menge,
+            einheit: rz.einheit,
+          }))
+        ).map((rz) => (
           <tr key={rz.zutatId}>
             <Td className="font-medium text-ink">{rz.name}</Td>
             <Td className="text-muted">{rz.originalMenge.toLocaleString("de-DE")} {rz.einheit}</Td>

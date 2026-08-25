@@ -2,16 +2,21 @@
 
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
+import { useIsFetching } from "@tanstack/react-query";
 import { Lock, Pencil, RotateCcw, X } from "lucide-react";
-import { Button, Card, CardHeader, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
+import { Button, Card, CardHeader, LoadingState, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
+import { PromptDialog } from "@/components/ui/confirm-dialog";
 import { useTenants, useUpdateTenant, useLockTenant, useUnlockTenant, useTenantUsers, useGlobalAuditLog } from "@/lib/services/super-admin";
 import { SupportAccess } from "./support-access";
+import { TenantProfileCard } from "./tenant-profile-card";
+import { TenantSettingsCard } from "./tenant-settings-card";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
 export function TenantDetailView({ tenantId }: { tenantId: string }) {
   const tenants = useTenants();
   const tenant = tenants.find((entry) => entry.id === tenantId);
+  const ladend = useIsFetching({ queryKey: ["super-admin-tenants"] }) > 0 && tenants.length === 0;
   const updateTenant = useUpdateTenant();
   const lockTenant = useLockTenant();
   const unlockTenant = useUnlockTenant();
@@ -21,8 +26,11 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
   const [name, setName] = useState(tenant?.name ?? "");
   const [ansprechpartner, setAnsprechpartner] = useState(tenant?.ansprechpartner ?? "");
   const [email, setEmail] = useState(tenant?.email ?? "");
+  const [sperrenDialog, setSperrenDialog] = useState(false);
+  const [reaktivierenDialog, setReaktivierenDialog] = useState(false);
 
   if (!tenant) {
+    if (ladend) return <Card><LoadingState text="Mandant wird geladen …" /></Card>;
     return (
       <Card className="p-8 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">Mandant nicht gefunden</h1>
@@ -44,14 +52,14 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
     updateTenant.mutate({ id: tenant!.id, input: { name: name.trim(), ansprechpartner: ansprechpartner.trim(), email: email.trim() } }, { onSuccess: () => setBearbeiten(false) });
   }
 
-  function sperren() {
-    const grund = window.prompt("Begründung für die Sperrung:");
-    if (grund?.trim()) lockTenant.mutate({ id: tenant!.id, grund: grund.trim() });
+  function sperrenBestaetigt(grund: string) {
+    lockTenant.mutate({ id: tenant!.id, grund });
+    setSperrenDialog(false);
   }
 
-  function reaktivieren() {
-    const grund = window.prompt("Begründung für die Reaktivierung:");
-    if (grund?.trim()) unlockTenant.mutate({ id: tenant!.id, grund: grund.trim() });
+  function reaktivierenBestaetigt(grund: string) {
+    unlockTenant.mutate({ id: tenant!.id, grund });
+    setReaktivierenDialog(false);
   }
 
   return (
@@ -69,9 +77,9 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           <>
             <Button variant="secondary" onClick={editierenStarten}><Pencil size={15} aria-hidden /> Bearbeiten</Button>
             {tenant.status === "AKTIV" ? (
-              <Button variant="danger" onClick={sperren}><Lock size={15} aria-hidden /> Mandant sperren</Button>
+              <Button variant="danger" onClick={() => setSperrenDialog(true)}><Lock size={15} aria-hidden /> Mandant sperren</Button>
             ) : (
-              <Button onClick={reaktivieren}><RotateCcw size={15} aria-hidden /> Reaktivieren</Button>
+              <Button onClick={() => setReaktivierenDialog(true)}><RotateCcw size={15} aria-hidden /> Reaktivieren</Button>
             )}
           </>
         }
@@ -114,6 +122,9 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
             ) : <p className="px-5 py-6 text-sm text-muted">Noch keine weiteren Benutzer angelegt.</p>}
           </Card>
 
+          <TenantProfileCard tenantId={tenant.id} />
+          <TenantSettingsCard tenantId={tenant.id} />
+
           <Card>
             <CardHeader title="Aktivitäts- und Audit-Log" hint="Nachvollziehbare Änderungen im Mandanten" />
             {tenantAudit.length ? (
@@ -140,6 +151,25 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           </Card>
         </div>
       </div>
+
+      <PromptDialog
+        open={sperrenDialog}
+        title="Mandant sperren"
+        label="Begründung für die Sperrung"
+        placeholder="z. B. Zahlungsrückstand"
+        confirmLabel="Sperren"
+        onCancel={() => setSperrenDialog(false)}
+        onConfirm={sperrenBestaetigt}
+      />
+      <PromptDialog
+        open={reaktivierenDialog}
+        title="Mandant reaktivieren"
+        label="Begründung für die Reaktivierung"
+        placeholder="z. B. Zahlung eingegangen"
+        confirmLabel="Reaktivieren"
+        onCancel={() => setReaktivierenDialog(false)}
+        onConfirm={reaktivierenBestaetigt}
+      />
     </>
   );
 }

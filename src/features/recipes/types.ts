@@ -55,6 +55,8 @@ export interface Rezept {
   kerntemperaturC?: number;
   lagerhinweis?: string;
   haltbarkeitNachZubereitung?: string;
+  /** Gewichtsverlust/-gewinn-Faktor beim Garen (z. B. 0,7 = 30 % Gewichtsverlust). Standard 1. */
+  reduktionsfaktor?: number;
   erstelltVon: string;
   erstelltAm: string;
   aktualisiertAm?: string;

@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Table, Td, StatusBadge, Pagination } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useStandorte } from "@/lib/services/locations";
 import { useSpeiseplaene, useDuplicateSpeiseplan, useDeleteSpeiseplan, useSubmitReviewSpeiseplan, usePublishSpeiseplan } from "@/lib/services/meal-plans";
 import { usePagination } from "@/lib/use-pagination";
+import type { Speiseplan } from "@/features/meal-plans/types";
 
 export function WochenplanTabelle() {
   const plaene = useSpeiseplaene();
@@ -14,6 +17,7 @@ export function WochenplanTabelle() {
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(plaene);
+  const [loeschenBestaetigung, setLoeschenBestaetigung] = useState<Speiseplan | null>(null);
 
   return (
     <>
@@ -35,7 +39,7 @@ export function WochenplanTabelle() {
               {p.status === "DRAFT" && (
                 <button
                   type="button"
-                  onClick={() => window.confirm(`Wochenplan KW ${p.kalenderwoche}/${p.jahr} wirklich löschen?`) && deleteSpeiseplan.mutate(p.id)}
+                  onClick={() => setLoeschenBestaetigung(p)}
                   className="cursor-pointer text-muted hover:text-danger hover:underline"
                 >
                   Löschen
@@ -49,6 +53,15 @@ export function WochenplanTabelle() {
       <Pagination
         page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
         onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
+      />
+      <ConfirmDialog
+        open={loeschenBestaetigung !== null}
+        title="Wochenplan löschen?"
+        tone="warn"
+        confirmLabel="Ja, löschen"
+        onCancel={() => setLoeschenBestaetigung(null)}
+        onConfirm={() => { if (loeschenBestaetigung) deleteSpeiseplan.mutate(loeschenBestaetigung.id); setLoeschenBestaetigung(null); }}
+        message={<p>Wochenplan KW {loeschenBestaetigung?.kalenderwoche}/{loeschenBestaetigung?.jahr} wirklich löschen?</p>}
       />
     </>
   );

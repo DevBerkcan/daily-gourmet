@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PageHeader, Card, CardHeader, Table, Td, Button, StatusBadge, Tag, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Card, CardHeader, Table, Td, Button, StatusBadge, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { TextField } from "@/components/ui/form-fields";
 import { Pencil } from "lucide-react";
@@ -47,12 +48,14 @@ function EinrichtungsdatenFormular({ e, onClose }: { e: NonNullable<ReturnType<t
 }
 
 export function ProfileContent() {
-  const { user } = useAuth();
+  const { user, isLoading: authLaedt } = useAuth();
   const e = useEinrichtung(user?.facilityId);
   const benutzer = useUsers();
   const [bearbeiten, setBearbeiten] = useState(false);
+  const facilityLaedt = useIsFetching({ queryKey: ["facility", user?.facilityId] }) > 0;
 
   if (!e) {
+    if (authLaedt || facilityLaedt) return <Card><LoadingState text="Einrichtung wird geladen …" /></Card>;
     return <Card><EmptyState title="Keine Einrichtung zugeordnet" text="Ihrem Konto ist derzeit keine Einrichtung zugeordnet." /></Card>;
   }
 

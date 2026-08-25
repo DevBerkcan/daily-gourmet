@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useIsFetching } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, CheckCircle2, MapPin, Navigation, PackageCheck, Phone, Route as RouteIcon, Thermometer, Truck } from "lucide-react";
-import { Button, Card, EmptyState, PageHeader, StatCard } from "@/components/ui";
+import { Button, Card, EmptyState, LoadingState, PageHeader, StatCard } from "@/components/ui";
 import { useLieferRoute, useFahrer, useUpdateStoppStatus, useAdvanceRouteStatus, portionenJeRoute } from "@/lib/services/logistics";
 
 const SUBTITLE = "Stopps der Reihe nach anfahren und jede Zustellung bestätigen.";
@@ -22,13 +23,20 @@ export function DriverRouteDetail({ id }: { id: string }) {
   const fahrer = useFahrer();
   const updateStoppStatus = useUpdateStoppStatus();
   const advanceRouteStatus = useAdvanceRouteStatus();
+  const ladend = useIsFetching({ queryKey: ["route", id] }) > 0;
 
   if (!route) {
     return (
       <>
         <Breadcrumb />
         <PageHeader title="Routenansicht" subtitle={SUBTITLE} />
-        <Card><EmptyState title="Route nicht gefunden" text="Diese Route ist nicht mehr verfügbar." action={<Button href="/driver/routes">Zu meinen Touren</Button>} /></Card>
+        <Card>
+          {ladend ? (
+            <LoadingState text="Route wird geladen …" />
+          ) : (
+            <EmptyState title="Route nicht gefunden" text="Diese Route ist nicht mehr verfügbar." action={<Button href="/driver/routes">Zu meinen Touren</Button>} />
+          )}
+        </Card>
       </>
     );
   }

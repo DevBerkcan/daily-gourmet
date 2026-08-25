@@ -1,5 +1,5 @@
 import type { Rezept, RezeptNaehrwerte100 } from "./types";
-import type { Zutat } from "@/features/ingredients/types";
+import type { Zutat } from "@/lib/services/ingredients";
 
 /* ---------- Live-Berechnungshelfer (arbeiten auf der aktuell geladenen Zutatenliste) ---------- */
 

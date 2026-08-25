@@ -3,12 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { Copy, Printer } from "lucide-react";
+import { Copy, Printer, Sigma } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
 import { EtikettButton } from "./etikett-button";
+import { NaehrwerteModal } from "./naehrwerte-modal";
 import {
   useRezepte,
   useUpdateRezept,
@@ -27,15 +29,21 @@ export function RezeptDetail({ id }: { id: string }) {
   const rezepte = useRezepte();
   const zutaten = useZutaten();
   const rezept = rezepte.find((r) => r.id === id);
+  const ladend = useIsFetching({ queryKey: ["recipes"] }) > 0 && rezepte.length === 0;
   const updateRezept = useUpdateRezept();
   const duplicateRezept = useDuplicateRezept();
   const [bearbeiten, setBearbeiten] = useState(false);
   const [naehrwertModus, setNaehrwertModus] = useState<"portion" | "100g">("portion");
+  const [naehrwerteAnsehen, setNaehrwerteAnsehen] = useState(false);
 
   if (!rezept) {
     return (
       <Card>
-        <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button href="/admin/recipes">Zurück zur Übersicht</Button>} />
+        {ladend ? (
+          <LoadingState text="Rezept wird geladen …" />
+        ) : (
+          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button href="/admin/recipes">Zurück zur Übersicht</Button>} />
+        )}
       </Card>
     );
   }
@@ -85,7 +93,8 @@ export function RezeptDetail({ id }: { id: string }) {
         actions={
           <>
             <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
-            <EtikettButton rezeptId={rezept.id} rezeptName={rezept.name} />
+            <Button variant="secondary" onClick={() => setNaehrwerteAnsehen(true)}><Sigma size={15} aria-hidden /> Nährwerte ansehen</Button>
+            <EtikettButton rezeptId={rezept.id} rezeptName={rezept.name} portionsgewichtG={rezept.portionsgewichtG} />
             <Button
               variant="secondary"
               onClick={() => {
@@ -227,6 +236,8 @@ export function RezeptDetail({ id }: { id: string }) {
           </Card>
         </div>
       </div>
+
+      {naehrwerteAnsehen && <NaehrwerteModal rezept={rezept} onClose={() => setNaehrwerteAnsehen(false)} />}
     </>
   );
 }

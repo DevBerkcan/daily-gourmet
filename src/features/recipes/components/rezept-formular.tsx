@@ -16,7 +16,7 @@ function leer(erstesZutatId: string): RezeptFormDaten {
     zubereitungsschritte: [""], zutaten: erstesZutatId ? [{ zutatId: erstesZutatId, menge: 1, einheit: "kg" }] : [],
     vegetarisch: true, vegan: true, glutenfrei: false, laktosefrei: false, dgeZertifiziert: false,
     produktionshinweise: "", zielgruppen: [], bildUrl: undefined,
-    kerntemperaturC: undefined, lagerhinweis: "", haltbarkeitNachZubereitung: "", aktiv: true,
+    kerntemperaturC: undefined, lagerhinweis: "", haltbarkeitNachZubereitung: "", reduktionsfaktor: 1, aktiv: true,
   };
 }
 
@@ -161,6 +161,14 @@ export function RezeptFormular({
         <CardHeader title="Küchen- & HACCP-Hinweise" />
         <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <NumberField label="Kerntemperatur" value={r.kerntemperaturC ?? ""} onChange={(v) => set("kerntemperaturC", v)} min={0} suffix="°C" />
+          <NumberField
+            label="Reduktionsfaktor"
+            value={r.reduktionsfaktor ?? 1}
+            onChange={(v) => set("reduktionsfaktor", v)}
+            min={0.1}
+            step={0.01}
+            hint="Gewichtsverlust beim Garen, z. B. 0,7 = 30 % Verlust. Treibt „Gewicht zubereitet“ in der Nährwerte-Ansicht."
+          />
           <TextField label="Haltbarkeit nach Zubereitung" value={r.haltbarkeitNachZubereitung ?? ""} onChange={(v) => set("haltbarkeitNachZubereitung", v)} placeholder="z. B. 24 Stunden gekühlt" />
           <div className="sm:col-span-2"><TextField label="Lagerhinweis" value={r.lagerhinweis ?? ""} onChange={(v) => set("lagerhinweis", v)} /></div>
           <div className="sm:col-span-2"><TextareaField label="Produktionshinweise" value={r.produktionshinweise ?? ""} onChange={(v) => set("produktionshinweise", v)} /></div>

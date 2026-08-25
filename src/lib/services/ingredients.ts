@@ -5,12 +5,16 @@ import type { Einheit } from "@/lib/types";
 
 export interface Naehrwerte {
   kcal: number;
+  kj: number;
   eiweissG: number;
   fettG: number;
+  gesFettSaeurenG: number;
   kohlenhydrateG: number;
   zuckerG: number;
+  ballaststoffeG: number;
   salzG: number;
-  quelle: "Open Food Facts" | "USDA FoodData Central" | "Manuell";
+  alkoholG: number;
+  quelle: "Open Food Facts" | "USDA FoodData Central" | "Manuell" | "Bundeslebensmittelschlüssel (BLS)";
 }
 
 export interface ZutatLieferantenpreis {
@@ -72,7 +76,10 @@ interface IngredientDto {
   bio: boolean;
   regional: boolean;
   active: boolean;
-  nutrition: { kcal: number; proteinG: number; fatG: number; carbsG: number; sugarG: number; saltG: number; source: string };
+  nutrition: {
+    kcal: number; kj: number; proteinG: number; fatG: number; saturatedFatG: number;
+    carbsG: number; sugarG: number; fiberG: number; saltG: number; alcoholG: number; source: string;
+  };
   allergenNames: string[];
   allergenIds: string[];
   additives: string[];
@@ -118,11 +125,13 @@ const quelleToFrontend: Record<string, Naehrwerte["quelle"]> = {
   OpenFoodFacts: "Open Food Facts",
   Usda: "USDA FoodData Central",
   Manuell: "Manuell",
+  Bls: "Bundeslebensmittelschlüssel (BLS)",
 };
 const quelleToBackend: Record<Naehrwerte["quelle"], string> = {
   "Open Food Facts": "OpenFoodFacts",
   "USDA FoodData Central": "Usda",
   Manuell: "Manuell",
+  "Bundeslebensmittelschlüssel (BLS)": "Bls",
 };
 
 function toZutat(dto: IngredientDto): Zutat {
@@ -145,11 +154,15 @@ function toZutat(dto: IngredientDto): Zutat {
     aktiv: dto.active,
     naehrwertePro100: {
       kcal: dto.nutrition.kcal,
+      kj: dto.nutrition.kj,
       eiweissG: dto.nutrition.proteinG,
       fettG: dto.nutrition.fatG,
+      gesFettSaeurenG: dto.nutrition.saturatedFatG,
       kohlenhydrateG: dto.nutrition.carbsG,
       zuckerG: dto.nutrition.sugarG,
+      ballaststoffeG: dto.nutrition.fiberG,
       salzG: dto.nutrition.saltG,
+      alkoholG: dto.nutrition.alcoholG,
       quelle: quelleToFrontend[dto.nutrition.source] ?? "Manuell",
     },
     quelle: dto.source === "Rezeptrechner" ? "Rezeptrechner" : "Manuell",
@@ -227,11 +240,15 @@ async function toSaveDto(input: Omit<Zutat, "id">, categories: LookupDto[], alle
     regional: input.regional,
     nutrition: {
       kcal: input.naehrwertePro100.kcal,
+      kj: input.naehrwertePro100.kj,
       proteinG: input.naehrwertePro100.eiweissG,
       fatG: input.naehrwertePro100.fettG,
+      saturatedFatG: input.naehrwertePro100.gesFettSaeurenG,
       carbsG: input.naehrwertePro100.kohlenhydrateG,
       sugarG: input.naehrwertePro100.zuckerG,
+      fiberG: input.naehrwertePro100.ballaststoffeG,
       saltG: input.naehrwertePro100.salzG,
+      alcoholG: input.naehrwertePro100.alkoholG,
       source: quelleToBackend[input.naehrwertePro100.quelle],
     },
     allergenIds,

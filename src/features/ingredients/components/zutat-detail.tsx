@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ZutatFormular } from "./zutat-formular";
 import { PreisePanel } from "./preise-panel";
@@ -12,6 +13,7 @@ export function ZutatDetail({ id }: { id: string }) {
   const toast = useToast();
   const zutaten = useZutaten();
   const zutat = zutaten.find((z) => z.id === id);
+  const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
   const updateZutat = useUpdateZutat();
   const [bearbeiten, setBearbeiten] = useState(false);
 
@@ -19,7 +21,11 @@ export function ZutatDetail({ id }: { id: string }) {
     return (
       <>
         <Card>
-          <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button href="/admin/ingredients">Zurück zur Übersicht</Button>} />
+          {ladend ? (
+            <LoadingState text="Zutat wird geladen …" />
+          ) : (
+            <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button href="/admin/ingredients">Zurück zur Übersicht</Button>} />
+          )}
         </Card>
       </>
     );
@@ -93,12 +99,15 @@ export function ZutatDetail({ id }: { id: string }) {
         <Card>
           <CardHeader title="Nährwerte je 100 g / 100 ml" hint={`Quelle: ${zutat.naehrwertePro100.quelle}`} />
           <Table head={["Nährwert", "Menge"]}>
-            <tr><Td className="font-medium text-ink">Kalorien</Td><Td>{zutat.naehrwertePro100.kcal} kcal</Td></tr>
-            <tr><Td className="font-medium text-ink">Eiweiß</Td><Td>{zutat.naehrwertePro100.eiweissG} g</Td></tr>
+            <tr><Td className="font-medium text-ink">Energie</Td><Td>{zutat.naehrwertePro100.kcal} kcal / {zutat.naehrwertePro100.kj} kJ</Td></tr>
             <tr><Td className="font-medium text-ink">Fett</Td><Td>{zutat.naehrwertePro100.fettG} g</Td></tr>
+            <tr><Td className="pl-8 text-muted">davon gesättigte Fettsäuren</Td><Td>{zutat.naehrwertePro100.gesFettSaeurenG} g</Td></tr>
             <tr><Td className="font-medium text-ink">Kohlenhydrate</Td><Td>{zutat.naehrwertePro100.kohlenhydrateG} g</Td></tr>
-            <tr><Td className="font-medium text-ink">davon Zucker</Td><Td>{zutat.naehrwertePro100.zuckerG} g</Td></tr>
+            <tr><Td className="pl-8 text-muted">davon Zucker</Td><Td>{zutat.naehrwertePro100.zuckerG} g</Td></tr>
+            <tr><Td className="font-medium text-ink">Ballaststoffe</Td><Td>{zutat.naehrwertePro100.ballaststoffeG} g</Td></tr>
+            <tr><Td className="font-medium text-ink">Eiweiß</Td><Td>{zutat.naehrwertePro100.eiweissG} g</Td></tr>
             <tr><Td className="font-medium text-ink">Salz</Td><Td>{zutat.naehrwertePro100.salzG} g</Td></tr>
+            <tr><Td className="font-medium text-ink">Alkohol</Td><Td>{zutat.naehrwertePro100.alkoholG} g</Td></tr>
           </Table>
         </Card>
       </div>

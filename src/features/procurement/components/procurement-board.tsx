@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useIsFetching } from "@tanstack/react-query";
 import { CheckCircle2, Download, Printer, Send } from "lucide-react";
-import { Button, Card, CardHeader, EmptyState, StatCard, StatusBadge, Table, Td, Tag, Pagination } from "@/components/ui";
+import { Button, Card, CardHeader, EmptyState, LoadingState, StatCard, StatusBadge, Table, Td, Tag, Pagination } from "@/components/ui";
 import {
   useEinkaufslisten,
   useUpdateEinkaufsmenge,
@@ -40,6 +41,11 @@ export function ProcurementBoard() {
   const aktuelleWocheSicher = listen[0]?.kalenderwoche;
   const aeltereListen = listen.filter((l) => l.kalenderwoche !== aktuelleWocheSicher);
   const aeltereListenSeite = usePagination(aeltereListen);
+  const ladend = useIsFetching({ queryKey: ["procurement-lists"] }) > 0 && listen.length === 0;
+
+  if (ladend) {
+    return <Card><LoadingState text="Einkaufslisten werden geladen …" /></Card>;
+  }
 
   if (listen.length === 0) {
     return <Card><EmptyState title="Keine Einkaufsliste vorhanden" text="Für den aktuellen Standort wurde noch keine Bedarfsliste aus einem Produktionsplan erzeugt." /></Card>;

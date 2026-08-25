@@ -75,6 +75,155 @@ export const useLockTenant = () => useTenantStatusAction("lock");
 export const useUnlockTenant = () => useTenantStatusAction("unlock");
 export const useArchiveTenant = () => useTenantStatusAction("archive");
 
+export interface TenantSettings {
+  bestellfristTageVorher: number;
+  bestellfristUhrzeit: string;
+  sameDayAnpassungFrist: string;
+  wochenendenAusschliessen: boolean;
+  pruefungVorVeroeffentlichung: boolean;
+  zurueckziehenNurOhneBestellungen: boolean;
+  praefixEinrichtungen: string;
+  praefixArtikel: string;
+  praefixTouren: string;
+  benachrichtigungen: { eventKey: string; aktiv: boolean }[];
+}
+
+interface TenantSettingsDto {
+  defaultOrderDeadlineOffsetDays: number;
+  defaultOrderDeadlineTime: string;
+  sameDayAdjustmentDeadlineTime: string;
+  excludeWeekendsFromDeadline: boolean;
+  requireReviewBeforePublish: boolean;
+  unpublishRequiresNoOrders: boolean;
+  facilityNumberPrefix: string;
+  articleNumberPrefix: string;
+  routeNumberPrefix: string;
+  notificationSettings: { eventKey: string; enabled: boolean }[];
+}
+
+function toTenantSettings(dto: TenantSettingsDto): TenantSettings {
+  return {
+    bestellfristTageVorher: dto.defaultOrderDeadlineOffsetDays,
+    bestellfristUhrzeit: dto.defaultOrderDeadlineTime.slice(0, 5),
+    sameDayAnpassungFrist: dto.sameDayAdjustmentDeadlineTime.slice(0, 5),
+    wochenendenAusschliessen: dto.excludeWeekendsFromDeadline,
+    pruefungVorVeroeffentlichung: dto.requireReviewBeforePublish,
+    zurueckziehenNurOhneBestellungen: dto.unpublishRequiresNoOrders,
+    praefixEinrichtungen: dto.facilityNumberPrefix,
+    praefixArtikel: dto.articleNumberPrefix,
+    praefixTouren: dto.routeNumberPrefix,
+    benachrichtigungen: dto.notificationSettings.map((n) => ({ eventKey: n.eventKey, aktiv: n.enabled })),
+  };
+}
+
+function toTenantSettingsDto(input: TenantSettings): TenantSettingsDto {
+  return {
+    defaultOrderDeadlineOffsetDays: input.bestellfristTageVorher,
+    defaultOrderDeadlineTime: input.bestellfristUhrzeit,
+    sameDayAdjustmentDeadlineTime: input.sameDayAnpassungFrist,
+    excludeWeekendsFromDeadline: input.wochenendenAusschliessen,
+    requireReviewBeforePublish: input.pruefungVorVeroeffentlichung,
+    unpublishRequiresNoOrders: input.zurueckziehenNurOhneBestellungen,
+    facilityNumberPrefix: input.praefixEinrichtungen,
+    articleNumberPrefix: input.praefixArtikel,
+    routeNumberPrefix: input.praefixTouren,
+    notificationSettings: input.benachrichtigungen.map((n) => ({ eventKey: n.eventKey, enabled: n.aktiv })),
+  };
+}
+
+const NOTIFICATION_LABELS: Record<string, string> = {
+  MealPlanPublished: "Speiseplan veröffentlicht → Einrichtungen",
+  DeadlineApproaching: "Frist läuft ab → Einrichtungen ohne Bestellung",
+  OrderChangedAfterSubmit: "Bestellung nachträglich geändert → Küche",
+  ProductionPlanChanged: "Produktionsplan geändert → Kitchen Manager",
+};
+export const notificationLabel = (eventKey: string) => NOTIFICATION_LABELS[eventKey] ?? eventKey;
+
+/** Einstellungen eines Mandanten (Bestellfristen, Freigabeprozesse, Nummernkreise) — Pflege
+ * ausschließlich durch Daily Gourmet (Super Admin), nicht durch den Mandanten selbst. */
+export function useTenantSettings(tenantId: string | undefined): TenantSettings | undefined {
+  const query = useQuery({
+    queryKey: ["super-admin-tenant-settings", tenantId],
+    queryFn: () => api.get<TenantSettingsDto>(`/super-admin/tenants/${tenantId}/settings`),
+    enabled: !!tenantId,
+  });
+  return query.data ? toTenantSettings(query.data) : undefined;
+}
+
+export function useUpdateTenantSettings(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TenantSettings) => api.put<TenantSettingsDto>(`/super-admin/tenants/${tenantId}/settings`, toTenantSettingsDto(input)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-settings", tenantId] }),
+  });
+}
+
+export interface TenantProfile {
+  ustId?: string;
+  strasse?: string;
+  plz?: string;
+  ort?: string;
+  telefon?: string;
+  email?: string;
+  zeitzone: string;
+  waehrung: string;
+  logoUrl?: string;
+}
+
+interface TenantProfileDto {
+  vatId: string | null;
+  street: string | null;
+  postalCode: string | null;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  timezone: string;
+  currency: string;
+  logoUrl: string | null;
+}
+
+/** Unternehmensprofil (Stammdaten, Branding) eines Mandanten — Pflege ausschließlich durch Daily
+ * Gourmet (Super Admin), nicht durch den Mandanten selbst. */
+export function useTenantProfile(tenantId: string | undefined): TenantProfile | undefined {
+  const query = useQuery({
+    queryKey: ["super-admin-tenant-profile", tenantId],
+    queryFn: () => api.get<TenantProfileDto>(`/super-admin/tenants/${tenantId}/profile`),
+    enabled: !!tenantId,
+  });
+  if (!query.data) return undefined;
+  const dto = query.data;
+  return {
+    ustId: dto.vatId ?? undefined,
+    strasse: dto.street ?? undefined,
+    plz: dto.postalCode ?? undefined,
+    ort: dto.city ?? undefined,
+    telefon: dto.phone ?? undefined,
+    email: dto.email ?? undefined,
+    zeitzone: dto.timezone,
+    waehrung: dto.currency,
+    logoUrl: dto.logoUrl ?? undefined,
+  };
+}
+
+export function useUpdateTenantProfile(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TenantProfile) =>
+      api.put<TenantProfileDto>(`/super-admin/tenants/${tenantId}/profile`, {
+        vatId: input.ustId || null,
+        street: input.strasse || null,
+        postalCode: input.plz || null,
+        city: input.ort || null,
+        phone: input.telefon || null,
+        email: input.email || null,
+        timezone: input.zeitzone,
+        currency: input.waehrung,
+        logoUrl: input.logoUrl || null,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-profile", tenantId] }),
+  });
+}
+
 export interface GlobalUser {
   id: string;
   tenantId: string | null;

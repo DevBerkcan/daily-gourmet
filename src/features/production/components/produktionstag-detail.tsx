@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, EmptyState, LoadingState } from "@/components/ui";
 import { useRezepte } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
 import {
@@ -77,8 +78,10 @@ export function ProduktionstagDetail({ id }: { id: string }) {
   const zutaten = useZutaten();
   const refreshPlan = useRefreshProduktionsplan();
   const pp = plaene.find((p) => p.id === id);
+  const ladend = useIsFetching({ queryKey: ["production-plans"] }) > 0 && plaene.length === 0;
 
   if (!pp) {
+    if (ladend) return <Card><LoadingState text="Produktionsplan wird geladen …" /></Card>;
     return (
       <Card>
         <EmptyState

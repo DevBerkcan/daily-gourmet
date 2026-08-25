@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 /* ---------- Status-Badges ---------- */
 
@@ -213,6 +213,17 @@ export function Pagination({
 }
 
 /* ---------- Zustände ---------- */
+
+/** Ersetzt Tabellen/Listen/Karten während des ersten Ladens — verhindert, dass für einen Moment
+ * fälschlich "keine Einträge vorhanden" aufblitzt, bevor die Daten eintreffen. */
+export function LoadingState({ text = "Wird geladen …" }: { text?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+      <Loader2 className="animate-spin text-muted" size={24} aria-hidden />
+      <p className="text-sm text-muted">{text}</p>
+    </div>
+  );
+}
 
 export function EmptyState({ title, text, action }: { title: string; text: string; action?: ReactNode }) {
   return (

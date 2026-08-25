@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { Table, Td, StatusBadge, SearchInput, Tag, Pagination, LoadingState } from "@/components/ui";
 import { REZEPT_KATEGORIEN } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
@@ -15,6 +16,7 @@ export function RezepteTabelle() {
   const router = useRouter();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
+  const ladend = useIsFetching({ queryKey: ["recipes"] }) > 0 && rezepte.length === 0;
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
   const [sortierung, setSortierung] = useState<Sortierung>("name");
@@ -47,6 +49,8 @@ export function RezepteTabelle() {
           <option value="neu">Zuletzt hinzugefügt</option>
         </select>
       </div>
+      {ladend ? <LoadingState text="Rezepte werden geladen …" /> : (
+      <>
       <Table
         head={[
           "Rezept",
@@ -100,6 +104,8 @@ export function RezepteTabelle() {
         page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
         onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
       />
+      </>
+      )}
     </>
   );
 }

@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination, LoadingState } from "@/components/ui";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import { usePagination } from "@/lib/use-pagination";
 
 export function ZutatenTabelle() {
   const zutaten = useZutaten();
+  const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
   const [allergen, setAllergen] = useState("Alle Allergene");
@@ -52,6 +54,8 @@ export function ZutatenTabelle() {
         </select>
         <button type="button" onClick={csvExport} className="ml-auto cursor-pointer text-xs font-medium text-basil hover:underline">CSV-Export</button>
       </div>
+      {ladend ? <LoadingState text="Zutaten werden geladen …" /> : (
+      <>
       <Table
         head={[
           "Zutat",
@@ -98,6 +102,8 @@ export function ZutatenTabelle() {
         page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
         onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
       />
+      </>
+      )}
     </Card>
   );
 }

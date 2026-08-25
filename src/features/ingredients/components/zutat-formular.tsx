@@ -8,13 +8,13 @@ import type { Zutat } from "@/lib/services/ingredients";
 import type { Einheit } from "@/lib/types";
 
 const EINHEITEN: Einheit[] = ["g", "kg", "ml", "l", "Stück"];
-const NAEHRWERT_QUELLEN = ["Open Food Facts", "USDA FoodData Central", "Manuell"] as const;
+const NAEHRWERT_QUELLEN = ["Open Food Facts", "USDA FoodData Central", "Manuell", "Bundeslebensmittelschlüssel (BLS)"] as const;
 
 function leer(): Omit<Zutat, "id"> {
   return {
     name: "", artikelnummer: "", kategorie: ZUTAT_KATEGORIEN[0], basiseinheit: "kg", einkaufseinheit: "", umrechnungsfaktor: 1,
     einkaufspreis: undefined, lieferant: "", allergene: [], zusatzstoffe: [], vegetarisch: true, vegan: true, bio: false, regional: false, aktiv: true,
-    naehrwertePro100: { kcal: 0, eiweissG: 0, fettG: 0, kohlenhydrateG: 0, zuckerG: 0, salzG: 0, quelle: "Manuell" },
+    naehrwertePro100: { kcal: 0, kj: 0, eiweissG: 0, fettG: 0, gesFettSaeurenG: 0, kohlenhydrateG: 0, zuckerG: 0, ballaststoffeG: 0, salzG: 0, alkoholG: 0, quelle: "Manuell" },
     quelle: "Manuell", manuellBearbeitet: false, lieferantenpreise: [],
   };
 }
@@ -76,11 +76,15 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
         <CardHeader title="Nährwerte je 100 g / 100 ml" />
         <div className="grid gap-4 px-5 py-4 sm:grid-cols-3">
           <NumberField label="Kalorien" value={z.naehrwertePro100.kcal} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, kcal: v })} min={0} suffix="kcal" />
+          <NumberField label="Energie" value={z.naehrwertePro100.kj} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, kj: v })} min={0} suffix="kJ" />
           <NumberField label="Eiweiß" value={z.naehrwertePro100.eiweissG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, eiweissG: v })} min={0} suffix="g" />
           <NumberField label="Fett" value={z.naehrwertePro100.fettG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, fettG: v })} min={0} suffix="g" />
+          <NumberField label="davon gesättigte Fettsäuren" value={z.naehrwertePro100.gesFettSaeurenG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, gesFettSaeurenG: v })} min={0} suffix="g" />
           <NumberField label="Kohlenhydrate" value={z.naehrwertePro100.kohlenhydrateG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, kohlenhydrateG: v })} min={0} suffix="g" />
           <NumberField label="davon Zucker" value={z.naehrwertePro100.zuckerG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, zuckerG: v })} min={0} suffix="g" />
+          <NumberField label="Ballaststoffe" value={z.naehrwertePro100.ballaststoffeG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, ballaststoffeG: v })} min={0} suffix="g" />
           <NumberField label="Salz" value={z.naehrwertePro100.salzG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, salzG: v })} min={0} suffix="g" />
+          <NumberField label="Alkohol" value={z.naehrwertePro100.alkoholG} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, alkoholG: v })} min={0} suffix="g" />
           <div className="sm:col-span-3">
             <SelectField label="Quelle" value={z.naehrwertePro100.quelle} onChange={(v) => set("naehrwertePro100", { ...z.naehrwertePro100, quelle: v as Zutat["naehrwertePro100"]["quelle"] })} options={NAEHRWERT_QUELLEN} />
           </div>

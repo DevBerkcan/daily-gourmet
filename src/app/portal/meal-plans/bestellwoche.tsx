@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Button, Tag, StatusBadge, EmptyState } from "@/components/ui";
+import { useIsFetching } from "@tanstack/react-query";
+import { PageHeader, Button, Tag, StatusBadge, EmptyState, LoadingState } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/form-fields";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
 import { usePortalSpeiseplaene, MENUELINIEN } from "@/lib/services/meal-plans";
@@ -12,8 +14,7 @@ import type { Speiseplan } from "@/features/meal-plans/types";
 import type { Rezept } from "@/features/recipes/types";
 import type { Bestellung } from "@/lib/types";
 import { Save, Send } from "lucide-react";
-
-const heute = "2026-08-06";
+import { HEUTE as heute } from "@/lib/heute";
 
 /** Anpassung am Liefertag selbst — nur für heutige Positionen einer bereits abgesendeten
  * Bestellung, und nur reduzierbar (siehe useAdjustBestellungSameDay / OrderHandler.AdjustSameDayAsync). */
@@ -88,6 +89,7 @@ export function BestellWoche() {
   const plan = wochen.find((p) => p.id === aktivePlanId);
   const bestellung = plan ? bestellungen.find((eintrag) => eintrag.speiseplanId === plan.id) : undefined;
   const readOnly = plan?.status === "CLOSED" || plan?.status === "ARCHIVED" || bestellung?.status === "LOCKED";
+  const ladend = useIsFetching({ queryKey: ["portal-meal-plans"] }) > 0 && wochen.length === 0;
 
   return (
     <>
@@ -113,7 +115,9 @@ export function BestellWoche() {
         }
       />
 
-      {!plan ? (
+      {ladend ? (
+        <LoadingState text="Speisepläne werden geladen …" />
+      ) : !plan ? (
         <EmptyState title="Keine Speisepläne verfügbar" text="Für Ihre Einrichtung sind derzeit keine veröffentlichten Speisepläne vorhanden." />
       ) : plan.tage.length === 0 ? (
         <EmptyState title="Keine Tage geplant" text={`Für KW ${plan.kalenderwoche} liegen keine Plandaten vor.`} />
@@ -150,6 +154,7 @@ function WochenTage({
     return initial;
   });
   const [gespeichert, setGespeichert] = useState<string | null>(null);
+  const [absendenBestaetigung, setAbsendenBestaetigung] = useState<string[] | null>(null);
 
   const gesamt = useMemo(() => Object.values(mengen).reduce((s, n) => s + (n || 0), 0), [mengen]);
 
@@ -174,8 +179,22 @@ function WochenTage({
     );
     saveBestellung.mutate(
       { speiseplanId: plan.id, positionen, submit },
-      { onSuccess: () => setGespeichert(submit ? "Bestellung wurde verbindlich abgesendet." : "Entwurf wurde gespeichert.") }
+      { onSuccess: () => setGespeichert(submit ? "Bestellung wurde abgesendet." : "Entwurf wurde gespeichert.") }
     );
+  };
+
+  // "Absenden" fragt immer noch einmal gezielt nach — bei (noch editierbaren) Gerichten mit 0/keiner
+  // Menge wird zusätzlich aufgelistet, welche das sind (häufig schlicht vergessen einzutragen, nicht
+  // bewusst auf 0 gesetzt). Serverseitig bleibt 0 weiterhin ein gültiger, bewusster Wert (s. o.).
+  const absendenAnklicken = () => {
+    const offenePositionen = plan.tage
+      .filter((tag) => tag.datum >= heute)
+      .flatMap((tag) =>
+        tag.gerichte
+          .filter((gericht) => (mengen[`${tag.datum}|${gericht.rezeptId}`] ?? 0) === 0)
+          .map((gericht) => `${tag.wochentag}: ${rezepte.find((r) => r.id === gericht.rezeptId)?.name ?? gericht.rezeptId}`)
+      );
+    setAbsendenBestaetigung(offenePositionen);
   };
 
   return (
@@ -183,9 +202,32 @@ function WochenTage({
       {!readOnly && (
         <div className="mb-4 flex justify-end gap-2 no-print">
           <Button variant="secondary" onClick={() => speichern(false)}><Save size={15} aria-hidden /> Als Entwurf speichern</Button>
-          <Button disabled={gesamt === 0} onClick={() => speichern(true)}><Send size={15} aria-hidden /> Verbindlich absenden</Button>
+          <Button disabled={gesamt === 0} onClick={absendenAnklicken}><Send size={15} aria-hidden /> Absenden</Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={absendenBestaetigung !== null}
+        title="Bestellung absenden?"
+        tone={absendenBestaetigung && absendenBestaetigung.length > 0 ? "warn" : "default"}
+        confirmLabel="Ja, absenden"
+        onCancel={() => setAbsendenBestaetigung(null)}
+        onConfirm={() => { setAbsendenBestaetigung(null); speichern(true); }}
+        message={
+          absendenBestaetigung && absendenBestaetigung.length > 0 ? (
+            <>
+              <p>Für folgende Gerichte wurden keine Portionen eingetragen (0):</p>
+              <ul className="my-3 list-disc space-y-1 pl-5">
+                {absendenBestaetigung.slice(0, 8).map((eintrag, i) => <li key={i}>{eintrag}</li>)}
+                {absendenBestaetigung.length > 8 && <li>… und {absendenBestaetigung.length - 8} weitere</li>}
+              </ul>
+              <p>Trotzdem absenden?</p>
+            </>
+          ) : (
+            <p>Möchten Sie diese Bestellung jetzt absenden? Änderungen sind danach nur noch bis zur Frist möglich.</p>
+          )
+        }
+      />
 
       <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-card border border-line bg-surface px-5 py-3 text-sm">
         <span className="text-muted">Bestellte Portionen gesamt:</span>
