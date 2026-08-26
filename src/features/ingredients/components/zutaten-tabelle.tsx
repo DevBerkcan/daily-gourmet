@@ -8,6 +8,12 @@ import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import { usePagination } from "@/lib/use-pagination";
 
+const QUELLE_KURZ: Record<string, string> = {
+  "Open Food Facts": "OFF",
+  "USDA FoodData Central": "USDA",
+  "Bundeslebensmittelschlüssel (BLS)": "BLS",
+};
+
 export function ZutatenTabelle() {
   const zutaten = useZutaten();
   const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
@@ -60,8 +66,8 @@ export function ZutatenTabelle() {
         head={[
           "Zutat",
           { label: "Kategorie", className: "hidden sm:table-cell" },
-          { label: "Basiseinheit", className: "hidden lg:table-cell" },
-          { label: "Einkaufseinheit", className: "hidden lg:table-cell" },
+          { label: "Einheit", className: "hidden lg:table-cell" },
+          { label: "Preis", className: "hidden lg:table-cell" },
           { label: "kcal / 100", className: "hidden md:table-cell" },
           { label: "Allergene", className: "hidden md:table-cell" },
           { label: "Ernährung", className: "hidden lg:table-cell" },
@@ -76,11 +82,15 @@ export function ZutatenTabelle() {
               <span className="block text-xs text-muted">{z.artikelnummer}</span>
             </Td>
             <Td className="hidden text-muted sm:table-cell">{z.kategorie}</Td>
-            <Td className="hidden lg:table-cell">{z.basiseinheit}</Td>
-            <Td className="hidden text-muted lg:table-cell">{z.einkaufseinheit}</Td>
+            <Td className="hidden text-muted lg:table-cell">{z.basiseinheit} · {z.einkaufseinheit}</Td>
+            <Td className="hidden lg:table-cell">
+              {z.einkaufspreis !== undefined
+                ? <>{z.einkaufspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}<span className="text-muted"> / {z.einkaufseinheit}</span></>
+                : <span className="text-muted">—</span>}
+            </Td>
             <Td className="hidden md:table-cell">
               <span className="font-medium">{z.naehrwertePro100.kcal}</span>
-              <span className="block text-[11px] text-muted">{z.naehrwertePro100.quelle}</span>
+              <span className="block text-[11px] text-muted">{QUELLE_KURZ[z.naehrwertePro100.quelle] ?? z.naehrwertePro100.quelle}</span>
             </Td>
             <Td className="hidden md:table-cell">
               {z.allergene.length > 0

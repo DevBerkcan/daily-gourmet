@@ -145,7 +145,7 @@ export function Table({ head, children }: { head: TableHead[]; children: ReactNo
             {head.map((h, i) => {
               const label = typeof h === "string" ? h : h.label;
               const extra = typeof h === "string" ? "" : (h.className ?? "");
-              return <th key={label} className={`px-5 py-3 font-medium ${i === 0 ? "sticky left-0 z-10 bg-surface" : ""} ${extra}`}>{label}</th>;
+              return <th key={label} className={`px-3 py-3 font-medium ${i === 0 ? "sticky left-0 z-10 bg-surface" : ""} ${extra}`}>{label}</th>;
             })}
           </tr>
         </thead>
@@ -158,7 +158,7 @@ export function Table({ head, children }: { head: TableHead[]; children: ReactNo
 }
 
 export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <td className={`px-5 py-3.5 align-middle ${className}`}>{children}</td>;
+  return <td className={`px-3 py-3 align-middle ${className}`}>{children}</td>;
 }
 
 /** Pairs with lib/use-pagination.ts's usePagination() — page-size selector plus prev/next, stacked

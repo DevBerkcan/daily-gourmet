@@ -36,11 +36,18 @@ function TagRezeptHinzufuegen({
   rezepte: Rezept[];
 }) {
   const [offen, setOffen] = useState(false);
+  const [ernaehrungsFilter, setErnaehrungsFilter] = useState<"alle" | "vegan" | "vegetarisch" | "glutenfrei">("alle");
   const updateTag = useUpdateSpeiseplanTag();
   const inDieserLinie = new Set(tag.gerichte.filter((g) => g.menuelinie === menuelinie).map((g) => g.rezeptId));
-  const verfuegbar = rezepte.filter((r) => !inDieserLinie.has(r.id));
+  const auswaehlbar = rezepte.filter((r) => !inDieserLinie.has(r.id));
+  const verfuegbar = auswaehlbar.filter((r) => {
+    if (ernaehrungsFilter === "vegan") return r.vegan;
+    if (ernaehrungsFilter === "vegetarisch") return r.vegetarisch || r.vegan;
+    if (ernaehrungsFilter === "glutenfrei") return !!r.glutenfrei;
+    return true;
+  });
 
-  if (verfuegbar.length === 0) return null;
+  if (auswaehlbar.length === 0) return null;
 
   if (!offen) {
     return (
@@ -54,8 +61,27 @@ function TagRezeptHinzufuegen({
     );
   }
 
+  const filterOptionen: { value: typeof ernaehrungsFilter; label: string }[] = [
+    { value: "alle", label: "Alle" },
+    { value: "vegan", label: "Vegan" },
+    { value: "vegetarisch", label: "Vegetarisch" },
+    { value: "glutenfrei", label: "Glutenfrei" },
+  ];
+
   return (
     <div className="mt-1 flex flex-col gap-1.5 no-print">
+      <div className="flex flex-wrap gap-1">
+        {filterOptionen.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setErnaehrungsFilter(f.value)}
+            className={`cursor-pointer rounded-full border px-2 py-0.5 text-[11px] font-medium ${ernaehrungsFilter === f.value ? "border-basil bg-basil-soft text-basil-deep" : "border-line text-muted hover:border-line-strong hover:text-ink"}`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
       <select
         autoFocus
         aria-label={`Rezept für ${tag.wochentag} (${menuelinie}) hinzufügen`}
@@ -69,9 +95,14 @@ function TagRezeptHinzufuegen({
         className="min-h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-sm"
       >
         <option value="" disabled>Rezept wählen …</option>
-        {verfuegbar.map((r) => (
-          <option key={r.id} value={r.id}>{r.name} · {r.kategorie}</option>
-        ))}
+        {verfuegbar.length === 0 ? (
+          <option value="" disabled>Keine Rezepte für diesen Filter</option>
+        ) : (
+          verfuegbar.map((r) => {
+            const tags = [r.vegan ? "vegan" : r.vegetarisch ? "vegetarisch" : null, r.glutenfrei ? "glutenfrei" : null].filter(Boolean).join(", ");
+            return <option key={r.id} value={r.id}>{r.name} · {r.kategorie}{tags ? ` · ${tags}` : ""}</option>;
+          })
+        )}
       </select>
       <button type="button" onClick={() => setOffen(false)} className="cursor-pointer text-left text-xs text-muted hover:text-ink hover:underline">
         Abbrechen

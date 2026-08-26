@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Tag, Pagination } from "@/components/ui";
+import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
@@ -55,22 +55,21 @@ export function FacilitiesManager() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <Table head={["Einrichtung", "Kundennr.", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status", ""]}>
+        <Table head={["Einrichtung", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status", ""]}>
           {pageItems.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
                 <span className="font-medium text-ink">{e.name}</span>
-                <span className="block text-xs text-muted">{e.anschrift}</span>
+                <span className="block text-xs text-muted">{e.kundennummer} · {e.anschrift}</span>
               </Td>
-              <Td className="text-muted">{e.kundennummer}</Td>
               <Td>
                 <span>{e.ansprechpartner}</span>
                 <span className="block text-xs text-muted">{e.email}</span>
               </Td>
               <Td className="text-muted">{e.standortName}</Td>
               <Td className="text-muted">{e.routeNummer ?? "—"}</Td>
-              <Td className="text-muted">{e.bestellfrist}</Td>
-              <Td><span className="flex gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</span></Td>
+              <Td className="text-muted">Mandanten-Standard</Td>
+              <Td className="text-muted">{e.aktiveWochentage.join(", ")}</Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
               <Td className="no-print">

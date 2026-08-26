@@ -81,8 +81,10 @@ export function RezepteTabelle() {
               className="cursor-pointer hover:bg-paper"
             >
               <Td>
-                <Link href={`/admin/recipes/${r.id}`} className="font-medium text-basil hover:underline">{r.name}</Link>
-                <span className="block max-w-40 truncate text-xs text-muted sm:max-w-64">{r.rezeptnummer ? `${r.rezeptnummer} · ` : ""}{r.beschreibung}</span>
+                <div className="max-w-40 sm:max-w-52">
+                  <Link href={`/admin/recipes/${r.id}`} className="block truncate font-medium text-basil hover:underline">{r.name}</Link>
+                  <span className="block truncate text-xs text-muted">{r.rezeptnummer ? `${r.rezeptnummer} · ` : ""}{r.beschreibung}</span>
+                </div>
               </Td>
               <Td className="hidden text-muted md:table-cell">{r.kategorie}</Td>
               <Td className="hidden sm:table-cell">{r.standardPortionen}</Td>
