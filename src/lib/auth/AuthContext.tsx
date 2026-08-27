@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api/client";
-import { clearToken, getToken, setToken } from "./token-storage";
+import { clearToken, endImpersonation, getToken, isImpersonating, setToken } from "./token-storage";
 import type { CurrentUser, LoginResponse } from "./types";
 
 interface AuthContextValue {
@@ -30,8 +30,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const me = await api.get<CurrentUser>("/auth/me");
       setUser(me);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) clearToken();
-      setUser(null);
+      if (err instanceof ApiError && err.status === 401 && isImpersonating()) {
+        // A revoked/expired impersonation session 401s (see TenantContextMiddleware) before the
+        // token's own exp — drop back to the real super-admin session instead of a full logout,
+        // and retry once so the caller ends up authenticated as the real super admin again.
+        endImpersonation();
+        try {
+          const me = await api.get<CurrentUser>("/auth/me");
+          setUser(me);
+          setIsLoading(false);
+          return;
+        } catch {
+          clearToken();
+          setUser(null);
+        }
+      } else {
+        if (err instanceof ApiError && err.status === 401) clearToken();
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }

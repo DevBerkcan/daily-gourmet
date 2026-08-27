@@ -3,21 +3,34 @@
 import { useMemo, useState } from "react";
 import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { PromptDialog } from "@/components/ui/confirm-dialog";
+import { ApiError } from "@/lib/api/client";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
-import { useEinrichtungen, useCreateEinrichtung, useUpdateEinrichtung, type Einrichtung } from "@/lib/services/facilities";
+import {
+  useEinrichtungen,
+  useCreateEinrichtung,
+  useUpdateEinrichtung,
+  useDeleteEinrichtung,
+  useEinrichtungLoeschImpact,
+  type Einrichtung,
+} from "@/lib/services/facilities";
 import { usePagination } from "@/lib/use-pagination";
-import { Pencil, Plus, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 export function FacilitiesManager() {
+  const toast = useToast();
   const einrichtungen = useEinrichtungen();
   const standorte = useStandorte();
   const [suche, setSuche] = useState("");
   const [standortFilter, setStandortFilter] = useState("");
   const [formularOffen, setFormularOffen] = useState(false);
   const [bearbeiteEinrichtung, setBearbeiteEinrichtung] = useState<Einrichtung | null>(null);
+  const [loescheEinrichtung, setLoescheEinrichtung] = useState<Einrichtung | null>(null);
+  const { impact } = useEinrichtungLoeschImpact(loescheEinrichtung?.id ?? null);
+  const deleteEinrichtung = useDeleteEinrichtung();
 
   const gefiltert = useMemo(() => {
     const s = suche.trim().toLowerCase();
@@ -73,14 +86,24 @@ export function FacilitiesManager() {
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
               <Td className="no-print">
-                <button
-                  type="button"
-                  onClick={() => setBearbeiteEinrichtung(e)}
-                  aria-label={`${e.name} bearbeiten`}
-                  className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
-                >
-                  <Pencil size={13} aria-hidden /> Bearbeiten
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setBearbeiteEinrichtung(e)}
+                    aria-label={`${e.name} bearbeiten`}
+                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
+                  >
+                    <Pencil size={13} aria-hidden /> Bearbeiten
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoescheEinrichtung(e)}
+                    aria-label={`${e.name} löschen`}
+                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
+                  >
+                    <Trash2 size={13} aria-hidden /> Löschen
+                  </button>
+                </div>
               </Td>
             </tr>
           ))}
@@ -93,6 +116,39 @@ export function FacilitiesManager() {
           onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
         />
       </Card>
+
+      <PromptDialog
+        open={!!loescheEinrichtung}
+        title={loescheEinrichtung ? `${loescheEinrichtung.name} endgültig löschen` : ""}
+        message={
+          loescheEinrichtung && (
+            <p>
+              Diese Einrichtung hat {impact ? (
+                <>
+                  <strong>{impact.bestellungen}</strong> Bestellung(en), <strong>{impact.tourStopps}</strong> Tour-Stopp(s),{" "}
+                  <strong>{impact.benutzer}</strong> Benutzerkonto(en) und <strong>{impact.schliesstage}</strong> Schließtag(e)
+                </>
+              ) : "Bestellungen, Benutzerkonten und Schließtage"} — alle werden unwiderruflich gelöscht (Benutzerkonten werden
+              stattdessen deaktiviert). Zum Bestätigen bitte den Namen <strong>{loescheEinrichtung.name}</strong> eingeben.
+            </p>
+          )
+        }
+        label="Name der Einrichtung"
+        placeholder={loescheEinrichtung?.name}
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheEinrichtung(null)}
+        onConfirm={(wert) => {
+          if (!loescheEinrichtung) return;
+          if (wert.trim() !== loescheEinrichtung.name) {
+            toast.error("Name stimmt nicht überein. Löschen abgebrochen.");
+            return;
+          }
+          deleteEinrichtung.mutate(loescheEinrichtung.id, {
+            onSuccess: () => { toast.success("Einrichtung wurde gelöscht."); setLoescheEinrichtung(null); },
+            onError: () => toast.error("Löschen fehlgeschlagen. Bitte erneut versuchen."),
+          });
+        }}
+      />
     </>
   );
 }
@@ -113,7 +169,14 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
   const [status, setStatus] = useState<Einrichtung["status"]>(initial?.status ?? "AKTIV");
 
   const mutation = initial ? updateEinrichtung : createEinrichtung;
-  const kannSpeichern = name.trim() !== "" && standortId !== "" && !mutation.isPending;
+  const kannSpeichern =
+    name.trim() !== "" &&
+    anschrift.trim() !== "" &&
+    ansprechpartner.trim() !== "" &&
+    email.trim() !== "" &&
+    telefon.trim() !== "" &&
+    standortId !== "" &&
+    !mutation.isPending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,8 +202,16 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
       );
     } else {
       createEinrichtung.mutate(werte, {
-        onSuccess: () => { onClose(); toast.success("Einrichtung wurde angelegt."); },
-        onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen."),
+        onSuccess: (data) => {
+          onClose();
+          toast.success(
+            data.adminInvited
+              ? `Einrichtung wurde angelegt. Zugangsdaten wurden an ${data.email} gesendet.`
+              : "Einrichtung wurde angelegt."
+          );
+        },
+        onError: (error) =>
+          toast.error(error instanceof ApiError && error.status === 409 ? error.message : "Speichern fehlgeschlagen. Bitte erneut versuchen."),
       });
     }
   }
@@ -156,10 +227,10 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-5 py-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Name" value={name} onChange={setName} required />
-          <TextField label="Anschrift" value={anschrift} onChange={setAnschrift} />
-          <TextField label="Ansprechpartner" value={ansprechpartner} onChange={setAnsprechpartner} />
-          <TextField label="E-Mail" value={email} onChange={setEmail} />
-          <TextField label="Telefon" value={telefon} onChange={setTelefon} />
+          <TextField label="Anschrift" value={anschrift} onChange={setAnschrift} required />
+          <TextField label="Ansprechpartner" value={ansprechpartner} onChange={setAnsprechpartner} required />
+          <TextField label="E-Mail" value={email} onChange={setEmail} required hint="Wird als Zugang für die Einrichtung verwendet" />
+          <TextField label="Telefon" value={telefon} onChange={setTelefon} required />
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Standort</span>
             <select

@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui";
 import { useCreateSupportTicket, useSupportTickets, useUploadSupportAnhang } from "@/lib/services/support";
 import type { SupportKategorie, SupportPrioritaet } from "@/lib/services/support";
+import { useFeatureFlag } from "@/lib/services/feature-flags";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
 export function TenantSupportWidget() {
   const pathname = usePathname();
+  const anhaengeAktiv = useFeatureFlag("support-tenant-attachments");
   const tickets = useSupportTickets();
   const createTicket = useCreateSupportTicket();
   const uploadAnhang = useUploadSupportAnhang();
@@ -91,14 +93,17 @@ export function TenantSupportWidget() {
                 <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Beschreibung
                   <textarea value={nachricht} onChange={(event) => setNachricht(event.target.value)} required rows={4} placeholder="Beschreiben Sie die Frage oder den Fehler möglichst genau." className={`${fieldClass} py-2`} />
                 </label>
-                <label className="flex cursor-pointer items-center gap-2 self-start rounded-lg border border-line-strong bg-surface px-4 py-2 text-xs font-medium text-ink hover:bg-paper">
-                  <Paperclip size={14} aria-hidden /> {datei ? datei.name : "Screenshot / Datei anhängen"}
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(event) => setDatei(event.target.files?.[0] ?? null)}
-                  />
-                </label>
+                {anhaengeAktiv && (
+                  <label className="flex cursor-pointer items-center gap-2 self-start rounded-lg border border-line-strong bg-surface px-4 py-2 text-xs font-medium text-ink hover:bg-paper">
+                    <Paperclip size={14} aria-hidden /> {datei ? datei.name : "Screenshot anhängen"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => setDatei(event.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                )}
                 <Button type="submit" disabled={wirdGesendet}><MessageSquareText size={16} aria-hidden /> {wirdGesendet ? "Wird gesendet …" : "Anfrage senden"}</Button>
               </form>
               <div className="border-t border-line px-5 py-4">

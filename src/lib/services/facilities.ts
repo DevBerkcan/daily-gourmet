@@ -22,7 +22,7 @@ export interface Einrichtung {
   routeNummer?: string;
 }
 
-interface FacilityDto {
+export interface FacilityDto {
   id: string;
   name: string;
   customerNumber: string;
@@ -37,6 +37,7 @@ interface FacilityDto {
   status: string;
   notes: string | null;
   routeNumber: string | null;
+  adminInvited: boolean;
 }
 
 export interface CreateEinrichtungInput {
@@ -52,7 +53,7 @@ export interface CreateEinrichtungInput {
   routeNummer?: string;
 }
 
-function toEinrichtung(dto: FacilityDto): Einrichtung {
+export function toEinrichtung(dto: FacilityDto): Einrichtung {
   return {
     id: dto.id,
     name: dto.name,
@@ -137,6 +138,44 @@ export function useUpdateEinrichtung() {
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
       queryClient.invalidateQueries({ queryKey: ["facility", id] });
     },
+  });
+}
+
+export interface FacilityDeleteImpact {
+  bestellungen: number;
+  schliesstage: number;
+  benutzer: number;
+  tourStopps: number;
+}
+
+interface FacilityDeleteImpactDto {
+  orderCount: number;
+  closureCount: number;
+  userCount: number;
+  routeStopCount: number;
+}
+
+/** Vorschau, was ein endgültiges Löschen mitreißt — vor der eigentlichen Bestätigung abgerufen. */
+export function useEinrichtungLoeschImpact(id: string | null) {
+  const query = useQuery({
+    queryKey: ["facility-delete-impact", id],
+    queryFn: () => api.get<FacilityDeleteImpactDto>(`/facilities/${id}/delete-impact`),
+    enabled: !!id,
+  });
+  const dto = query.data;
+  const impact: FacilityDeleteImpact | undefined = dto
+    ? { bestellungen: dto.orderCount, schliesstage: dto.closureCount, benutzer: dto.userCount, tourStopps: dto.routeStopCount }
+    : undefined;
+  return { impact, isLoading: query.isLoading };
+}
+
+/** Endgültiges Löschen (siehe FacilityHandler.DeleteAsync) — nimmt Bestellungen, Tour-Stopps und
+ * Schließtage der Einrichtung mit; zugehörige Benutzerkonten werden deaktiviert, nicht gelöscht. */
+export function useDeleteEinrichtung() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/facilities/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["facilities"] }),
   });
 }
 

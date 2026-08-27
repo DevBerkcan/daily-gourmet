@@ -10,6 +10,8 @@ import { useTenants, useUpdateTenant, useLockTenant, useUnlockTenant, useTenantU
 import { SupportAccess } from "./support-access";
 import { TenantProfileCard } from "./tenant-profile-card";
 import { TenantSettingsCard } from "./tenant-settings-card";
+import { TenantFacilitiesCard } from "./tenant-facilities-card";
+import { TenantFeatureFlagsCard } from "./tenant-feature-flags-card";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
@@ -122,6 +124,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
             ) : <p className="px-5 py-6 text-sm text-muted">Noch keine weiteren Benutzer angelegt.</p>}
           </Card>
 
+          <TenantFacilitiesCard tenantId={tenant.id} />
           <TenantProfileCard tenantId={tenant.id} />
           <TenantSettingsCard tenantId={tenant.id} />
 
@@ -141,6 +144,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
 
         <div className="flex flex-col gap-6">
           <Card><CardHeader title="Supportzugriff" hint="Sichtbar, zeitlich begrenzt und protokolliert" /><SupportAccess tenantId={tenant.id} tenantName={tenant.name} /></Card>
+          <TenantFeatureFlagsCard tenantId={tenant.id} />
           <Card>
             <CardHeader title="Berechtigungsmodell" hint="Klare Trennung zwischen Plattform und Mandant" />
             <dl className="space-y-4 p-5 text-sm">

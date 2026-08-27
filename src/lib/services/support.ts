@@ -18,6 +18,8 @@ export interface SupportAnhang {
   dateiname: string;
   contentType: string;
   groesseBytes: number;
+  /** Öffentliche imgbb-URL — null nur bei einem Alt-Anhang von vor der Umstellung auf imgbb. */
+  url: string | null;
 }
 
 export interface SupportTicket {
@@ -50,6 +52,7 @@ interface SupportTicketAttachmentDto {
   fileName: string;
   contentType: string;
   sizeBytes: number;
+  url: string | null;
 }
 
 interface SupportTicketDto {
@@ -87,7 +90,7 @@ function toSupportTicket(dto: SupportTicketDto): SupportTicket {
     status: dto.status as SupportStatus,
     erstelltAm: formatDateTime(dto.createdAt),
     antworten: dto.replies.map((r) => ({ id: r.id, autor: r.authorName, rolle: r.role as SupportAntwort["rolle"], text: r.text, zeitpunkt: formatDateTime(r.createdAt) })),
-    anhaenge: dto.attachments.map((a) => ({ id: a.id, dateiname: a.fileName, contentType: a.contentType, groesseBytes: a.sizeBytes })),
+    anhaenge: dto.attachments.map((a) => ({ id: a.id, dateiname: a.fileName, contentType: a.contentType, groesseBytes: a.sizeBytes, url: a.url })),
   };
 }
 
@@ -207,6 +210,20 @@ export function useStarteSupportSitzung() {
   return useMutation({
     mutationFn: (tenantId: string) => api.post<SupportSessionDto>(`/super-admin/tenants/${tenantId}/support-sessions`),
     onSuccess: () => invalidateSupportSessions(queryClient),
+  });
+}
+
+export interface ImpersonationToken {
+  token: string;
+  tenantName: string;
+  expiresAtUtc: string;
+}
+
+/** Mintet das Impersonation-Token für eine bereits laufende Supportsitzung — der eigentliche
+ * "Im Mandanten prüfen"-Schritt nach useStarteSupportSitzung(). */
+export function useImpersonate() {
+  return useMutation({
+    mutationFn: (sessionId: string) => api.post<ImpersonationToken>(`/super-admin/support-sessions/${sessionId}/impersonate`),
   });
 }
 

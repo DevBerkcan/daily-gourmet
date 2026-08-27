@@ -1,13 +1,14 @@
 "use client";
 
 import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge } from "@/components/ui";
-import { useTenants, useSuperAdminDashboard, useGlobalAuditLog } from "@/lib/services/super-admin";
+import { useTenants, useSuperAdminDashboard, useGlobalAuditLog, useFeatureFlagAdoption } from "@/lib/services/super-admin";
 import { SupportSummary } from "./support-summary";
 
 export function DashboardContent() {
   const tenants = useTenants();
   const dashboard = useSuperAdminDashboard();
   const auditLog = useGlobalAuditLog();
+  const flagAdoption = useFeatureFlagAdoption();
   const aktiv = dashboard?.tenantCountsByStatus.AKTIV ?? 0;
   const gesperrt = dashboard?.tenantCountsByStatus.GESPERRT ?? 0;
   const archiviert = dashboard?.tenantCountsByStatus.ARCHIVIERT ?? 0;
@@ -52,11 +53,49 @@ export function DashboardContent() {
           </Card>
 
           <Card>
+            <CardHeader title="Top-Mandanten" hint="Nach Bestellungen diese Kalenderwoche" />
+            {dashboard?.topTenantsByOrdersThisWeek.length ? (
+              <ul className="divide-y divide-line text-sm">
+                {dashboard.topTenantsByOrdersThisWeek.map((t) => (
+                  <li key={t.tenantName} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <span className="text-ink">{t.tenantName}</span>
+                    <span className="font-medium text-ink">{t.orderCount}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-5 py-4 text-sm text-muted">Diese Woche noch keine Bestellungen.</p>
+            )}
+          </Card>
+
+          <Card>
             <CardHeader title="Fehlgeschlagene Logins" hint="Letzte 24 Stunden" />
             <p className="px-5 py-4 text-sm text-muted">
               <span className="font-display text-2xl font-semibold text-ink">{dashboard?.failedLoginsLast24h ?? "—"}</span>
               <span className="ml-2">Versuche</span>
             </p>
+            {dashboard?.currentlyLockedOutUsers.length ? (
+              <ul className="divide-y divide-line border-t border-line text-sm">
+                {dashboard.currentlyLockedOutUsers.map((u) => (
+                  <li key={u.email} className="px-5 py-3">
+                    <p className="font-medium text-ink">{u.name} {u.tenantName && <span className="font-normal text-muted">· {u.tenantName}</span>}</p>
+                    <p className="text-xs text-muted">Gesperrt bis {new Date(u.lockedUntil).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </Card>
+
+          <Card>
+            <CardHeader title="Feature-Flag-Nutzung" hint="Aktiv über alle Mandanten" />
+            <ul className="divide-y divide-line text-sm">
+              {flagAdoption.map((f) => (
+                <li key={f.key} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <span className="text-ink">{f.name}</span>
+                  <span className="text-muted">{f.enabledTenantCount}/{f.totalTenantCount}</span>
+                </li>
+              ))}
+            </ul>
           </Card>
         </div>
       </div>

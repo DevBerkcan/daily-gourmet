@@ -33,7 +33,7 @@ const toneStyles = {
 export function AppShell({ areaLabel, areaTone, nav, userName, userRole, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -86,7 +86,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
   const brand = (
     <div className="px-6 pb-5 pt-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-daily-gourmet.png" alt="Daily Gourmet" className="h-9 w-auto" />
+      <img src={user?.logoUrl ?? "/logo-daily-gourmet.png"} alt={user?.tenantName ?? "Daily Gourmet"} className="h-9 w-auto" />
       <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${tone.chip}`}>
         {areaLabel}
       </span>

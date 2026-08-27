@@ -2,12 +2,14 @@
 
 import { AlertTriangle, Check, MapPin, Navigation, PackageCheck, Phone, Play, Route, Soup } from "lucide-react";
 import { Button, Card, CardHeader, StatCard } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { useAktuelleFahrerRouten, useFahrer, useToggleGeladen, useAdvanceRouteStatus, useHandoffBestaetigen, useVerfuegbareRouten, useRouteUebernehmen, portionenJeRoute } from "@/lib/services/logistics";
 import { HEUTE } from "@/lib/heute";
 
 function VerfuegbareRouten() {
   const verfuegbar = useVerfuegbareRouten(HEUTE);
   const uebernehmen = useRouteUebernehmen();
+  const toast = useToast();
 
   if (verfuegbar.length === 0) {
     return <Card><div className="p-8 text-center text-sm text-muted">Für heute ist keine Route zugeordnet und derzeit keine offen zum Übernehmen.</div></Card>;
@@ -23,7 +25,7 @@ function VerfuegbareRouten() {
               <p className="font-semibold text-ink">{r.name}</p>
               <p className="mt-0.5 text-sm text-muted">{r.stopps.length} Stopps · Abfahrt {r.start} Uhr</p>
             </div>
-            <Button onClick={() => uebernehmen.mutate(r.id)} disabled={uebernehmen.isPending}>Route übernehmen</Button>
+            <Button onClick={() => uebernehmen.mutate(r.id, { onError: () => toast.error("Route konnte nicht übernommen werden. Bitte erneut versuchen.") })} disabled={uebernehmen.isPending}>{uebernehmen.isPending ? "Wird übernommen …" : "Route übernehmen"}</Button>
           </div>
         ))}
       </div>
@@ -37,6 +39,7 @@ export function DriverDashboard() {
   const toggleGeladen = useToggleGeladen();
   const advanceRouteStatus = useAdvanceRouteStatus();
   const handoffBestaetigen = useHandoffBestaetigen();
+  const toast = useToast();
   const route = routen.find((r) => r.datum === HEUTE) ?? routen[0];
   if (!route) return <VerfuegbareRouten />;
   const person = fahrer.find((f) => f.id === route.fahrerId);
@@ -44,12 +47,15 @@ export function DriverDashboard() {
   const allesGeladen = ladePositionen.length > 0 && ladePositionen.every((position) => position.geladen);
   const handoffVollstaendig = route.handoffWarmBestaetigt && route.handoffKaltBestaetigt && route.handoffDessertBestaetigt;
   const setHandoff = (feld: "warm" | "kalt" | "dessert", wert: boolean) =>
-    handoffBestaetigen.mutate({
-      routeId: route.id,
-      warm: feld === "warm" ? wert : route.handoffWarmBestaetigt,
-      kalt: feld === "kalt" ? wert : route.handoffKaltBestaetigt,
-      dessert: feld === "dessert" ? wert : route.handoffDessertBestaetigt,
-    });
+    handoffBestaetigen.mutate(
+      {
+        routeId: route.id,
+        warm: feld === "warm" ? wert : route.handoffWarmBestaetigt,
+        kalt: feld === "kalt" ? wert : route.handoffKaltBestaetigt,
+        dessert: feld === "dessert" ? wert : route.handoffDessertBestaetigt,
+      },
+      { onError: () => toast.error("Abnahme konnte nicht gespeichert werden. Bitte erneut versuchen.") }
+    );
 
   return (
     <>
@@ -66,7 +72,7 @@ export function DriverDashboard() {
             <div className="divide-y divide-line">
               {ladePositionen.map((position) => {
                 const istGeladen = position.geladen;
-                return <button key={position.id} type="button" onClick={() => toggleGeladen.mutate({ routeId: route.id, stoppId: position.stopp.id, positionId: position.id })} aria-pressed={istGeladen} className={`flex w-full items-start gap-4 px-5 py-4 text-left transition-colors ${istGeladen ? "bg-ok-soft" : "hover:bg-paper"}`}><span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border ${istGeladen ? "border-ok bg-ok text-white" : "border-line-strong bg-surface"}`}>{istGeladen ? <Check size={15} aria-hidden /> : null}</span><span className="min-w-0 flex-1"><span className="block font-semibold text-ink">{position.portionen} Portionen · {position.rezeptName}</span><span className="mt-1 block text-sm text-muted">{position.behaelter} · {position.stopp.einrichtungName}</span><span className="mt-1 block text-xs font-medium text-warn">{position.temperatur}{position.hinweis ? ` · ${position.hinweis}` : ""}</span></span></button>;
+                return <button key={position.id} type="button" onClick={() => toggleGeladen.mutate({ routeId: route.id, stoppId: position.stopp.id, positionId: position.id }, { onError: () => toast.error("Ladestatus konnte nicht aktualisiert werden. Bitte erneut versuchen.") })} disabled={toggleGeladen.isPending} aria-pressed={istGeladen} className={`flex w-full items-start gap-4 px-5 py-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${istGeladen ? "bg-ok-soft" : "hover:bg-paper"}`}><span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border ${istGeladen ? "border-ok bg-ok text-white" : "border-line-strong bg-surface"}`}>{istGeladen ? <Check size={15} aria-hidden /> : null}</span><span className="min-w-0 flex-1"><span className="block font-semibold text-ink">{position.portionen} Portionen · {position.rezeptName}</span><span className="mt-1 block text-sm text-muted">{position.behaelter} · {position.stopp.einrichtungName}</span><span className="mt-1 block text-xs font-medium text-warn">{position.temperatur}{position.hinweis ? ` · ${position.hinweis}` : ""}</span></span></button>;
               })}
             </div>
           </Card>
@@ -92,7 +98,8 @@ export function DriverDashboard() {
                     type="button"
                     onClick={() => setHandoff(feld, !bestaetigt)}
                     aria-pressed={bestaetigt}
-                    className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left text-sm transition-colors ${bestaetigt ? "border-ok bg-ok-soft" : "border-line-strong bg-surface hover:bg-paper"}`}
+                    disabled={handoffBestaetigen.isPending}
+                    className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${bestaetigt ? "border-ok bg-ok-soft" : "border-line-strong bg-surface hover:bg-paper"}`}
                   >
                     <span className={`flex size-6 shrink-0 items-center justify-center rounded-md border ${bestaetigt ? "border-ok bg-ok text-white" : "border-line-strong bg-surface"}`}>{bestaetigt ? <Check size={15} aria-hidden /> : null}</span>
                     <span className="font-medium text-ink">{label}</span>
@@ -103,7 +110,7 @@ export function DriverDashboard() {
           )}
           {!handoffVollstaendig && route.status === "GEPLANT" ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Abnahme von der Küche fehlt</strong><span className="text-muted">Bitte alle drei Komponenten bestätigen, bevor die Tour startet.</span></p></div> : null}
           {!allesGeladen ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Ladung noch unvollständig</strong><span className="text-muted">Tourstart wird freigegeben, sobald alle Positionen kontrolliert wurden.</span></p></div> : null}
-          {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button disabled={!allesGeladen || !handoffVollstaendig} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" })}><Play size={16} aria-hidden /> Tour starten</Button> : null}
+          {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button disabled={!allesGeladen || !handoffVollstaendig || advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" }, { onError: () => toast.error("Tour konnte nicht gestartet werden. Bitte erneut versuchen.") })}><Play size={16} aria-hidden /> {advanceRouteStatus.isPending ? "Wird gestartet …" : "Tour starten"}</Button> : null}
           <Button href={`/driver/routes/${route.id}`} variant="secondary"><Navigation size={16} aria-hidden /> Routenansicht öffnen</Button>
           <a href={`tel:${person?.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-paper"><Phone size={16} aria-hidden /> Disposition anrufen</a>
         </div>

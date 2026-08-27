@@ -2,6 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, toQueryString } from "@/lib/api/client";
 import type { PagedResult } from "@/lib/api/types";
 import type { TenantStatus } from "@/features/tenants/types";
+import {
+  toEinrichtung,
+  type Einrichtung,
+  type FacilityDto,
+  type CreateEinrichtungInput,
+  type UpdateEinrichtungInput,
+  type FacilityDeleteImpact,
+} from "@/lib/services/facilities";
 
 export type { TenantStatus } from "@/features/tenants/types";
 
@@ -286,6 +294,32 @@ export function useCreateUser() {
   });
 }
 
+export function useUpdateGlobalUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: { name: string; role: string; facilityId?: string | null } }) =>
+      api.put<UserDto>(`/super-admin/users/${id}`, { name: input.name, role: input.role, facilityId: input.facilityId ?? null }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin-users"] }),
+  });
+}
+
+function useGlobalUserStatusAction(action: "deactivate" | "activate") {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/super-admin/users/${id}/${action}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin-users"] }),
+  });
+}
+
+export const useDeactivateGlobalUser = () => useGlobalUserStatusAction("deactivate");
+export const useActivateGlobalUser = () => useGlobalUserStatusAction("activate");
+
+/** Admin-triggered "Passwort zurücksetzen" — sendet erneut eine "Passwort festlegen"-Mail, auch für
+ * bereits aktive Benutzer (siehe SuperAdminHandler.TriggerPasswordResetAsync). */
+export function useResetGlobalUserPassword() {
+  return useMutation({ mutationFn: (id: string) => api.post(`/super-admin/users/${id}/password-reset`) });
+}
+
 export function useTenantUsers(tenantId: string): GlobalUser[] {
   const query = useQuery({
     queryKey: ["super-admin-tenant-users", tenantId],
@@ -302,11 +336,26 @@ export interface SuperAdminDashboard {
   totalFacilities: number;
   thisWeekOrderCount: number;
   failedLoginsLast24h: number;
+  topTenantsByOrdersThisWeek: { tenantName: string; orderCount: number }[];
+  currentlyLockedOutUsers: { name: string; email: string; tenantName: string | null; lockedUntil: string }[];
+  averageFirstResponseMinutes: number | null;
 }
 
 export function useSuperAdminDashboard(): SuperAdminDashboard | undefined {
   const query = useQuery({ queryKey: ["super-admin-dashboard"], queryFn: () => api.get<SuperAdminDashboard>("/super-admin/dashboard") });
   return query.data;
+}
+
+export interface FeatureFlagAdoption {
+  key: string;
+  name: string;
+  enabledTenantCount: number;
+  totalTenantCount: number;
+}
+
+export function useFeatureFlagAdoption(): FeatureFlagAdoption[] {
+  const query = useQuery({ queryKey: ["feature-flag-adoption"], queryFn: () => api.get<FeatureFlagAdoption[]>("/super-admin/feature-flags/adoption") });
+  return query.data ?? [];
 }
 
 export interface SystemStatus {
@@ -326,8 +375,14 @@ export interface LocationSummary {
   tenantName: string;
 }
 
-export function useAllLocations(): LocationSummary[] {
-  const query = useQuery({ queryKey: ["super-admin-locations"], queryFn: () => api.get<LocationSummary[]>("/super-admin/locations") });
+/** tenantId narrows to one tenant's own Standorte (kitchens) — used by the tenant-facility form
+ * in TenantFacilitiesCard; omitted, it lists every tenant's locations (the /super-admin/locations
+ * overview page). */
+export function useAllLocations(tenantId?: string): LocationSummary[] {
+  const query = useQuery({
+    queryKey: ["super-admin-locations", tenantId],
+    queryFn: () => api.get<LocationSummary[]>(`/super-admin/locations${toQueryString({ tenantId })}`),
+  });
   return query.data ?? [];
 }
 
@@ -337,6 +392,9 @@ export interface FeatureFlag {
   name: string;
   description?: string;
   standardAktiv: boolean;
+  /** Per-tenant override — null when none is set (falls back to standardAktiv), only meaningful
+   * when useFeatureFlags() was called with a tenantId. */
+  tenantAktiv: boolean | null;
 }
 
 interface FeatureFlagDto {
@@ -348,9 +406,14 @@ interface FeatureFlagDto {
   tenantEnabled: boolean | null;
 }
 
-export function useFeatureFlags(): FeatureFlag[] {
-  const query = useQuery({ queryKey: ["feature-flags"], queryFn: () => api.get<FeatureFlagDto[]>("/super-admin/feature-flags") });
-  return (query.data ?? []).map((f) => ({ id: f.id, key: f.key, name: f.name, description: f.description ?? undefined, standardAktiv: f.defaultEnabled }));
+/** tenantId resolves each flag's per-tenant override too (tenantAktiv: null = no override, falls
+ * back to standardAktiv) — omitted, it's just the global catalog (the /super-admin/features page). */
+export function useFeatureFlags(tenantId?: string): FeatureFlag[] {
+  const query = useQuery({
+    queryKey: ["feature-flags", tenantId],
+    queryFn: () => api.get<FeatureFlagDto[]>(`/super-admin/feature-flags${toQueryString({ tenantId })}`),
+  });
+  return (query.data ?? []).map((f) => ({ id: f.id, key: f.key, name: f.name, description: f.description ?? undefined, standardAktiv: f.defaultEnabled, tenantAktiv: f.tenantEnabled }));
 }
 
 export function useUpdateFeatureFlag() {
@@ -359,6 +422,17 @@ export function useUpdateFeatureFlag() {
     mutationFn: ({ id, name, description, standardAktiv }: { id: string; name: string; description?: string; standardAktiv: boolean }) =>
       api.put<FeatureFlagDto>(`/super-admin/feature-flags/${id}`, { name, description, defaultEnabled: standardAktiv }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feature-flags"] }),
+  });
+}
+
+/** Sets (or clears, by passing the flag's own DefaultEnabled) a per-tenant override — the endpoint
+ * already existed (SuperAdminHandler.SetTenantFeatureFlagAsync) but no frontend hook ever called it. */
+export function useSetTenantFeatureFlag(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ featureFlagId, enabled }: { featureFlagId: string; enabled: boolean }) =>
+      api.put(`/super-admin/tenants/${tenantId}/feature-flags`, { featureFlagId, enabled }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feature-flags", tenantId] }),
   });
 }
 
@@ -402,4 +476,78 @@ export function useGlobalAuditLog(filters?: { tenantId?: string }): GlobalAuditE
     entitaetId: a.entityId,
     begruendung: a.reason ?? undefined,
   }));
+}
+
+// ---- Einrichtungen eines Mandanten (Super Admin) ----
+// Spiegelt lib/services/facilities.ts, aber über die tenantId-parametrisierten
+// /super-admin/tenants/{tenantId}/facilities-Routen statt der eigenen Mandanten-Session.
+
+export function useTenantFacilities(tenantId: string): Einrichtung[] {
+  const query = useQuery({
+    queryKey: ["super-admin-tenant-facilities", tenantId],
+    queryFn: () => api.get<PagedResult<FacilityDto>>(`/super-admin/tenants/${tenantId}/facilities?pageSize=200`),
+    enabled: !!tenantId,
+  });
+  return (query.data?.items ?? []).map(toEinrichtung);
+}
+
+function toFacilityBody(input: CreateEinrichtungInput) {
+  return {
+    name: input.name,
+    address: input.anschrift,
+    contactPerson: input.ansprechpartner,
+    email: input.email,
+    phone: input.telefon,
+    locationId: input.standortId,
+    activeWeekdays: input.aktiveWochentage.join(","),
+    portionPrice: input.portionspreis,
+    notes: input.notizen,
+    routeNumber: input.routeNummer,
+  };
+}
+
+export function useCreateTenantFacility(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateEinrichtungInput) => api.post<FacilityDto>(`/super-admin/tenants/${tenantId}/facilities`, toFacilityBody(input)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-facilities", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenants"] });
+    },
+  });
+}
+
+export function useUpdateTenantFacility(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateEinrichtungInput }) =>
+      api.put<FacilityDto>(`/super-admin/tenants/${tenantId}/facilities/${id}`, { ...toFacilityBody(input), status: input.status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-facilities", tenantId] }),
+  });
+}
+
+export function useTenantFacilityDeleteImpact(tenantId: string, facilityId: string | null) {
+  const query = useQuery({
+    queryKey: ["super-admin-tenant-facility-delete-impact", tenantId, facilityId],
+    queryFn: () => api.get<{ orderCount: number; closureCount: number; userCount: number; routeStopCount: number }>(
+      `/super-admin/tenants/${tenantId}/facilities/${facilityId}/delete-impact`
+    ),
+    enabled: !!facilityId,
+  });
+  const dto = query.data;
+  const impact: FacilityDeleteImpact | undefined = dto
+    ? { bestellungen: dto.orderCount, schliesstage: dto.closureCount, benutzer: dto.userCount, tourStopps: dto.routeStopCount }
+    : undefined;
+  return { impact };
+}
+
+export function useDeleteTenantFacility(tenantId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (facilityId: string) => api.delete(`/super-admin/tenants/${tenantId}/facilities/${facilityId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-facilities", tenantId] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenants"] });
+    },
+  });
 }
