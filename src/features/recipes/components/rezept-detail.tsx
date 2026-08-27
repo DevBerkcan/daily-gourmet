@@ -207,7 +207,7 @@ export function RezeptDetail({ id }: { id: string }) {
                   const faktor = (rz.menge * (z.basiseinheit === "Stück" ? 1 : 1000)) / 100 / rezept.standardPortionen;
                   const kcal = Math.round(z.naehrwertePro100.kcal * faktor);
                   return (
-                    <tr key={rz.zutatId}>
+                    <tr key={rz.id ?? rz.zutatId}>
                       <Td className="font-medium text-ink">{z.name}</Td>
                       <Td className="text-muted">{rz.menge} {rz.einheit}</Td>
                       <Td>{kcal} kcal</Td>

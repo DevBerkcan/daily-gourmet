@@ -21,6 +21,7 @@ interface LookupDto {
 }
 
 interface RecipeIngredientDto {
+  id: string;
   ingredientId: string;
   ingredientName: string;
   quantity: number;
@@ -84,6 +85,7 @@ interface RecipeDto {
 }
 
 interface RecipeScaleIngredientDto {
+  id: string;
   ingredientId: string;
   ingredientName: string;
   originalQuantity: number;
@@ -98,7 +100,7 @@ interface RecipeScaleResultDto {
 
 export interface RezeptSkaliert {
   faktor: number;
-  zutaten: { zutatId: string; name: string; originalMenge: number; hochgerechnet: number; einheit: string }[];
+  zutaten: { id: string; zutatId: string; name: string; originalMenge: number; hochgerechnet: number; einheit: string }[];
 }
 
 function toRezept(dto: RecipeDto): Rezept {
@@ -113,7 +115,7 @@ function toRezept(dto: RecipeDto): Rezept {
     zubereitungszeitMin: dto.prepTimeMinutes,
     schwierigkeit: dto.difficulty as Rezept["schwierigkeit"],
     zubereitungsschritte: dto.prepSteps,
-    zutaten: dto.ingredients.map((i) => ({ zutatId: i.ingredientId, menge: i.quantity, einheit: unitToFrontend(i.unit) })),
+    zutaten: dto.ingredients.map((i) => ({ id: i.id, zutatId: i.ingredientId, menge: i.quantity, einheit: unitToFrontend(i.unit) })),
     vegetarisch: dto.vegetarian,
     vegan: dto.vegan,
     glutenfrei: dto.glutenFree,
@@ -320,6 +322,7 @@ export function useRezeptSkaliert(id: string, portionen: number): RezeptSkaliert
   return {
     faktor: query.data.factor,
     zutaten: query.data.ingredients.map((i) => ({
+      id: i.id,
       zutatId: i.ingredientId,
       name: i.ingredientName,
       originalMenge: i.originalQuantity,
@@ -332,6 +335,7 @@ export function useRezeptSkaliert(id: string, portionen: number): RezeptSkaliert
 // ---- Nährwerte-Detailansicht ("Nährwerte ansehen") ----
 
 export interface RezeptNaehrwerteZeile {
+  id: string;
   zutatId: string;
   name: string;
   menge: number;
@@ -370,6 +374,7 @@ export interface RezeptNaehrwerteDetail {
 }
 
 interface RecipeNutritionIngredientRowDto {
+  id: string;
   ingredientId: string;
   ingredientName: string;
   quantity: number;
@@ -429,6 +434,7 @@ export function useRezeptNaehrwerteDetail(id: string | undefined): RezeptNaehrwe
     standardPortionen: d.standardPortions,
     gewichtProPortionG: d.portionWeightG ?? undefined,
     zutaten: d.ingredients.map((i) => ({
+      id: i.id,
       zutatId: i.ingredientId,
       name: i.ingredientName,
       menge: i.quantity,

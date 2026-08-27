@@ -150,7 +150,7 @@ export function ProduktionstagDetail({ id }: { id: string }) {
 
               <Table head={["Zutat", "Rezeptmenge (Basis)", "Hochgerechnet für Produktion"]}>
                 {rezept.zutaten.map((rz) => (
-                  <tr key={rz.zutatId}>
+                  <tr key={rz.id ?? rz.zutatId}>
                     <Td className="font-medium text-ink">{zutaten.find((z) => z.id === rz.zutatId)?.name}</Td>
                     <Td className="text-muted">{rz.menge.toLocaleString("de-DE")} {rz.einheit} / {rezept.standardPortionen} Port.</Td>
                     <Td className="font-semibold text-basil">{rund(rz.menge * faktor).toLocaleString("de-DE")} {rz.einheit}</Td>

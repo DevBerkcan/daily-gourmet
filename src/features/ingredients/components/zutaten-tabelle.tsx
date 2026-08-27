@@ -14,12 +14,15 @@ const QUELLE_KURZ: Record<string, string> = {
   "Bundeslebensmittelschlüssel (BLS)": "BLS",
 };
 
+const NAEHRWERTQUELLEN = ["Bundeslebensmittelschlüssel (BLS)", "Manuell", "Open Food Facts", "USDA FoodData Central"] as const;
+
 export function ZutatenTabelle() {
   const zutaten = useZutaten();
   const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
   const [allergen, setAllergen] = useState("Alle Allergene");
+  const [naehrwertquelle, setNaehrwertquelle] = useState("Alle Quellen");
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
@@ -27,9 +30,10 @@ export function ZutatenTabelle() {
       if (q && !z.name.toLowerCase().includes(q) && !z.artikelnummer.toLowerCase().includes(q)) return false;
       if (kategorie !== "Alle Kategorien" && z.kategorie !== kategorie) return false;
       if (allergen !== "Alle Allergene" && !z.allergene.includes(allergen)) return false;
+      if (naehrwertquelle !== "Alle Quellen" && z.naehrwertePro100.quelle !== naehrwertquelle) return false;
       return true;
     });
-  }, [zutaten, suche, kategorie, allergen]);
+  }, [zutaten, suche, kategorie, allergen, naehrwertquelle]);
 
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
@@ -57,6 +61,10 @@ export function ZutatenTabelle() {
         <select aria-label="Nach Allergen filtern" value={allergen} onChange={(e) => setAllergen(e.target.value)} className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
           <option>Alle Allergene</option>
           {ALLERGENE_LISTE.map((a) => <option key={a}>{a}</option>)}
+        </select>
+        <select aria-label="Nach Nährwertquelle filtern" value={naehrwertquelle} onChange={(e) => setNaehrwertquelle(e.target.value)} className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm">
+          <option>Alle Quellen</option>
+          {NAEHRWERTQUELLEN.map((q) => <option key={q} value={q}>{QUELLE_KURZ[q] ?? q}</option>)}
         </select>
         <button type="button" onClick={csvExport} className="ml-auto cursor-pointer text-xs font-medium text-basil hover:underline">CSV-Export</button>
       </div>

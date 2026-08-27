@@ -124,7 +124,7 @@ export function NaehrwerteModal({ rezept, onClose }: { rezept: Rezept; onClose: 
                   </thead>
                   <tbody className="divide-y divide-line">
                     {detail.zutaten.map((z) => (
-                      <tr key={z.zutatId} className={z.hatNaehrwerte ? "" : "text-muted"}>
+                      <tr key={z.id} className={z.hatNaehrwerte ? "" : "text-muted"}>
                         <td className="whitespace-nowrap px-3 py-2 text-xs">{fmt(z.menge, 3)} {z.einheit}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-xs">{z.gewichtG !== undefined ? `${fmt(z.gewichtG, 0)}g` : "—"}</td>
                         <td className="px-3 py-2 text-xs font-medium text-ink">

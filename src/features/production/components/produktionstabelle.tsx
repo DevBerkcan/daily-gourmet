@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, Table, Td, StatusBadge, Pagination } from "@/components/ui";
+import { Card, Table, Td, StatusBadge, Pagination, Button } from "@/components/ui";
+import { Printer } from "lucide-react";
 import { useProduktionsplaene } from "@/lib/services/production";
 import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useStandorte } from "@/lib/services/locations";
@@ -45,6 +46,9 @@ export function Produktionstabelle() {
             <option value="">Alle Standorte</option>
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
+          <div className="ml-auto">
+            <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
+          </div>
         </div>
       </Card>
       {pageItems.map((pp) => {
@@ -89,7 +93,7 @@ export function Produktionstabelle() {
           </Card>
         );
       })}
-      <Card>
+      <Card className="no-print">
         <Pagination
           page={page} totalPages={totalPages} pageSize={pageSize} totalItems={totalItems}
           onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}

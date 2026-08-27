@@ -4,6 +4,11 @@ export type Schwierigkeitsgrad = "Einfach" | "Mittel" | "Anspruchsvoll";
 export type NutriScore = "A" | "B" | "C" | "D" | "E";
 
 export interface RezeptZutat {
+  /** Id der RecipeIngredient-Zeile selbst (nicht der Zutat) — eindeutig auch wenn dieselbe Zutat
+   * mehrfach im Rezept vorkommt. Als React-Key verwenden (mit zutatId als Fallback), nicht zutatId
+   * allein. Optional, weil neu im Formular hinzugefügte Zeilen vor dem Speichern noch keine haben,
+   * und der große Dummy-Datensatz (data.ts) sie nicht nachträgt — echte API-Daten liefern immer eine. */
+  id?: string;
   zutatId: string;
   menge: number;
   einheit: Einheit;

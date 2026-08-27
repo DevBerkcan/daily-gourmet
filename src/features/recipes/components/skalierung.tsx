@@ -36,6 +36,7 @@ export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
         {(
           skaliert?.zutaten ??
           rezept.zutaten.map((rz) => ({
+            id: rz.id ?? rz.zutatId,
             zutatId: rz.zutatId,
             name: zutaten.find((z) => z.id === rz.zutatId)?.name ?? rz.zutatId,
             originalMenge: rz.menge,
@@ -43,7 +44,7 @@ export function RezeptSkalierung({ rezept }: { rezept: Rezept }) {
             einheit: rz.einheit,
           }))
         ).map((rz) => (
-          <tr key={rz.zutatId}>
+          <tr key={rz.id}>
             <Td className="font-medium text-ink">{rz.name}</Td>
             <Td className="text-muted">{rz.originalMenge.toLocaleString("de-DE")} {rz.einheit}</Td>
             <Td className="font-semibold text-basil">{rund(rz.hochgerechnet).toLocaleString("de-DE")} {rz.einheit}</Td>
