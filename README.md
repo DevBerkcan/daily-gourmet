@@ -197,12 +197,22 @@ Diese fünf sind auch als Ein-Klick-Buttons auf `/login` hinterlegt.
 
 ### 6.6 Konfiguration im Überblick
 
+> **Sicherheitshinweis (2026-08-29):** `appsettings.json` enthielt bis zu diesem Datum echte
+> Produktions-Zugangsdaten im Klartext (Connection String, JWT-Secret, SMTP-Passwort, ImgBB-Key) —
+> siehe `docs/audit/04-security-authz.md` (SEC-03). Diese Werte gelten als kompromittiert und wurden
+> aus der Datei entfernt (leere Platzhalter). **Vor dem nächsten Produktions-Deployment müssen alle
+> vier Zugangsdaten beim jeweiligen Anbieter rotiert werden** (neues DB-Passwort, neu generiertes
+> JWT-Secret ≥ 32 Zeichen, neues SMTP-Passwort, neuer ImgBB-Key) und ausschließlich über
+> Umgebungsvariablen/User-Secrets gesetzt werden — nie erneut in diese Datei committen. Die Werte
+> bleiben in der Git-Historie sichtbar, bis diese separat bereinigt wird (siehe Audit-Bericht).
+
 | appsettings-Schlüssel | Zweck | Produktionsquelle |
 |---|---|---|
 | `ConnectionStrings:DefaultConnection` | SQL-Server-Verbindung | Umgebungsvariable |
 | `Jwt:Secret` / `Issuer` / `Audience` / `ExpirationMinutes` | JWT-Signierung | `Secret` als Umgebungsvariable |
 | `Smtp:Host/Port/Username/Password/FromEmail/FromName` | E-Mail-Versand (Einladungen) | Umgebungsvariablen |
 | `Cors:AllowedOrigins` | Erlaubte Frontend-Origins | Umgebungsvariable/Portal-Konfiguration |
+| `ImgBb:ApiKey` | Bild-Upload für Support-Anhänge | Umgebungsvariable |
 
 ## 7. Nächste Schritte
 
