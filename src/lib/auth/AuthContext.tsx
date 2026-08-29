@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api/client";
-import { clearToken, endImpersonation, getToken, isImpersonating, setToken } from "./token-storage";
+import { clearToken, endImpersonation, getToken, isImpersonating, setToken, TOKEN_STORAGE_KEYS } from "./token-storage";
 import type { CurrentUser, LoginResponse } from "./types";
 
 interface AuthContextValue {
@@ -55,6 +55,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void loadCurrentUser();
+  }, [loadCurrentUser]);
+
+  useEffect(() => {
+    // Fixed 2026-08-29 (SEC-06, docs/audit/04-security-authz.md): localStorage is shared across
+    // every tab of the same origin, but each tab's `user` here is plain React state loaded once on
+    // mount — starting/ending an impersonation in one tab silently swapped the active token
+    // underneath every other open tab without updating what they displayed, so a second tab could
+    // keep showing (and acting as) the old identity while its outgoing requests were already using
+    // the new one. The native `storage` event only fires in *other* tabs than the one that wrote
+    // the change, which is exactly what's needed to resync them.
+    function handleStorageChange(event: StorageEvent) {
+      if (event.key !== null && !TOKEN_STORAGE_KEYS.includes(event.key)) return;
+      void loadCurrentUser();
+    }
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [loadCurrentUser]);
 
   const login = useCallback(async (email: string, password: string) => {

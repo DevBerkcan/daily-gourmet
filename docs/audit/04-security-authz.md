@@ -217,6 +217,23 @@ Default), oder vertraglich klarstellen, dass Mandanten dies aktiv einfordern mü
 
 ## SEC-06 — Frontend: Impersonation-Token überschreibt den globalen `localStorage`-Slot browserweit
 
+> **✅ Behoben 2026-08-29.** Der eigentliche Kern des Risikos war nicht das Überschreiben selbst
+> (das ist für den `apiFetch`-Mechanismus beabsichtigt), sondern dass `AuthContext`s `user`-State pro
+> Tab nur einmal beim Mount geladen wird — ein anderer Tab bemerkte einen extern geänderten Token
+> nie und zeigte weiter die alte Identität an, während ausgehende Requests bereits mit dem neuen
+> Token liefen. `AuthContext.tsx` hört jetzt auf das native `storage`-Event (feuert laut
+> Web-Standard nur in *anderen* Tabs als dem schreibenden) und lädt bei einer Änderung der
+> Token-Schlüssel `/auth/me` neu — der Tab zeigt die tatsächlich aktive Identität dann sofort
+> korrekt an, statt sie zu verschleiern. `token-storage.ts` exportiert die relevanten Schlüssel
+> zentral (`TOKEN_STORAGE_KEYS`), damit der Listener nicht auf unbeteiligte `localStorage`-Schreibvorgänge
+> reagiert. Die mittelfristig vorgeschlagene Alternative (`sessionStorage`, pro Tab isoliert) wurde
+> nicht umgesetzt — größerer Eingriff für denselben Nutzen, siehe Fund für die Abwägung.
+> `tsc --noEmit`/`npm run build` sauber; interaktive Mehr-Tab-Verifikation nicht automatisiert (kein
+> Interaktionstest-Framework im Projekt, siehe `06-testing-ci-gap.md`) — die `storage`-Event-API ist
+> aber eine seit Langem stabile, gut dokumentierte Web-Standard-API ohne Next.js-spezifische
+> Fallstricke (anders als der SEC-07-Nonce-Mechanismus, der genau deshalb per echtem Browser
+> verifiziert wurde).
+
 **Beschreibung:** `setToken`/`startImpersonation` schreiben in den gemeinsamen Schlüssel `dg_token`.
 `localStorage` ist pro Origin global über alle Tabs geteilt. Startet ein Super-Admin in Tab A eine
 Impersonation, schaltet sich der aktive Token in **allen** Tabs derselben Browser-Session sofort um —

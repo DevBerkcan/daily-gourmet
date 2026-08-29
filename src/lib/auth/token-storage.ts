@@ -4,6 +4,10 @@
 const TOKEN_KEY = "dg_token";
 const REAL_TOKEN_KEY = "dg_token_real_before_impersonation";
 
+/** Exposed so AuthContext's cross-tab `storage` listener (SEC-06) knows which keys to react to,
+ * without hardcoding them a second time or reacting to unrelated localStorage writes from elsewhere. */
+export const TOKEN_STORAGE_KEYS = [TOKEN_KEY, REAL_TOKEN_KEY];
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(TOKEN_KEY);
