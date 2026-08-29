@@ -164,6 +164,14 @@ Deployment-Smoke-Test mit neuen Werten.
 
 ## SEC-04 — Impersonation-Audit erfasst nur schreibende Requests, keine Lesezugriffe
 
+> **✅ Behoben 2026-08-29.** `ImpersonationAuditMiddleware` protokolliert jetzt auch GET/HEAD-Requests
+> während einer aktiven Impersonation — aber dedupliziert pro Sitzung nach `Entity`/`EntityId`/`Action`,
+> damit wiederholtes Neuladen/Polling nicht die Tabelle flutet (jeder distinkte Pfad wird einmal pro
+> Sitzung geloggt, nicht pro Request). Sitzungsstart/-ende sind bereits über DBI-05 abgedeckt.
+> Test: `ImpersonationAuditTests.RepeatedGetDuringImpersonation_IsLoggedOnceNotOncePerRequest` — 3
+> identische GET-Requests erzeugen genau 1 Audit-Log-Eintrag; am ungefixten Code verifiziert
+> fehlgeschlagen (0 statt 1, da GETs komplett ignoriert wurden).
+
 **Beschreibung:** `ImpersonationAuditMiddleware` schreibt einen `AuditLog`-Eintrag nur bei
 Nicht-GET/HEAD-Requests. Während einer aktiven Impersonation können beliebig viele lesende Endpunkte
 (Bestellungen, Rezepte, Nutzerlisten, Standortdaten) aufgerufen werden, ohne dass dies im Audit-Trail
