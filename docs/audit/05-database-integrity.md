@@ -16,6 +16,12 @@ umrissen, aber teils mit echtem Risiko.
 
 ### DBI-01 — SQL-Deploy-Skript ist veraltet: letzte Migration fehlt vollständig
 
+> **✅ Behoben 2026-08-29.** `Database/DailyGourmet.sql` per `dotnet ef migrations script --idempotent`
+> neu generiert (zweimal — einmal initial, einmal erneut nach dem DBI-02-Fix, damit beide Migrationen
+> enthalten sind). Rein additive Änderung, verifiziert per `dotnet ef database update` gegen eine
+> frische, isolierte lokale Testdatenbank (`DailyGourmet_MigrationTest`, danach gelöscht) — alle 10
+> Migrationen wenden fehlerfrei an.
+
 **Titel:** `DailyGourmet.sql` enthält die Migration `20260827054437_AddImgBbSupportAttachments` nicht
 
 **Beschreibung:** Das Skript wird laut Vorgabe idempotent per `dotnet ef migrations script --idempotent`
@@ -44,6 +50,21 @@ fehl.
 ---
 
 ### DBI-02 — `IngredientSupplierPrice.Price` ohne explizite Precision, keine EF-Konfiguration überhaupt
+
+> **✅ Behoben 2026-08-29** (Unique-Constraint-Teil weiterhin offen, siehe Offene Frage 1).
+> `IngredientSupplierPriceConfiguration` ergänzt (`HasPrecision(12,2)` für `Price`,
+> `HasConversion<string>()` für `Unit`, `MaxLength` für die String-Felder, explizite FK-Delete-Behaviors).
+> Migration `20260829213739_ConfigureIngredientSupplierPrice` erstellt — **manuell nachbearbeitet**,
+> da die von `dotnet ef migrations add` generierte `Unit`-Spaltenkonvertierung (`int` → `nvarchar`)
+> SQL Servers impliziten Zahl-zu-Text-Cast genutzt hätte (`0` → `"0"` statt `"g"`) und damit jede
+> bestehende Zeile beim nächsten Lesen zum Absturz gebracht hätte. Stattdessen: neue Spalte anlegen,
+> per `CASE`-Statement die Ordinalwerte auf die Enum-Namen abbilden, alte Spalte löschen, umbenennen
+> (symmetrisch auch in `Down()`). Verifiziert: (1) volle Migrationskette gegen eine frische, isolierte
+> LocalDB-Testdatenbank angewendet (0 Fehler), (2) die exakte `CASE`-Zuordnung isoliert per `sqlcmd`
+> gegen eine Scratch-Tabelle mit allen 5 Ordinalwerten geprüft — Ergebnis stimmt exakt mit der
+> Enum-Deklarationsreihenfolge überein. `DbSeeder.cs` legt aktuell keine `IngredientSupplierPrice`-
+> Zeilen an, das Risiko war also zusätzlich gering, aber die Migration ist jetzt auch für einen
+> künftig befüllten Bestand sicher.
 
 **Titel:** Lieferantenpreis-Tabelle hat keine `IEntityTypeConfiguration`, `Price` läuft auf EF-Default
 

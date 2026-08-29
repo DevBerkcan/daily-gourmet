@@ -99,6 +99,13 @@ durchgängigem `DbContext`-Zugriff (Mehrheitspraxis) — Hauptsache konsistent.
 
 ### BEQ-04 — Weitverbreitetes `tenantContext.TenantId!.Value` ohne Guard
 
+> **✅ Behoben 2026-08-29.** Entscheidung bestätigt (`07-open-questions.md #8`): SUPER_ADMIN greift nie
+> direkt auf tenant-gebundene Handler zu, nur über Impersonation — die 24 Stellen in 19 Handlern waren
+> also eine echte Robustheitslücke, kein theoretisches Problem. Neue Extension-Methode
+> `ITenantContext.RequireTenantId()` (`Authentication/ITenantContext.cs`) wirft eine
+> `ForbiddenException` (→ 403) statt der rohen `InvalidOperationException`; alle 24 Stellen ersetzt.
+> Unit-Tests: `TenantContextExtensionsTests.cs`.
+
 **Beschreibung:** Mindestens 24 Stellen in 19 Handler-Dateien verwenden den Null-forgiving-Operator auf
 `ITenantContext.TenantId` (`Guid?`), ohne Guard-Klausel — obwohl das Feld explizit `null` sein kann,
 wenn ein SUPER_ADMIN anfragt. Die Invariante wird nur implizit über `[Authorize(Roles="TENANT_...")]`

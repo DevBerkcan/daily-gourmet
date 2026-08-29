@@ -4,11 +4,16 @@ Stand: 2026-08-29. Vollständiger technischer, architektonischer und sicherheits
 dem in `C:\Users\AtesogluBerk-Can\.claude\plans\der-prompt-ist-so-generic-hippo.md` freigegebenen Plan.
 
 **Umsetzungsstatus (laufend aktualisiert):** Nach Review der offenen Fragen (`07-open-questions.md`)
-mit dem Nutzer wurde am 2026-08-29 mit der Umsetzung begonnen. Bereits behoben und mit Regressionstests
-abgesichert: **SEC-01, SEC-02** (siehe `04-security-authz.md`), **BEQ-05** (siehe `03-backend-quality.md`).
-Teilweise: **SEC-03** (Code-seitig bereinigt, Rotation beim Hoster steht noch aus — siehe dort) und
-**BEQ-01** (ein reales Testprojekt existiert jetzt und deckt SEC-01/SEC-02 ab; die übrigen drei leeren
-Testordner sind noch offen). Alle übrigen Funde sind unverändert offen.
+mit dem Nutzer wurde am 2026-08-29 mit der Umsetzung begonnen.
+
+Bereits behoben und mit Regressionstests abgesichert: **SEC-01, SEC-02, BEQ-05, DBI-01, DBI-02, BEQ-04**.
+Teilweise: **SEC-03** (Code-seitig bereinigt, Rotation beim Hoster steht noch aus) und **BEQ-01** (ein
+reales Testprojekt existiert jetzt mit 7 laufenden Tests, deckt SEC-01/SEC-02/BEQ-04 ab; die übrigen
+drei leeren Testordner sind noch offen). DBI-07 (Unique-Constraint) bleibt bewusst zurückgestellt bis
+zur Lieferanten-API/CSV-Entscheidung. Alle übrigen Funde sind unverändert offen.
+
+Zwei Commits im Backend-Repo (`Fix critical auth bugs...`, sowie die DBI/BEQ-04-Nachfolge-Commits),
+ein Commit im Frontend-Repo (Audit-Report + README).
 
 ## Systemkontext (kurz)
 

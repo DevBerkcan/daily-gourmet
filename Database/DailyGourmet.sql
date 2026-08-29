@@ -2110,3 +2110,162 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260827054437_AddImgBbSupportAttachments'
+)
+BEGIN
+    DECLARE @var1 nvarchar(max);
+    SELECT @var1 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[SupportTicketAttachments]') AND [c].[name] = N'StorageKey');
+    IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [SupportTicketAttachments] DROP CONSTRAINT ' + @var1 + ';');
+    ALTER TABLE [SupportTicketAttachments] ALTER COLUMN [StorageKey] nvarchar(500) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260827054437_AddImgBbSupportAttachments'
+)
+BEGIN
+    ALTER TABLE [SupportTicketAttachments] ADD [DeleteUrl] nvarchar(1000) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260827054437_AddImgBbSupportAttachments'
+)
+BEGIN
+    ALTER TABLE [SupportTicketAttachments] ADD [ExternalUrl] nvarchar(1000) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260827054437_AddImgBbSupportAttachments'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260827054437_AddImgBbSupportAttachments', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT [FK_IngredientSupplierPrices_Suppliers_SupplierId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    ALTER TABLE [IngredientSupplierPrices] ADD [UnitNew] nvarchar(10) NOT NULL DEFAULT N'g';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    UPDATE [IngredientSupplierPrices] SET [UnitNew] = CASE [Unit]
+        WHEN 0 THEN 'g'
+        WHEN 1 THEN 'kg'
+        WHEN 2 THEN 'ml'
+        WHEN 3 THEN 'l'
+        WHEN 4 THEN 'Stueck'
+        ELSE 'g'
+    END;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    DECLARE @var2 nvarchar(max);
+    SELECT @var2 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'Unit');
+    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var2 + ';');
+    ALTER TABLE [IngredientSupplierPrices] DROP COLUMN [Unit];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    EXEC sp_rename N'[IngredientSupplierPrices].[UnitNew]', N'Unit', 'COLUMN';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    DECLARE @var3 nvarchar(max);
+    SELECT @var3 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'SupplierArticleNumber');
+    IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var3 + ';');
+    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [SupplierArticleNumber] nvarchar(50) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    DECLARE @var4 nvarchar(max);
+    SELECT @var4 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'Price');
+    IF @var4 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var4 + ';');
+    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [Price] decimal(12,2) NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    DECLARE @var5 nvarchar(max);
+    SELECT @var5 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'AvailabilityNote');
+    IF @var5 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var5 + ';');
+    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [AvailabilityNote] nvarchar(200) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    ALTER TABLE [IngredientSupplierPrices] ADD CONSTRAINT [FK_IngredientSupplierPrices_Suppliers_SupplierId] FOREIGN KEY ([SupplierId]) REFERENCES [Suppliers] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260829213739_ConfigureIngredientSupplierPrice', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
