@@ -6,14 +6,15 @@ dem in `C:\Users\AtesogluBerk-Can\.claude\plans\der-prompt-ist-so-generic-hippo.
 **Umsetzungsstatus (laufend aktualisiert):** Nach Review der offenen Fragen (`07-open-questions.md`)
 mit dem Nutzer wurde am 2026-08-29 mit der Umsetzung begonnen.
 
-Bereits behoben und mit Regressionstests abgesichert: **SEC-01, SEC-02, BEQ-05, DBI-01, DBI-02, BEQ-04**.
+Bereits behoben und mit Regressionstests abgesichert: **SEC-01, SEC-02, BEQ-05, DBI-01, DBI-02, BEQ-04,
+DBI-04, DBI-06**. Behoben ohne dediziertem Test: **DBI-05** (mechanisch identisch zu DBI-04/06).
 Teilweise: **SEC-03** (Code-seitig bereinigt, Rotation beim Hoster steht noch aus) und **BEQ-01** (ein
-reales Testprojekt existiert jetzt mit 7 laufenden Tests, deckt SEC-01/SEC-02/BEQ-04 ab; die übrigen
-drei leeren Testordner sind noch offen). DBI-07 (Unique-Constraint) bleibt bewusst zurückgestellt bis
-zur Lieferanten-API/CSV-Entscheidung. Alle übrigen Funde sind unverändert offen.
+reales Testprojekt existiert jetzt mit 9 laufenden Tests, deckt SEC-01/SEC-02/BEQ-04/DBI-04/DBI-06 ab;
+die übrigen drei leeren Testordner sind noch offen). DBI-07 (Unique-Constraint) bleibt bewusst
+zurückgestellt bis zur Lieferanten-API/CSV-Entscheidung. Alle übrigen Funde sind unverändert offen.
 
-Zwei Commits im Backend-Repo (`Fix critical auth bugs...`, sowie die DBI/BEQ-04-Nachfolge-Commits),
-ein Commit im Frontend-Repo (Audit-Report + README).
+Drei Commits im Backend-Repo, zwei Commits im Frontend-Repo (Audit-Report + README, SQL-Skript +
+Doku-Updates).
 
 ## Systemkontext (kurz)
 

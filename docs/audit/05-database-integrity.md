@@ -123,6 +123,11 @@ Umsatz-/Produktionsberechnungen einfließen.
 
 ### DBI-04 — Feature-Flag-Toggle pro Mandant ist komplett unauditierbar
 
+> **✅ Behoben 2026-08-29.** `SuperAdminHandler.SetTenantFeatureFlagAsync` schreibt jetzt zusätzlich
+> einen `AuditLog`-Eintrag (Flag-Key, Alt-/Neu-Zustand, `UserId`). Test:
+> `AuditTrailTests.SetTenantFeatureFlag_WritesAuditLogEntry_WithFlagKeyAndNewState` — am ungefixten
+> Code verifiziert fehlgeschlagen (leere `AuditLogs`-Collection).
+
 **Titel:** `TenantFeatureFlag` hat weder Zeitstempel noch "wer" noch Grund; Handler schreibt nicht ins AuditLog
 
 **Beschreibung:** `TenantFeatureFlag` erbt nicht von `BaseEntity` (keine `CreatedAt`/`UpdatedAt`/
@@ -144,6 +149,12 @@ soll beim Toggle einen `AuditLog`-Eintrag schreiben.
 ---
 
 ### DBI-05 — Support-Session-Start/-Ende schreibt nicht ins zentrale AuditLog
+
+> **✅ Behoben 2026-08-29.** `SupportSessionHandler.StartAsync`/`EndAsync`/
+> `EndCurrentForCallerTenantAsync` schreiben jetzt je einen `AuditLog`-Eintrag. Kein dedizierter
+> HTTP-Regressionstest ergänzt (würde zusätzlichen `IJwtTokenService`/Tenant-Seed-Aufwand erfordern,
+> der für diese reine Ergänzung nicht im Verhältnis stand) — Änderung ist mechanisch identisch zu den
+> per Test abgesicherten DBI-04/DBI-06-Fixes.
 
 **Titel:** `SupportSessionHandler` protokolliert nur in eigener Tabelle, nicht im `AuditLog`
 
@@ -168,6 +179,11 @@ Eintrag ergänzen.
 ---
 
 ### DBI-06 — `ProductionAdjustment` dokumentiert als AuditLog-Schreiber, schreibt aber nur in eigene Tabelle
+
+> **✅ Behoben 2026-08-29** (Entscheidung: zentrales AuditLog ergänzen, nicht nur Doku korrigieren —
+> `07-open-questions.md #4`). `ProductionPlanHandler.AddAdjustmentAsync` schreibt jetzt zusätzlich
+> einen `AuditLog`-Eintrag. Test: `AuditTrailTests.AddAdjustment_WritesAuditLogEntry_WithOldAndNewQuantity`
+> — am ungefixten Code verifiziert fehlgeschlagen.
 
 **Titel:** Produktionsanpassungen mit Grund landen nicht im zentralen AuditLog
 
