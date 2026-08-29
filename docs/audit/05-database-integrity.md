@@ -239,6 +239,12 @@ Einzelpreis.
 
 ### DBI-08 — `ConversionFactor`-Schutz existiert nur in einem von mehreren Schreibpfaden
 
+> **✅ Behoben 2026-08-29.** `IngredientHandler.SyncAsync` überspringt Zeilen mit
+> `ConversionFactor <= 0` jetzt explizit (neuer `SyncResultDto.SkippedInvalidConversionFactor`-Zähler)
+> statt sie still auf `1` zu setzen oder gegen die neue CHECK-Constraint (DBI-03) zu laufen und den
+> gesamten Batch scheitern zu lassen. Test:
+> `SeedAndImportTests.SyncAsync_RowWithNonPositiveConversionFactor_IsSkippedNotDefaulted`.
+
 **Titel:** Ingredient-Sync-Import defaultet ungültige `ConversionFactor`-Werte statt sie abzulehnen
 
 **Beschreibung:** Manueller Create/Update-Pfad lehnt ungültige Werte per DTO-`[Range]` ab. Der

@@ -166,6 +166,14 @@ ist; sonst `InvalidOperationException` werfen — konsistent mit `JwtTokenServic
 
 ### BEQ-06 — `DbSeeder` widerspricht der dokumentierten Passwort-Policy für Seed-Accounts
 
+> **✅ Behoben 2026-08-29.** `DbSeeder.ResolveDevPassword` liest `SEED_DEV_PASSWORD` als
+> Override; außerhalb von Development wirft der Seeder eine `InvalidOperationException` statt auf
+> das bekannte Standardpasswort zurückzufallen. README.md Abschnitt 6.4 aktualisiert (dabei auch eine
+> unabhängig entdeckte Diskrepanz korrigiert: die Tabelle nannte einen nicht existierenden
+> `KITCHEN_MANAGER`/`petra.salomon`-Zugang, der weder als Rolle noch im Seed vorkommt — verwandt mit
+> `07-open-questions.md #2`). Unit-Tests: `SeedAndImportTests.cs` (3 Fälle) — Kompilierfehler gegen
+> den ungefixten Code bestätigt, dass die Tests exakt an die neue Signatur gebunden sind.
+
 **Beschreibung:** `BACKEND_IMPLEMENTATION_PLAN.md` §10 legt fest: dev/test-Accounts ohne committete
 Klartext-Passwörter, generiert beim ersten Seed-Lauf oder per Env-Var. Tatsächlich verwendet
 `DbSeeder.SeedAsync` eine fest im Quellcode hinterlegte Konstante für **alle** Konten inkl. SUPER_ADMIN.
@@ -201,6 +209,13 @@ wortgleich in mehreren Handlern statt zentral als Erweiterungsmethode.
 ---
 
 ### BEQ-08 — Unique-Constraint-Erkennung über brüchiges String-Matching
+
+> **✅ Behoben 2026-08-29.** Neuer `DbExceptionHelpers.IsUniqueConstraintViolation` prüft die
+> SQL-Server-Fehlernummer (2601/2627) zusätzlich zum Indexnamen, statt reinem Teilstring-Vergleich
+> auf die komplette Fehlermeldung. Alle 5 Fundstellen (`IngredientHandler`, 2× `MealPlanHandler`,
+> `ProductionPlanHandler`) angepasst. Kein dedizierter Test (bräuchte eine echte SQL-Server-Instanz,
+> die einen Duplicate-Key-Fehler auslöst — die bereits per LocalDB verifizierten Unique-Indizes aus
+> DBI-02/03 bestätigen indirekt, dass die Indizes selbst funktionieren).
 
 **Beschreibung:** Zur Umwandlung von DB-Unique-Constraint-Verletzungen in `ConflictException` (409)
 wird der Indexname als Teilstring in `DbUpdateException.InnerException.Message` gesucht, statt die

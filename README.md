@@ -169,18 +169,24 @@ ein JWT aus `POST /api/auth/login` (Format: `Bearer <token>`).
 
 ### 6.4 Test-Zugänge (Seed-Daten)
 
-Alle Seed-Benutzer teilen sich das Passwort **`Passwort123!`** (nur lokale Entwicklung —
-`Data/DbSeeder.cs`):
+In der Entwicklungsumgebung (`ASPNETCORE_ENVIRONMENT=Development`) teilen sich alle Seed-Benutzer
+das Standardpasswort **`Passwort123!`** (`Data/DbSeeder.cs`). Außerhalb von Development **verweigert
+der Seeder den Start**, sofern nicht die Umgebungsvariable `SEED_DEV_PASSWORD` mit einem eigenen
+Passwort gesetzt ist — siehe `docs/audit/03-backend-quality.md` (BEQ-06). `dotnet run -- --seed
+--environment Production` etwa erfordert also zusätzlich `SEED_DEV_PASSWORD=<eigenes Passwort>`.
 
 | E-Mail | Rolle | Bereich |
 |---|---|---|
 | `berkcan@gentle-webdesign.com` | SUPER_ADMIN | `/super-admin/dashboard` |
 | `miriam.hoffmann@daily-gourmet.de` | TENANT_OWNER | `/admin/dashboard` |
-| `petra.salomon@daily-gourmet.de` | KITCHEN_MANAGER | `/kitchen` |
+| `jonas.weber@daily-gourmet.de` | TENANT_ADMIN | `/admin/dashboard` |
 | `claudia.winter@musterschule-nord.example.de` | FACILITY_ADMIN | `/portal/dashboard` |
 | `markus.becker@daily-gourmet.de` | DRIVER | `/driver` |
 
-Diese fünf sind auch als Ein-Klick-Buttons auf `/login` hinterlegt.
+Diese Tabelle spiegelt die tatsächlichen Nutzer in `Data/DbSeeder.cs` (Stand 2026-08-29) — vorher
+nannte sie eine `petra.salomon@daily-gourmet.de` / `KITCHEN_MANAGER`-Kombination, die weder als Rolle
+existiert noch im Seed vorkommt; siehe `docs/audit/07-open-questions.md #2` zum verwandten
+Küche-Modul-Diskrepanz.
 
 ### 6.5 Deployment (MonsterASP)
 
