@@ -76,6 +76,18 @@ Einheiten-Konvertierung — vor der Extraktion anlegen.
 
 ### BEQ-03 — Repository-Abstraktion wird von der Mehrheit der Handler umgangen
 
+> **✅ Behoben 2026-08-29** (Nutzerentscheidung: Repository entfernen, entspricht bereits der
+> Mehrheitspraxis). `IRepository<T>`/`Repository<T>` gelöscht; alle 7 betroffenen Handler
+> (`QualityControlHandler`, `LocationHandler`, `FacilityHandler`, `DeviationHandler`,
+> `StorageLocationHandler`, `UserManagementHandler`, `SupplierHandler`) auf direkten
+> `DailyGourmetDbContext`-Zugriff umgestellt — inklusive manueller Nachbildung dessen, was
+> `Repository<T>.AddAsync`/`Update` bisher automatisch erledigt haben (`CreatedAt`/`UpdatedAt`
+> setzen), da das sonst stillschweigend entfallen wäre. `IUserRepository`/`ITenantSettingsRepository`
+> bleiben bestehen — echte dedizierte Verträge mit Sonderverhalten (Tenant-Filter-Bypass,
+> Nicht-`BaseEntity`-Form), keine Instanzen der entfernten generischen Abstraktion mehr.
+> `IUserRepository` von der generischen Basis gelöst (eigenständiges Interface). Alle 13 bestehenden
+> Tests weiterhin grün, kein dedizierter neuer Test (reines Refactoring ohne Verhaltensänderung).
+
 **Beschreibung:** `IRepository<T>` existiert, wird aber nur von 6 der 27 Handler genutzt. Die übrigen
 ~20 injizieren `DailyGourmetDbContext` direkt. `SupplierHandler` injiziert **beides gleichzeitig**
 (`IRepository<Supplier>` UND `DailyGourmetDbContext`), was zeigt, dass die Abstraktion hier keine echte
