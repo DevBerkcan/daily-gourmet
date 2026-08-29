@@ -39,6 +39,10 @@ und Domänentypen nach `lib/types.ts` verschieben — nicht beides parallel bela
 
 ### FEQ-02 — `src/lib/einrichtungenStore.ts` ist toter Code mit namensgleichem Hook
 
+> **✅ Behoben 2026-08-29.** Datei gelöscht — Grep über alle 8 tatsächlichen Konsumenten bestätigt
+> erneut, dass ausschließlich `@/lib/services/facilities` importiert wird. `tsc --noEmit`/`npm run
+> build` danach weiterhin sauber.
+
 **Beschreibung:** Definiert `useEinrichtungen()`/`addEinrichtung()` als Session-Store auf Mock-Basis.
 Parallel exportiert `src/lib/services/facilities.ts:78` eine **gleichnamige** Funktion, die echt gegen
 das Backend lädt. Alle 8 tatsächlichen Konsumenten importieren ausschließlich aus
@@ -98,6 +102,13 @@ setzen, Tab-Zyklus begrenzen, Escape schließt, Fokus-Restore beim Schließen.
 ---
 
 ### FEQ-05 — `NumberField` ohne Clamping, inkonsistent mit anderen Zahlen-Inputs im selben Repo
+
+> **✅ Behoben 2026-08-29.** `onChange` klammert jetzt gegen `min` (falls gesetzt) und behandelt NaN
+> wie die bereits im Repo etablierten `Math.max(0, ...)`-Stellen. `step`-Erzwingung für Geldfelder
+> (die im Fund optional vorgeschlagene `MoneyField`-Variante) bewusst nicht umgesetzt — das ist eine
+> UX-Verbesserung, keine Korrektheitslücke wie das fehlende Clamping, und damit nicht Teil dieser
+> minimalen Änderung. `tsc --noEmit`/`npm run build`/`npm run lint` danach weiterhin sauber (kein
+> automatisierter Frontend-Test verfügbar, siehe `06-testing-ci-gap.md`).
 
 **Beschreibung:** `NumberField` (`src/components/ui/form-fields.tsx:25-42`) reicht `onChange`-Werte
 ungeklammert durch (`step ?? "any"` als Default, kein `min`-Enforcement in JS), während mehrere manuell

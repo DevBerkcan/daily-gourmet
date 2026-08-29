@@ -31,7 +31,14 @@ export function NumberField({ label, value, onChange, min, step, suffix, require
           value={value}
           min={min}
           step={step ?? "any"}
-          onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+          onChange={(e) => {
+            // Fixed 2026-08-29 (FEQ-05): this used to pass the raw parsed value straight through,
+            // so a negative/NaN keystroke (or a value below `min`) landed unclamped in state and fed
+            // straight into live calculations (e.g. cheapest-supplier-price reduce) — several other
+            // number inputs in the codebase already clamp with this same Math.max pattern.
+            const parsed = e.target.value === "" ? 0 : Number(e.target.value) || 0;
+            onChange(min !== undefined ? Math.max(min, parsed) : parsed);
+          }}
           required={required}
           className={inputCls}
         />
