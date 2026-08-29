@@ -8,6 +8,13 @@ verifiziert.
 
 ### FEQ-01 — `lib/services/*.ts` importiert systematisch aus `features/*`
 
+> **✅ Behoben 2026-08-29 als Doku-Fix** (Nutzerentscheidung: kleiner Fix statt Datei-Umzug —
+> Importpfad-Änderungen quer durchs Repo ohne Frontend-Testsuite als Sicherheitsnetz wurden als zu
+> riskant für den architektonischen Nutzen bewertet). `docs/ARCHITECTURE.md` Abschnitt 1 dokumentiert
+> jetzt explizit, dass `lib/services/{recipes,super-admin,support,meal-plans}.ts` eine bewusste
+> Ausnahme von der Schichtregel sind — keine generelle Freigabe für `lib/services/` insgesamt, mit
+> Hinweis, das Abwägen bei künftigen Änderungen an diesen vier Dateien erneut zu treffen.
+
 **Beschreibung:** `docs/ARCHITECTURE.md` (Abschnitt 1) legt fest: „`lib/` importiert nie aus `features/`
 oder `app/`." Die neue Schicht `src/lib/services/*.ts` (17 Dateien, TanStack-Query-Hooks) verletzt das
 durchgängig — importiert Typen UND Laufzeit-Code aus `features/`, statt wie in Abschnitt 4 der Doku

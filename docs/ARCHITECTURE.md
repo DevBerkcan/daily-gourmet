@@ -21,6 +21,18 @@ components/ Reine Präsentations-Komponenten ohne Fachlogik (analog zu lib/)
 
 Wenn eine neue Abhängigkeit diese Richtung verletzen würde (z. B. eine gemeinsam genutzte Hilfsfunktion in `lib/` bräuchte plötzlich einen Typ aus einem Feature), ist das ein Signal, die Funktion selbst zu verschieben — nicht die Regel zu umgehen. Beispiel aus diesem Refactoring: `lib/isoWeek.ts` enthielt ursprünglich `generateWeekTage()`, das den `SpeiseplanTag`-Typ aus dem Speiseplan-Feature brauchte. Die reinen Datumsfunktionen blieben in `lib/isoWeek.ts`, `generateWeekTage()` wanderte nach `features/meal-plans/utils.ts`.
 
+**Dokumentierte Ausnahme (Stand 2026-08-29, siehe `docs/audit/02-frontend-quality.md` FEQ-01):**
+`lib/services/*.ts` (die TanStack-Query-Hooks aus Abschnitt 4) importiert für `recipes.ts`,
+`super-admin.ts`, `support.ts` und `meal-plans.ts` Typen — und im Fall von `recipes.ts` auch
+Live-Berechnungsfunktionen wie `rezeptAllergeneLive()` — aus dem jeweiligen `features/<name>/`. Das
+verletzt die Regel oben, wurde aber bewusst nicht rückgebaut: Ein Verschieben dieser vier
+Service-Dateien nach `features/` würde Importpfade quer durch weite Teile des Repos ändern, ohne dass
+eine automatisierte Testsuite (siehe `docs/audit/06-testing-ci-gap.md`) diesen Umzug absichern könnte
+— das Risiko stand in keinem Verhältnis zum rein architektonischen Nutzen. Bei künftiger Arbeit an
+diesen vier Dateien: keine weiteren `features/`-Importe in `lib/services/` ergänzen, ohne dasselbe
+Abwägen erneut zu treffen; neue Service-Dateien für andere Features sollten die Regel weiterhin
+einhalten, das ist keine generelle Freigabe für `lib/services/` insgesamt.
+
 ## 2. Ordnerstruktur
 
 ```
