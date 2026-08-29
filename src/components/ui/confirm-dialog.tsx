@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "./index";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 /** Zentrierter Bestätigungsdialog im App-Design (siehe TenantSupportWidget für dasselbe
  * Overlay-Muster) — Ersatz für window.confirm() an Stellen, an denen eine Aktion (fast) endgültig
@@ -26,14 +27,19 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(open, dialogRef, onCancel);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
       <div className="absolute inset-0 bg-ink/50" onClick={onCancel} aria-hidden />
       <div
+        ref={dialogRef}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
+        tabIndex={-1}
         className="relative flex w-full max-w-md flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
       >
         <div className="flex items-start gap-3 px-5 pt-5">
@@ -73,6 +79,8 @@ export function PromptDialog({
   onCancel: () => void;
 }) {
   const [wert, setWert] = useState("");
+  const dialogRef = useRef<HTMLFormElement>(null);
+  useDialogFocus(open, dialogRef, abbrechen);
 
   if (!open) return null;
 
@@ -93,10 +101,12 @@ export function PromptDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
       <div className="absolute inset-0 bg-ink/50" onClick={abbrechen} aria-hidden />
       <form
+        ref={dialogRef}
         onSubmit={absenden}
         role="dialog"
         aria-modal="true"
         aria-labelledby="prompt-dialog-title"
+        tabIndex={-1}
         className="relative flex w-full max-w-md flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
       >
         <div className="px-5 pt-5">
@@ -107,7 +117,6 @@ export function PromptDialog({
           <label className="text-xs font-medium text-muted">
             {label}
             <input
-              autoFocus
               required
               value={wert}
               onChange={(event) => setWert(event.target.value)}

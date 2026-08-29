@@ -87,6 +87,18 @@ alten „Heute"-Tag, während jede andere Ansicht korrekt aktualisiert.
 
 ### FEQ-04 — Modal-Dialoge ohne Fokus-Falle, Fokus-Restore oder Escape-Handling
 
+> **✅ Behoben 2026-08-29.** Neuer Hook `src/lib/use-dialog-focus.ts`: setzt beim Öffnen den Fokus
+> auf das erste fokussierbare Element, begrenzt Tab/Shift+Tab auf den Dialog, schließt bei Escape
+> (ruft `onCancel`), stellt beim Schließen den Fokus auf das auslösende Element zurück. In
+> `ConfirmDialog` und `PromptDialog` eingebunden (`ref` + `tabIndex={-1}` auf dem Dialog-Container).
+> `onEscape` wird über eine Ref statt direkt in den Effekt-Dependencies gehalten, damit
+> Tastatureingaben in `PromptDialog`s Eingabefeld nicht bei jedem Zeichen den Fokus zurücksetzen —
+> vermeidet ein `eslint-disable` für `react-hooks/exhaustive-deps`, das laut Vorgabe nicht zulässig
+> ist. `tsc --noEmit`/`npm run lint`/`npm run build` sauber. **Nicht automatisiert verifiziert:**
+> tatsächliches Tab-Zyklus-/Escape-Verhalten im Browser — dafür fehlt ein Interaktionstest-Framework
+> (Playwright/Testing Library), siehe `06-testing-ci-gap.md`; neue Abhängigkeit dafür wurde nicht
+> ergänzt (keine unnötigen neuen Bibliotheken für einen einzelnen Fix).
+
 **Beschreibung:** `ConfirmDialog`/`PromptDialog` (`src/components/ui/confirm-dialog.tsx`) deklarieren
 `aria-modal="true"`, implementieren aber kein modales Verhalten: kein Fokus-Trap (Tab kann aus dem
 Dialog heraus navigieren), kein Escape-Handler (im Gegensatz zu `AppShell.tsx:53-55`), `ConfirmDialog`
