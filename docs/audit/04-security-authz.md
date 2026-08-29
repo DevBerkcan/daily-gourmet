@@ -233,6 +233,34 @@ Token-Storage-Strategie, hoher Regressionsbedarf)
 
 ## SEC-07 — Fehlende Content-Security-Policy als Mitigation für JWT in `localStorage`
 
+> **✅ Behoben 2026-08-29, mit wichtigem Nebeneffekt.** `src/middleware.ts` (neu) setzt eine
+> Nonce-basierte CSP (`script-src 'self' 'nonce-…' 'strict-dynamic'`, kein `unsafe-inline`/
+> `unsafe-eval` in Produktion) plus `X-Content-Type-Options`, `X-Frame-Options: DENY`,
+> `Referrer-Policy`. `src/app/layout.tsx` liest den Nonce jetzt über `headers()` — das ist laut
+> Next.js-Dokumentation zwingend nötig, damit Next die Nonce automatisch an seine eigenen
+> Framework-Skripte anhängt.
+>
+> **Wichtiger Nebeneffekt:** Next.js erzwingt bei Nonce-basierter CSP **vollständig dynamisches
+> Rendering für die gesamte Anwendung** — statische Optimierung/ISR sind damit systembedingt
+> deaktiviert (alle 34 Routen liefen vorher gemischt statisch/dynamisch, jetzt durchgängig `ƒ
+> Dynamic`). Das ist eine bewusste Next.js-Design-Entscheidung (nonces ergeben bei statisch zur
+> Build-Zeit generiertem HTML keinen Sinn), kein Implementierungsfehler — aber ein echter
+> Performance-/Hosting-Kosten-Trade-off, den der Fund selbst als "Risiko der Änderung: M" erwartet
+> hatte. Für eine intern genutzte B2B-Verwaltungsanwendung (kein hoher öffentlicher Traffic) als
+> vertretbar eingeschätzt; sollte sich das ändern, wäre die im selben Next.js-Leitfaden erwähnte
+> experimentelle Subresource-Integrity-Variante (`experimental.sri`) eine Alternative, die
+> statisches Rendering erhält.
+>
+> **Verifiziert per echtem Browser** (nicht nur Server-Response, da CSP-Verletzungen nur im Browser
+> sichtbar werden): `npm run build && npm start` sowie separat `npm run dev`, jeweils mit Headless
+> Chrome (`--headless=new --dump-dom --enable-logging=stderr`) gegen `/` und `/login` geprüft — 0
+> CSP-Verletzungen, 0 JS-Fehler, Seiteninhalt rendert korrekt. Zwei frühere Fehlversuche dabei
+> aufgedeckt und behoben: (1) ohne den `headers()`-Aufruf in `layout.tsx` blockierte die CSP
+> sämtliche Next.js-eigenen Skript-Chunks und Inline-Hydration-Skripte — die App wäre komplett
+> funktionsunfähig gewesen; (2) ein zwischenzeitlicher Fehlschlag stellte sich als Test gegen einen
+> noch laufenden alten Server-Prozess heraus, nicht als echtes CSP-Problem. Beide Server-Prozesse
+> nach den Tests sauber beendet.
+
 **Beschreibung:** JWT wird bewusst (dokumentierter Trade-off) in `localStorage` statt einem
 `HttpOnly`-Cookie gespeichert. Es existiert weder in `next.config.ts` noch anderswo eine CSP oder
 vergleichbare Kopfzeile, die eine XSS-Injektion am Auslesen des Tokens hindern würde.

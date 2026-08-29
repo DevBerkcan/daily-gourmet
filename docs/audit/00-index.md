@@ -71,19 +71,20 @@ werden.
 | DBI-02 | ✅ `IngredientSupplierPrice.Price` ohne explizite Precision/Konfiguration, Enum als rohes `int` | Datenbank | `05-database-integrity.md` |
 | DBI-03 | ✅ Fast keine DB-seitigen CHECK-Constraints gegen negative Preise/Mengen | Datenbank | `05-database-integrity.md` |
 
-## P2 — Mittel (16 Funde, Details in den Fachberichten)
+## P2 — Mittel (16 Funde, ✅ = behoben)
 
-- **Frontend** (`02-frontend-quality.md`): FEQ-01 (Schichtregel-Verletzung `lib/`↔`features/`),
-  FEQ-02 (toter Code mit Namenskollision), FEQ-04 (Fokus-Falle fehlt in Dialogen), FEQ-05
-  (`NumberField` ohne Clamping bei Geldfeldern)
-- **Backend** (`03-backend-quality.md`): BEQ-02 (`RecipeHandler` God-Handler), BEQ-03
-  (Repository-Pattern inkonsistent genutzt), BEQ-04 (`TenantId!.Value` ohne Guard, 24 Stellen),
-  BEQ-06 (Seed-Passwort widerspricht Policy), BEQ-08 (brüchige Unique-Constraint-Erkennung)
-- **Security** (`04-security-authz.md`): SEC-04 (Impersonation-Audit ohne Lesezugriffe), SEC-06
-  (Cross-Tab-Token-Überschreibung bei Impersonation), SEC-07 (keine CSP für localStorage-JWT)
-- **Datenbank** (`05-database-integrity.md`): DBI-04 (Feature-Flag-Toggle unauditierbar), DBI-05
-  (Support-Session-Start/-Ende nicht im AuditLog), DBI-07 (keine Unique-Constraint auf
-  Lieferantenpreise), DBI-08 (Sync-Import defaultet ungültige Werte still)
+- **Frontend** (`02-frontend-quality.md`): ✅ FEQ-01 (Doku-Fix statt Umzug), ✅ FEQ-02 (toter Code
+  gelöscht), FEQ-04 (Fokus-Falle fehlt in Dialogen — offen), ✅ FEQ-05 (`NumberField`-Clamping)
+- **Backend** (`03-backend-quality.md`): BEQ-02 (`RecipeHandler` God-Handler — offen, groß/riskant),
+  ✅ BEQ-03 (Repository-Pattern entfernt), ✅ BEQ-04 (`TenantId!.Value`-Guard), ✅ BEQ-06
+  (Seed-Passwort-Policy), ✅ BEQ-08 (SQL-Fehlernummer statt String-Matching)
+- **Security** (`04-security-authz.md`): SEC-04 (Impersonation-Audit ohne Lesezugriffe — offen),
+  SEC-06 (Cross-Tab-Token-Überschreibung — offen), SEC-07 (keine CSP — offen)
+- **Datenbank** (`05-database-integrity.md`): ✅ DBI-04 (Feature-Flag-Audit), ✅ DBI-05
+  (Support-Session-Audit), DBI-07 (Unique-Constraint — bewusst zurückgestellt, offene Frage 3), ✅
+  DBI-08 (Sync-Import überspringt statt still zu korrigieren)
+
+**Verbleibend: BEQ-02, FEQ-04, SEC-04, SEC-06, SEC-07** (DBI-07 bleibt bewusst offen).
 
 ## P3 — Niedrig (11 Funde)
 
