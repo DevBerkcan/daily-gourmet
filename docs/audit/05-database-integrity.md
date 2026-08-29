@@ -96,6 +96,17 @@ für "günstigster Lieferant"-Auflösung.
 
 ### DBI-03 — Nahezu keine DB-seitigen CHECK-Constraints gegen negative/ungültige Werte
 
+> **✅ Behoben 2026-08-29.** Offene Frage 5 zuvor technisch geklärt: alle Seed-Werte für
+> `ConversionFactor`, `PurchasePrice`, `PortionPrice`, `RecipeIngredient.Quantity` in `DbSeeder.cs`
+> sind positiv — keine Altdaten-Konflikte zu erwarten. Sechs CHECK-Constraints ergänzt
+> (`CK_Ingredient_ConversionFactor`, `CK_Ingredient_PurchasePrice`, `CK_Facility_PortionPrice`,
+> `CK_RecipeIngredient_Quantity`, `CK_ProcurementListItem_TotalQuantityBase`,
+> `CK_ProcurementListItem_PurchaseQuantity`). Verifiziert gegen eine frische, isolierte
+> LocalDB-Testdatenbank: (1) alle Migrationen wenden fehlerfrei an, (2) `dotnet run -- --seed` befüllt
+> die echten Demo-Daten erfolgreich gegen das eingeschränkte Schema, (3) ein manueller Versuch, einen
+> negativen `ConversionFactor` zu setzen, wird von SQL Server mit einem echten Constraint-Verstoß
+> abgelehnt (`Msg 547`). Datenbank danach gelöscht.
+
 **Titel:** Außer `Portions >= 0` existiert im gesamten Schema kein einziger CHECK-Constraint
 
 **Beschreibung:** Vollständige Suche über `Database/DailyGourmet.sql` nach `CHECK` liefert genau einen

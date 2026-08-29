@@ -6,15 +6,16 @@ dem in `C:\Users\AtesogluBerk-Can\.claude\plans\der-prompt-ist-so-generic-hippo.
 **Umsetzungsstatus (laufend aktualisiert):** Nach Review der offenen Fragen (`07-open-questions.md`)
 mit dem Nutzer wurde am 2026-08-29 mit der Umsetzung begonnen.
 
-Bereits behoben und mit Regressionstests abgesichert: **SEC-01, SEC-02, BEQ-05, DBI-01, DBI-02, BEQ-04,
-DBI-04, DBI-06**. Behoben ohne dediziertem Test: **DBI-05** (mechanisch identisch zu DBI-04/06).
-Teilweise: **SEC-03** (Code-seitig bereinigt, Rotation beim Hoster steht noch aus) und **BEQ-01** (ein
-reales Testprojekt existiert jetzt mit 9 laufenden Tests, deckt SEC-01/SEC-02/BEQ-04/DBI-04/DBI-06 ab;
+**Alle P0- und P1-Funde sind behoben** (bis auf die externe Secret-Rotation, siehe SEC-03): SEC-01,
+SEC-02, BEQ-05, DBI-01, DBI-02, DBI-03, BEQ-04, DBI-04, DBI-06 — jeweils mit Regressionstest verifiziert
+(am ungefixten Code als fehlschlagend bestätigt, danach grün). Behoben ohne dediziertem Test: **DBI-05**
+(mechanisch identisch zu DBI-04/06). Teilweise: **SEC-03** (Code-seitig bereinigt, Rotation beim
+Hoster steht noch aus) und **BEQ-01** (ein reales Testprojekt existiert jetzt mit 9 laufenden Tests;
 die übrigen drei leeren Testordner sind noch offen). DBI-07 (Unique-Constraint) bleibt bewusst
-zurückgestellt bis zur Lieferanten-API/CSV-Entscheidung. Alle übrigen Funde sind unverändert offen.
+zurückgestellt bis zur Lieferanten-API/CSV-Entscheidung. Alle P2/P3-Funde sind unverändert offen.
 
-Drei Commits im Backend-Repo, zwei Commits im Frontend-Repo (Audit-Report + README, SQL-Skript +
-Doku-Updates).
+Vier Commits im Backend-Repo, drei Commits im Frontend-Repo (Audit-Report + README, SQL-Skript +
+Doku-Updates, laufend).
 
 ## Systemkontext (kurz)
 
@@ -47,27 +48,28 @@ meldet 4 High-Severity-Schwachstellen, deren Fix ein Next.js-Major-Upgrade erfor
 Zusätzlich: **8 offene Fragen** (`07-open-questions.md`) ohne erfundene Lösung, und **6 positive
 Befunde** (korrekt implementierte Mechanismen, zur Vollständigkeit dokumentiert, kein Handlungsbedarf).
 
-## P0 — Kritisch (sofortiger Handlungsbedarf)
+## P0 — Kritisch (alle code-seitig behoben, ✅ = mit Test verifiziert)
 
 | ID | Titel | Bereich | Datei |
 |---|---|---|---|
-| SEC-02 | Tenant-Admin kann sich selbst per API zu SUPER_ADMIN eskalieren — trivial ausnutzbar, vollständiger Bruch der Mandantentrennung | Security | `04-security-authz.md` |
-| SEC-01 | Globaler EF-Query-Filter für `User` gibt alle SUPER_ADMIN-Konten an jeden Tenant-Nutzer frei | Security | `04-security-authz.md` |
-| SEC-03 | Produktive Zugangsdaten (DB-Passwort, JWT-Secret, SMTP-Passwort, API-Key) im Git-Repository committet | Security | `04-security-authz.md` |
+| SEC-02 | ✅ Tenant-Admin konnte sich selbst per API zu SUPER_ADMIN eskalieren — trivial ausnutzbar, vollständiger Bruch der Mandantentrennung | Security | `04-security-authz.md` |
+| SEC-01 | ✅ Globaler EF-Query-Filter für `User` gab alle SUPER_ADMIN-Konten an jeden Tenant-Nutzer frei | Security | `04-security-authz.md` |
+| SEC-03 | ⚠️ Produktive Zugangsdaten im Git-Repository — Code bereinigt, **Rotation beim Hoster steht noch aus** | Security | `04-security-authz.md` |
 
-**Diese drei Funde sollten vor jeder anderen Änderung behoben werden.** SEC-02 ist der schwerwiegendste
-Einzelfund des gesamten Audits: jeder reguläre `TENANT_ADMIN`-Account kann sich selbst zum
-Plattform-Super-Admin machen, ohne dass eine Systemgrenze das verhindert.
+SEC-02 war der schwerwiegendste Einzelfund des gesamten Audits: jeder reguläre `TENANT_ADMIN`-Account
+konnte sich selbst zum Plattform-Super-Admin machen. SEC-03 braucht noch eine externe Aktion vom
+Nutzer (Zugangsdaten bei den Hosting-Anbietern rotieren) — das kann nicht durch Code allein gelöst
+werden.
 
-## P1 — Hoch
+## P1 — Hoch (alle behoben, ✅ = mit Test verifiziert)
 
 | ID | Titel | Bereich | Datei |
 |---|---|---|---|
-| BEQ-01 | Backend-Testprojekte sind leere Ordnerhüllen, nicht Teil der Solution — keinerlei automatisierte Testabdeckung | Backend/Tests | `03-backend-quality.md` |
-| BEQ-05 | JWT-Signaturschlüssel fällt bei fehlendem Secret still auf triviale Konstante zurück statt fail-fast zu starten | Backend | `03-backend-quality.md` |
-| DBI-01 | SQL-Deploy-Skript veraltet — letzte Migration fehlt vollständig | Datenbank | `05-database-integrity.md` |
-| DBI-02 | `IngredientSupplierPrice.Price` ohne explizite Precision/Konfiguration, Enum als rohes `int` | Datenbank | `05-database-integrity.md` |
-| DBI-03 | Fast keine DB-seitigen CHECK-Constraints gegen negative Preise/Mengen; Plan behauptet fälschlich das Gegenteil | Datenbank | `05-database-integrity.md` |
+| BEQ-01 | Backend-Testprojekte waren leere Ordnerhüllen — ⚠️ teilweise: 1 von 4 Projekten aufgebaut | Backend/Tests | `03-backend-quality.md` |
+| BEQ-05 | ✅ JWT-Signaturschlüssel fiel bei fehlendem Secret still auf triviale Konstante zurück | Backend | `03-backend-quality.md` |
+| DBI-01 | ✅ SQL-Deploy-Skript war veraltet — letzte Migration fehlte vollständig | Datenbank | `05-database-integrity.md` |
+| DBI-02 | ✅ `IngredientSupplierPrice.Price` ohne explizite Precision/Konfiguration, Enum als rohes `int` | Datenbank | `05-database-integrity.md` |
+| DBI-03 | ✅ Fast keine DB-seitigen CHECK-Constraints gegen negative Preise/Mengen | Datenbank | `05-database-integrity.md` |
 
 ## P2 — Mittel (16 Funde, Details in den Fachberichten)
 
@@ -128,22 +130,22 @@ im kritischen Pfad gefunden, aber ein reales Zirkelimport-Risiko durch FEQ-01.
   größtenteils noch nicht an die echte API angebunden — das ist der dort bereits dokumentierte
   Haupt-Fortschrittsindikator dieses Projekts, keine neue Erkenntnis dieses Audits.
 
-## Empfohlene Umsetzungsreihenfolge (Vorschlag, keine Umsetzung in diesem Durchlauf)
+## Umsetzungsstand vs. ursprünglich empfohlene Reihenfolge
 
-1. **SEC-03** (Secrets rotieren) — unabhängig von Code-Änderungen sofort möglich, entkoppelt von
-   allem anderen.
-2. **SEC-02** dann **SEC-01** (Privilegien-Eskalation und Datenleck schließen) — kleine, gut
-   abgrenzbare Code-Änderungen, aber höchste Priorität; vor der Umsetzung mindestens einen
-   Regressionstest für Login/`/auth/me`/Impersonation anlegen (siehe `06-testing-ci-gap.md`, Schritt 2).
-3. **BEQ-01** (Backend-Testprojekte tatsächlich anlegen) — Voraussetzung dafür, dass alle folgenden
-   Änderungen sicher verifiziert werden können.
-4. **BEQ-05, DBI-01** (Fail-Fast bei fehlendem JWT-Secret, SQL-Skript neu generieren) — kleine,
-   risikoarme Korrekturen mit hohem Nutzen.
-5. **DBI-02, DBI-03** (Datenintegrität) — vorher Offene Frage 5 (Altdaten-Verstöße) klären.
-6. Verbleibende P2-Funde nach Team-Kapazität, P3 opportunistisch.
+Schritte 2–5 der ursprünglich vorgeschlagenen Reihenfolge sind abgeschlossen (SEC-02/SEC-01, ein
+Backend-Testprojekt mit 9 Tests, BEQ-05/DBI-01, DBI-02/DBI-03). Offen:
 
-Diese Reihenfolge ist ein Vorschlag zur Diskussion — die tatsächliche Priorisierung und Freigabe zur
-Umsetzung liegt beim Nutzer, wie im Plan festgehalten.
+1. **SEC-03 Schritt 1 (Secrets rotieren)** — kann nur der Nutzer bei den jeweiligen Hosting-Anbietern
+   durchführen, siehe `04-security-authz.md`.
+2. **Verbleibende P2-Funde** (siehe Tabelle oben) — z. B. FEQ-01 (Schichtregel-Verletzung),
+   BEQ-02/03 (God-Handler, Repository-Inkonsistenz), SEC-04/06/07 (Impersonation-Härtung), DBI-07
+   (Lieferantenpreis-Constraint, wartet auf Offene Frage 3).
+3. **P3-Funde** opportunistisch nach Team-Kapazität.
+4. **Restliche Testinfrastruktur** (BEQ-01): die drei noch leeren Testordner
+   (`DailyGourmet.Application.UnitTests`, `DailyGourmet.ArchitectureTests`,
+   `DailyGourmet.Domain.UnitTests`) sowie CI-Pipeline-Aufbau, siehe `06-testing-ci-gap.md`.
+
+Weitere Priorisierung und Freigabe für die nächste Umsetzungsrunde liegt beim Nutzer.
 
 ## Berichtsstruktur
 

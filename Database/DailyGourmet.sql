@@ -2269,3 +2269,64 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [RecipeIngredients] ADD CONSTRAINT [CK_RecipeIngredient_Quantity] CHECK ([Quantity] >= 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [ProcurementListItems] ADD CONSTRAINT [CK_ProcurementListItem_PurchaseQuantity] CHECK ([PurchaseQuantity] >= 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [ProcurementListItems] ADD CONSTRAINT [CK_ProcurementListItem_TotalQuantityBase] CHECK ([TotalQuantityBase] >= 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [Ingredients] ADD CONSTRAINT [CK_Ingredient_ConversionFactor] CHECK ([ConversionFactor] > 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [Ingredients] ADD CONSTRAINT [CK_Ingredient_PurchasePrice] CHECK ([PurchasePrice] IS NULL OR [PurchasePrice] >= 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [Facilities] ADD CONSTRAINT [CK_Facility_PortionPrice] CHECK ([PortionPrice] >= 0)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260829215522_AddNegativeValueCheckConstraints', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
