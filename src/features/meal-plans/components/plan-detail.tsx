@@ -6,16 +6,22 @@ import { useIsFetching } from "@tanstack/react-query";
 import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
 import { useEinrichtungen } from "@/lib/services/facilities";
+import { useToast } from "@/components/ui/toast";
+import { PromptDialog } from "@/components/ui/confirm-dialog";
+import { MarkAsTemplateDialog } from "./mark-as-template-dialog";
 import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
 import { MENUELINIEN } from "../types";
 import type { Rezept } from "@/features/recipes/types";
-import { Eye, Send, X } from "lucide-react";
+import { AlertTriangle, BookmarkPlus, Eye, Send, X } from "lucide-react";
 import {
   useSpeiseplaene,
   useUpdateSpeiseplanTag,
   useSubmitReviewSpeiseplan,
   usePublishSpeiseplan,
   useUnpublishSpeiseplan,
+  useMarkAsTemplate,
+  useRejectSpeiseplan,
+  useRemoveFacilityFromPlan,
 } from "@/lib/services/meal-plans";
 import { useBestellungen } from "@/lib/services/orders";
 import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
@@ -123,6 +129,34 @@ export function PlanDetail({ id }: { id: string }) {
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
   const unpublish = useUnpublishSpeiseplan();
+  const markAsTemplate = useMarkAsTemplate();
+  const reject = useRejectSpeiseplan();
+  const removeFacility = useRemoveFacilityFromPlan();
+  const toast = useToast();
+  const [vorlagenDialogOffen, setVorlagenDialogOffen] = useState(false);
+  const [ablehnenDialogOffen, setAblehnenDialogOffen] = useState(false);
+
+  const vorlageAnlegen = (slot: number) => {
+    if (!plan) return;
+    markAsTemplate.mutate(
+      { id: plan.id, vorlagenSlot: slot },
+      {
+        onSuccess: () => { setVorlagenDialogOffen(false); toast.success(`Vorlage ${slot} angelegt.`); },
+        onError: () => toast.error("Vorlage konnte nicht angelegt werden."),
+      }
+    );
+  };
+
+  const planAblehnen = (grund: string) => {
+    if (!plan) return;
+    reject.mutate(
+      { id: plan.id, grund },
+      {
+        onSuccess: () => { setAblehnenDialogOffen(false); toast.success("Wochenplan abgelehnt."); },
+        onError: () => toast.error("Ablehnen fehlgeschlagen. Bitte erneut versuchen."),
+      }
+    );
+  };
 
   const umsatz = bestellungen
     .filter((b) => BINDENDE_STATUS.includes(b.status))
@@ -160,16 +194,42 @@ export function PlanDetail({ id }: { id: string }) {
 
       <PageHeader
         title={`Speiseplan KW ${plan.kalenderwoche}`}
-        subtitle={`Veröffentlicht für: ${plan.einrichtungIds.map((f) => einrichtungen.find((e) => e.id === f)?.name).join(", ") || "—"}`}
+        subtitle={plan.einrichtungIds.length === 0 ? "Vorlage — keiner Einrichtung zugeordnet" : `Veröffentlicht für ${plan.einrichtungIds.length} Einrichtung${plan.einrichtungIds.length > 1 ? "en" : ""}`}
         actions={
           <>
             <Button variant="secondary" href="/portal/meal-plans"><Eye size={15} aria-hidden /> Vorschau als Einrichtung</Button>
+            <Button variant="secondary" onClick={() => setVorlagenDialogOffen(true)}><BookmarkPlus size={15} aria-hidden /> Als Vorlage markieren</Button>
             {plan.status === "DRAFT" && <Button onClick={() => submitReview.mutate(plan.id)}><Send size={15} aria-hidden /> Zur Prüfung senden</Button>}
             {plan.status === "REVIEW" && <Button onClick={() => publish.mutate(plan.id)}><Send size={15} aria-hidden /> Veröffentlichen</Button>}
+            {plan.status === "REVIEW" && <Button variant="secondary" onClick={() => setAblehnenDialogOffen(true)}>Ablehnen</Button>}
             {plan.status === "PUBLISHED" && <Button variant="secondary" onClick={() => unpublish.mutate(plan.id)}>Veröffentlichung zurückziehen</Button>}
           </>
         }
       />
+
+      {plan.einrichtungIds.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 no-print">
+          {plan.einrichtungIds.map((eid) => {
+            const name = einrichtungen.find((e) => e.id === eid)?.name ?? "—";
+            const kannEntfernen = bearbeitbar && plan.einrichtungIds.length > 1;
+            return (
+              <span key={eid} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs text-ink">
+                {name}
+                {kannEntfernen && (
+                  <button
+                    type="button"
+                    onClick={() => removeFacility.mutate({ id: plan.id, einrichtungId: eid }, { onError: () => toast.error("Einrichtung konnte nicht entfernt werden.") })}
+                    aria-label={`${name} von diesem Plan entfernen`}
+                    className="cursor-pointer text-muted hover:text-danger"
+                  >
+                    <X size={12} aria-hidden />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <StatusBadge status={plan.status} />
@@ -179,6 +239,16 @@ export function PlanDetail({ id }: { id: string }) {
           </span>
         )}
       </div>
+
+      {plan.ablehnungsgrund && (
+        <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-ink">
+          <AlertTriangle size={17} className="mt-0.5 shrink-0 text-warn" aria-hidden />
+          <div>
+            <p className="font-medium">Dieser Plan wurde abgelehnt und zur Überarbeitung zurückgeschickt.</p>
+            <p className="mt-0.5 text-ink-soft">{plan.ablehnungsgrund}</p>
+          </div>
+        </div>
+      )}
 
       {plan.tage.length === 0 ? (
         <Card>
@@ -247,6 +317,23 @@ export function PlanDetail({ id }: { id: string }) {
           ))}
         </WeekCalendar>
       )}
+
+      <MarkAsTemplateDialog
+        open={vorlagenDialogOffen}
+        onConfirm={vorlageAnlegen}
+        onCancel={() => setVorlagenDialogOffen(false)}
+        submitting={markAsTemplate.isPending}
+      />
+      <PromptDialog
+        open={ablehnenDialogOffen}
+        title="Wochenplan ablehnen"
+        message={<p>Der Plan wird zurück in den Entwurf gesendet. Der Grund wird hier angezeigt und die übrigen Administratoren werden per E-Mail informiert.</p>}
+        label="Grund der Ablehnung"
+        placeholder="z. B. Menülinie Alternativ fehlt an zwei Tagen"
+        confirmLabel="Ablehnen"
+        onCancel={() => setAblehnenDialogOffen(false)}
+        onConfirm={planAblehnen}
+      />
     </>
   );
 }

@@ -42,19 +42,18 @@ export function WochenplanFormular() {
   const [modus, setModus] = useState<"leer" | "vorlage">("leer");
   const [vorlageId, setVorlageId] = useState("");
   const [weekKey, setWeekKey] = useState(() => (wochen[0] ? `${wochen[0].jahr}-${wochen[0].kalenderwoche}` : ""));
-  const [standortIds, setStandortIds] = useState<string[]>(() => standorte.map((s) => s.id));
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
+  const [einrichtungSuche, setEinrichtungSuche] = useState("");
 
-  const toggleStandort = (id: string) => {
-    setStandortIds((ids) => (ids.includes(id) ? ids.filter((s) => s !== id) : [...ids, id]));
-    setEinrichtungIds((ids) => ids.filter((eid) => einrichtungen.find((e) => e.id === eid)?.standortId !== id));
-  };
+  const gefilterteEinrichtungen = einrichtungen.filter(
+    (e) => e.status === "AKTIV" && (einrichtungSuche.trim() === "" || e.name.toLowerCase().includes(einrichtungSuche.trim().toLowerCase()) || e.kundennummer.toLowerCase().includes(einrichtungSuche.trim().toLowerCase()))
+  );
 
   const toggleEinrichtung = (id: string) => {
     setEinrichtungIds((ids) => (ids.includes(id) ? ids.filter((e) => e !== id) : [...ids, id]));
   };
 
-  const kannAbsenden = weekKey !== "" && (modus === "vorlage" ? vorlageId !== "" : standortIds.length > 0 && einrichtungIds.length > 0);
+  const kannAbsenden = weekKey !== "" && einrichtungIds.length > 0 && (modus === "vorlage" ? vorlageId !== "" : true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,11 +61,12 @@ export function WochenplanFormular() {
     const [jahr, kalenderwoche] = weekKey.split("-").map(Number);
     if (modus === "vorlage") {
       duplicateIntoWeek.mutate(
-        { id: vorlageId, zielJahr: jahr, zielKalenderwoche: kalenderwoche },
+        { id: vorlageId, zielJahr: jahr, zielKalenderwoche: kalenderwoche, einrichtungIds },
         { onSuccess: (plan) => router.push(`/admin/meal-plans/${plan.id}`) }
       );
       return;
     }
+    const standortIds = [...new Set(einrichtungIds.map((id) => einrichtungen.find((e) => e.id === id)?.standortId).filter((id): id is string => !!id))];
     createSpeiseplan.mutate(
       { kalenderwoche, jahr, standortIds, einrichtungIds },
       { onSuccess: (plan) => router.push(`/admin/meal-plans/${plan.id}`) }
@@ -81,7 +81,7 @@ export function WochenplanFormular() {
         <span className="text-ink">Wochenplan erstellen</span>
       </nav>
 
-      <PageHeader title="Wochenplan erstellen" subtitle="Legen Sie Kalenderwoche, Standorte und Einrichtungen fest, oder starten Sie aus einer der acht Vorlagen." />
+      <PageHeader title="Wochenplan erstellen" subtitle="Legen Sie Kalenderwoche und Einrichtungen fest, oder starten Sie aus einer der acht Vorlagen." />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>
@@ -94,7 +94,7 @@ export function WochenplanFormular() {
 
         {modus === "vorlage" && (
           <Card>
-            <CardHeader title="Vorlage" hint="Standorte und Einrichtungen werden von der Vorlage übernommen und können danach angepasst werden." />
+            <CardHeader title="Vorlage" hint="Tage, Gerichte und Menülinien werden übernommen — die Einrichtungen wählen Sie unten, da eine Vorlage keinem Kunden zugeordnet ist." />
             <div className="px-5 py-4">
               {vorlagen.length === 0 ? (
                 <p className="text-sm text-muted">Noch keine Vorlagen angelegt — legen Sie einen Plan an und markieren Sie ihn als Vorlage (Slot 1-8).</p>
@@ -133,42 +133,37 @@ export function WochenplanFormular() {
           </div>
         </Card>
 
-        {modus === "leer" && (
-          <>
-            <Card>
-              <CardHeader title="Standorte" hint="Küchen- bzw. Produktionsstandort(e) für diesen Wochenplan." />
-              <div className="flex flex-col gap-2 px-5 py-4">
-                {standorte.map((s) => (
-                  <CheckboxRow key={s.id} checked={standortIds.includes(s.id)} onChange={() => toggleStandort(s.id)} label={s.name} sub={s.anschrift} status={s.status} />
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <CardHeader title="Einrichtungen" hint="Für welche Einrichtungen wird dieser Wochenplan veröffentlicht?" />
-              <div className="flex flex-col gap-5 px-5 py-4">
-                {standortIds.length === 0 ? (
-                  <p className="text-sm text-muted">Wählen Sie zunächst mindestens einen Standort.</p>
-                ) : (
-                  standortIds.map((sid) => {
-                    const standort = standorte.find((s) => s.id === sid);
-                    const zugehoerige = einrichtungen.filter((e) => e.standortId === sid);
-                    return (
-                      <div key={sid}>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">{standort?.name}</p>
-                        <div className="flex flex-col gap-2">
-                          {zugehoerige.map((e) => (
-                            <CheckboxRow key={e.id} checked={einrichtungIds.includes(e.id)} onChange={() => toggleEinrichtung(e.id)} label={e.name} sub={e.kundennummer} status={e.status} />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </Card>
-          </>
-        )}
+        <Card>
+          <CardHeader title="Einrichtungen" hint="Für welche Einrichtungen gilt dieser Wochenplan? Mehrere möglich — sie teilen sich dann dieselben Gerichte. Der Standort wird automatisch übernommen." />
+          <div className="flex flex-col gap-4 px-5 py-4">
+            <input
+              type="search"
+              value={einrichtungSuche}
+              onChange={(e) => setEinrichtungSuche(e.target.value)}
+              placeholder="Einrichtung suchen …"
+              aria-label="Einrichtung suchen"
+              className="min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+            />
+            {gefilterteEinrichtungen.length === 0 ? (
+              <p className="text-sm text-muted">Keine Einrichtung gefunden.</p>
+            ) : (
+              standorte
+                .filter((s) => gefilterteEinrichtungen.some((e) => e.standortId === s.id))
+                .map((standort) => (
+                  <div key={standort.id}>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">{standort.name}</p>
+                    <div className="flex flex-col gap-2">
+                      {gefilterteEinrichtungen
+                        .filter((e) => e.standortId === standort.id)
+                        .map((e) => (
+                          <CheckboxRow key={e.id} checked={einrichtungIds.includes(e.id)} onChange={() => toggleEinrichtung(e.id)} label={e.name} sub={e.kundennummer} status={e.status} />
+                        ))}
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </Card>
 
         <div className="flex justify-end gap-2 no-print">
           <Button variant="secondary" href="/admin/meal-plans">Abbrechen</Button>

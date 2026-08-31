@@ -43,6 +43,7 @@ interface MealPlanDto {
   templateSlot: number | null;
   locationIds: string[];
   facilityIds: string[];
+  rejectionReason: string | null;
   days: MealPlanDayDto[];
 }
 
@@ -56,6 +57,7 @@ function toSpeiseplan(dto: MealPlanDto): Speiseplan {
     einrichtungIds: dto.facilityIds,
     istVorlage: dto.isTemplate,
     vorlagenSlot: dto.templateSlot ?? undefined,
+    ablehnungsgrund: dto.rejectionReason ?? undefined,
     tage: dto.days.map((d) => ({
       id: d.id,
       wochentag: d.weekday,
@@ -105,6 +107,20 @@ export function useCreateSpeiseplan() {
   });
 }
 
+/** Legt aus einem bestehenden Plan eine eigenständige Kopie als Vorlage (Slot 1-8) an — der
+ * Ursprungsplan (Einrichtung, Status, Bestellungen) bleibt unverändert. */
+export function useMarkAsTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, vorlagenSlot }: { id: string; vorlagenSlot: number }) =>
+      api.post<MealPlanDto>(`/meal-plans/${id}/mark-as-template`, { templateSlot: vorlagenSlot }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meal-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] });
+    },
+  });
+}
+
 export function useDuplicateSpeiseplan() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -115,12 +131,13 @@ export function useDuplicateSpeiseplan() {
 
 /** Dupliziert eine Vorlage (oder eine beliebige andere Woche) gezielt in eine Kalenderwoche —
  * ersetzt das Rätselraten "welche KW-Nummer war das nochmal", das mit dem einfachen Duplizieren
- * (immer die Folgewoche) sonst nötig wäre. */
+ * (immer die Folgewoche) sonst nötig wäre. einrichtungIds ist bei Vorlagen (kundenneutral) Pflicht,
+ * bei einer normalen Woche optional (übernimmt sonst deren bestehende Einrichtungen). */
 export function useDuplicateIntoWeek() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, zielJahr, zielKalenderwoche }: { id: string; zielJahr: number; zielKalenderwoche: number }) =>
-      api.post<MealPlanDto>(`/meal-plans/${id}/duplicate-into-week`, { targetYear: zielJahr, targetCalendarWeek: zielKalenderwoche }),
+    mutationFn: ({ id, zielJahr, zielKalenderwoche, einrichtungIds }: { id: string; zielJahr: number; zielKalenderwoche: number; einrichtungIds?: string[] }) =>
+      api.post<MealPlanDto>(`/meal-plans/${id}/duplicate-into-week`, { targetYear: zielJahr, targetCalendarWeek: zielKalenderwoche, facilityIds: einrichtungIds ?? null }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
   });
 }
@@ -130,6 +147,16 @@ export function useDeleteSpeiseplan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/meal-plans/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+  });
+}
+
+/** Löst eine Einrichtung von einem geteilten Plan — die Einrichtung bekommt dadurch keinen eigenen
+ * Plan, kann aber separat per "Als Vorlage markieren" + Duplizieren eine eigene Version bekommen. */
+export function useRemoveFacilityFromPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, einrichtungId }: { id: string; einrichtungId: string }) => api.delete<MealPlanDto>(`/meal-plans/${id}/facilities/${einrichtungId}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
   });
 }
@@ -160,3 +187,13 @@ export const useSubmitReviewSpeiseplan = () => useTransition("submit-review");
 export const usePublishSpeiseplan = () => useTransition("publish");
 export const useUnpublishSpeiseplan = () => useTransition("unpublish");
 export const useArchiveSpeiseplan = () => useTransition("archive");
+
+/** Schickt einen Plan in Prüfung zurück in den Entwurf — mit Pflichtgrund, den der Ersteller dann
+ * sieht (Speiseplan.ablehnungsgrund). Benachrichtigt serverseitig die übrigen Admins des Mandanten. */
+export function useRejectSpeiseplan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, grund }: { id: string; grund: string }) => api.post<MealPlanDto>(`/meal-plans/${id}/reject`, { reason: grund }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+  });
+}
