@@ -40,6 +40,7 @@ export interface RoutenStopp {
   hinweis?: string;
   status: StoppStatus;
   problemHinweis?: string;
+  zugestelltAm?: string;
   positionen: LieferPosition[];
 }
 
@@ -97,6 +98,7 @@ interface RouteStopDto {
   note: string | null;
   status: string;
   problemNote: string | null;
+  deliveredAt: string | null;
   items: RouteStopItemDto[];
 }
 
@@ -120,6 +122,8 @@ interface DeliveryRouteDto {
 }
 
 const trimTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : undefined);
+const formatZeitpunkt = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : undefined;
 
 function toLieferRoute(dto: DeliveryRouteDto): LieferRoute {
   return {
@@ -150,6 +154,7 @@ function toLieferRoute(dto: DeliveryRouteDto): LieferRoute {
       hinweis: s.note ?? undefined,
       status: s.status as StoppStatus,
       problemHinweis: s.problemNote ?? undefined,
+      zugestelltAm: formatZeitpunkt(s.deliveredAt),
       positionen: s.items.map((i) => ({
         id: i.id,
         rezeptId: i.recipeId,
@@ -200,10 +205,14 @@ export function useUpdateFahrer() {
   });
 }
 
+/** Pollt alle 30s — das ist die Ansicht, über die ein Admin den Fortschritt der Fahrer auf ihren
+ * Touren mitverfolgt (zugestellte/offene/Problem-Stopps), soll sich also ohne manuelles Neuladen
+ * aktualisieren. */
 export function useLieferRouten(filters?: { datum?: string; fahrerId?: string; status?: RouteStatus }): LieferRoute[] {
   const query = useQuery({
     queryKey: ["routes", filters],
     queryFn: () => api.get<PagedResult<DeliveryRouteDto>>(`/routes${toQueryString({ date: filters?.datum, driverId: filters?.fahrerId, status: filters?.status, pageSize: 200 })}`),
+    refetchInterval: 30_000,
   });
   return (query.data?.items ?? []).map(toLieferRoute);
 }

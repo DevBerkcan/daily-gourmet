@@ -30,6 +30,15 @@ const badgeStyles: Record<string, string> = {
   // Einkauf
   REVIEWED: "bg-info-soft text-info",
   ORDERED: "bg-warn-soft text-warn",
+  // Lieferroute
+  GEPLANT: "bg-line text-ink-soft",
+  BELADUNG: "bg-warn-soft text-warn",
+  UNTERWEGS: "bg-info-soft text-info",
+  ABGESCHLOSSEN: "bg-ok-soft text-ok",
+  // Routen-Stopp
+  OFFEN: "bg-line text-ink-soft",
+  ZUGESTELLT: "bg-ok-soft text-ok",
+  PROBLEM: "bg-danger-soft text-danger",
 };
 
 const badgeLabels: Record<string, string> = {
@@ -39,6 +48,8 @@ const badgeLabels: Record<string, string> = {
   REVIEWED: "Geprüft", ORDERED: "Bestellt",
   AKTIV: "Aktiv", INAKTIV: "Inaktiv", GESPERRT: "Gesperrt", ARCHIVIERT: "Archiviert",
   EINGELADEN: "Eingeladen", DEAKTIVIERT: "Deaktiviert",
+  GEPLANT: "Geplant", BELADUNG: "In Beladung", UNTERWEGS: "Unterwegs", ABGESCHLOSSEN: "Abgeschlossen",
+  OFFEN: "Offen", ZUGESTELLT: "Zugestellt", PROBLEM: "Problem",
 };
 
 export function StatusBadge({ status }: { status: string }) {

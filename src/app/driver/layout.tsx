@@ -4,6 +4,7 @@ import { AppShell, type NavItem } from "@/components/shell/AppShell";
 import { Route, Truck } from "lucide-react";
 import { RequireRole } from "@/lib/auth/RequireRole";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { DriverIssueWidget } from "@/features/support/components/DriverIssueWidget";
 
 const nav: NavItem[] = [
   { label: "Meine heutige Route", href: "/driver", icon: Truck },
@@ -15,6 +16,7 @@ function DriverShell({ children }: { children: React.ReactNode }) {
   return (
     <AppShell areaLabel="Fahrer" areaTone="driver" nav={nav} userName={user?.name ?? ""} userRole="Fahrer">
       {children}
+      <DriverIssueWidget />
     </AppShell>
   );
 }

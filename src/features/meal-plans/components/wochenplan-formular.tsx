@@ -10,11 +10,15 @@ import { nextUpcomingWeeks } from "@/lib/isoWeek";
 import { useCreateSpeiseplan, useSpeiseplaene, useMealPlanTemplates, useDuplicateIntoWeek } from "@/lib/services/meal-plans";
 import { HEUTE } from "@/lib/heute";
 
-function CheckboxRow({ checked, onChange, label, sub, status }: { checked: boolean; onChange: () => void; label: string; sub?: string; status?: string }) {
+function CheckboxRow({ checked, onChange, label, sub, status, disabled }: { checked: boolean; onChange: () => void; label: string; sub?: string; status?: string; disabled?: boolean }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm hover:bg-paper">
+    <label
+      className={`flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm ${
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-paper"
+      }`}
+    >
       <span className="flex items-center gap-2.5">
-        <input type="checkbox" checked={checked} onChange={onChange} className="size-4 accent-basil" />
+        <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} className="size-4 accent-basil" />
         <span>
           <span className="font-medium text-ink">{label}</span>
           {sub && <span className="block text-xs text-muted">{sub}</span>}
@@ -34,16 +38,45 @@ export function WochenplanFormular() {
   const createSpeiseplan = useCreateSpeiseplan();
   const duplicateIntoWeek = useDuplicateIntoWeek();
 
-  const wochen = useMemo(() => {
-    const takenKeys = new Set(plaene.map((p) => `${p.jahr}-${p.kalenderwoche}`));
-    return nextUpcomingWeeks(HEUTE, takenKeys, 10);
+  /** Pro KW ("jahr-kalenderwoche") die Einrichtungen, die dort bereits einen Plan haben — über alle
+   * bestehenden Pläne hinweg, nicht nur einen. Mehrere unterschiedliche Pläne können dieselbe KW
+   * belegen (z. B. 14 Einrichtungen mit einem Plan, 6 andere mit einem eigenen); nur eine einzelne
+   * Einrichtung darf pro KW nicht in zwei Plänen vorkommen (serverseitig erzwungen über
+   * MealPlanFacilities' Unique-Index, siehe MealPlanHandler.AddFacilities). */
+  const belegtByWeek = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const p of plaene) {
+      const key = `${p.jahr}-${p.kalenderwoche}`;
+      const set = map.get(key) ?? new Set<string>();
+      for (const id of p.einrichtungIds) set.add(id);
+      map.set(key, set);
+    }
+    return map;
   }, [plaene]);
+
+  const wochen = useMemo(() => {
+    const aktiveIds = einrichtungen.filter((e) => e.status === "AKTIV").map((e) => e.id);
+    const vollBelegteWochen = new Set(
+      [...belegtByWeek.entries()]
+        .filter(([, ids]) => aktiveIds.length > 0 && aktiveIds.every((id) => ids.has(id)))
+        .map(([key]) => key)
+    );
+    return nextUpcomingWeeks(HEUTE, vollBelegteWochen, 10);
+  }, [belegtByWeek, einrichtungen]);
 
   const [modus, setModus] = useState<"leer" | "vorlage">("leer");
   const [vorlageId, setVorlageId] = useState("");
   const [weekKey, setWeekKey] = useState(() => (wochen[0] ? `${wochen[0].jahr}-${wochen[0].kalenderwoche}` : ""));
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
   const [einrichtungSuche, setEinrichtungSuche] = useState("");
+
+  const belegteEinrichtungIds = belegtByWeek.get(weekKey) ?? new Set<string>();
+
+  const handleWeekChange = (newKey: string) => {
+    setWeekKey(newKey);
+    const belegt = belegtByWeek.get(newKey) ?? new Set<string>();
+    setEinrichtungIds((ids) => ids.filter((id) => !belegt.has(id)));
+  };
 
   const gefilterteEinrichtungen = einrichtungen.filter(
     (e) => e.status === "AKTIV" && (einrichtungSuche.trim() === "" || e.name.toLowerCase().includes(einrichtungSuche.trim().toLowerCase()) || e.kundennummer.toLowerCase().includes(einrichtungSuche.trim().toLowerCase()))
@@ -116,12 +149,12 @@ export function WochenplanFormular() {
         )}
 
         <Card>
-          <CardHeader title="Kalenderwoche" hint="Nur noch nicht verplante, kommende Wochen stehen zur Auswahl." />
+          <CardHeader title="Kalenderwoche" hint="Kommende Wochen, für die noch nicht alle aktiven Einrichtungen verplant sind. Für dieselbe KW können mehrere unterschiedliche Pläne für unterschiedliche Einrichtungen existieren." />
           <div className="px-5 py-4">
             <select
               aria-label="Kalenderwoche wählen"
               value={weekKey}
-              onChange={(e) => setWeekKey(e.target.value)}
+              onChange={(e) => handleWeekChange(e.target.value)}
               className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm"
             >
               {wochen.map((w) => (
@@ -134,7 +167,7 @@ export function WochenplanFormular() {
         </Card>
 
         <Card>
-          <CardHeader title="Einrichtungen" hint="Für welche Einrichtungen gilt dieser Wochenplan? Mehrere möglich — sie teilen sich dann dieselben Gerichte. Der Standort wird automatisch übernommen." />
+          <CardHeader title="Einrichtungen" hint="Für welche Einrichtungen gilt dieser Wochenplan? Mehrere möglich — sie teilen sich dann dieselben Gerichte. Der Standort wird automatisch übernommen. Einrichtungen, die für diese Kalenderwoche bereits einen anderen Plan haben, sind ausgegraut." />
           <div className="flex flex-col gap-4 px-5 py-4">
             <input
               type="search"
@@ -155,9 +188,20 @@ export function WochenplanFormular() {
                     <div className="flex flex-col gap-2">
                       {gefilterteEinrichtungen
                         .filter((e) => e.standortId === standort.id)
-                        .map((e) => (
-                          <CheckboxRow key={e.id} checked={einrichtungIds.includes(e.id)} onChange={() => toggleEinrichtung(e.id)} label={e.name} sub={e.kundennummer} status={e.status} />
-                        ))}
+                        .map((e) => {
+                          const belegt = belegteEinrichtungIds.has(e.id);
+                          return (
+                            <CheckboxRow
+                              key={e.id}
+                              checked={einrichtungIds.includes(e.id)}
+                              onChange={() => toggleEinrichtung(e.id)}
+                              label={e.name}
+                              sub={belegt ? "Bereits verplant für diese Kalenderwoche" : e.kundennummer}
+                              status={e.status}
+                              disabled={belegt}
+                            />
+                          );
+                        })}
                     </div>
                   </div>
                 ))

@@ -1,8 +1,8 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Plus, Route, Truck, UserRound } from "lucide-react";
-import { Button, Card, CardHeader, StatCard, Pagination } from "@/components/ui";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Plus, Route, Truck, UserRound } from "lucide-react";
+import { Button, Card, CardHeader, StatCard, StatusBadge, Pagination } from "@/components/ui";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useStandorte } from "@/lib/services/locations";
 import { useFahrer, useLieferRouten, useCreateLieferRoute, portionenJeRoute, behaelterPositionenJeRoute } from "@/lib/services/logistics";
@@ -67,14 +67,22 @@ export function RouteManager() {
         {pageItems.map((route) => {
           const istOffen = details === route.id;
           const person = fahrer.find((f) => f.id === route.fahrerId);
+          const zugestellt = route.stopps.filter((s) => s.status === "ZUGESTELLT").length;
+          const probleme = route.stopps.filter((s) => s.status === "PROBLEM").length;
           return <Card key={route.id}>
             <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
-              <div><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info">{route.status === "BELADUNG" ? "In Beladung" : "Geplant"}</span><span className="text-xs text-muted">{new Date(`${route.datum}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</span></div><h2 className="mt-2 font-display text-xl font-semibold text-ink">{route.name}</h2><div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted"><span className="inline-flex items-center gap-1.5"><UserRound size={15} aria-hidden />{route.fahrerName ?? "Nicht vergeben"}</span><span className="inline-flex items-center gap-1.5"><Truck size={15} aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</span><span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{route.start}{route.rueckkehr ? `–${route.rueckkehr}` : ""} Uhr</span></div></div>
+              <div><div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={route.status} />
+                <span className="text-xs text-muted">{new Date(`${route.datum}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" })}</span>
+                {route.status !== "GEPLANT" && <span className="text-xs font-medium text-muted">{zugestellt}/{route.stopps.length} zugestellt</span>}
+                {probleme > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden />{probleme} {probleme === 1 ? "Problem" : "Probleme"}</span>}
+              </div><h2 className="mt-2 font-display text-xl font-semibold text-ink">{route.name}</h2><div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted"><span className="inline-flex items-center gap-1.5"><UserRound size={15} aria-hidden />{route.fahrerName ?? "Nicht vergeben"}</span><span className="inline-flex items-center gap-1.5"><Truck size={15} aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</span><span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{route.start}{route.rueckkehr ? `–${route.rueckkehr}` : ""} Uhr</span></div></div>
               <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div><Button variant="secondary" onClick={() => setDetails(istOffen ? null : route.id)}>{istOffen ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}{istOffen ? "Schließen" : "Tour anzeigen"}</Button></div>
             </div>
             {istOffen ? <div className="border-t border-line bg-paper/50 px-5 py-5"><div className="relative ml-3 border-l-2 border-basil-soft pl-6">{route.stopps.map((stopp) => {
               const einrichtung = einrichtungen.find((e) => e.id === stopp.einrichtungId);
-              return <div key={stopp.id} className="relative pb-6 last:pb-0"><span className="absolute -left-[33px] flex size-4 items-center justify-center rounded-full bg-basil text-[9px] font-bold text-white">{stopp.reihenfolge}</span><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold text-ink">{stopp.einrichtungName}</p><p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted"><MapPin size={13} aria-hidden />{einrichtung?.anschrift}</p><p className="mt-1 text-xs text-muted">Ankunft {stopp.ankunft}{stopp.zeitfenster ? ` · Zeitfenster ${stopp.zeitfenster}` : ""}</p></div><div className="text-right">{stopp.positionen.map((position) => <p key={position.id} className="text-sm"><strong className="text-basil">{position.portionen}</strong> {position.rezeptName} · {position.behaelter}</p>)}</div></div></div>;
+              const punktFarbe = stopp.status === "ZUGESTELLT" ? "bg-ok" : stopp.status === "PROBLEM" ? "bg-danger" : "bg-basil";
+              return <div key={stopp.id} className="relative pb-6 last:pb-0"><span className={`absolute -left-[33px] flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white ${punktFarbe}`}>{stopp.reihenfolge}</span><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-ink">{stopp.einrichtungName}</p><StatusBadge status={stopp.status} /></div><p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted"><MapPin size={13} aria-hidden />{einrichtung?.anschrift}</p><p className="mt-1 text-xs text-muted">Ankunft {stopp.ankunft}{stopp.zeitfenster ? ` · Zeitfenster ${stopp.zeitfenster}` : ""}{stopp.zugestelltAm ? ` · Zugestellt um ${stopp.zugestelltAm}` : ""}</p>{stopp.status === "PROBLEM" && stopp.problemHinweis ? <p className="mt-2 inline-flex items-start gap-1.5 rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger"><AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden />{stopp.problemHinweis}</p> : null}</div><div className="text-right">{stopp.positionen.map((position) => <p key={position.id} className="text-sm"><strong className="text-basil">{position.portionen}</strong> {position.rezeptName} · {position.behaelter}</p>)}</div></div></div>;
             })}</div><p className="mt-5 flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-muted"><CalendarDays size={14} aria-hidden />{behaelterPositionenJeRoute(route)} Ladepositionen werden automatisch an den Fahrer übergeben.</p></div> : null}
           </Card>;
         })}
