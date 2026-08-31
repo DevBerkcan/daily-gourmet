@@ -9,8 +9,10 @@ import { useBestellungen } from "@/lib/services/orders";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { isoWeekInfo } from "@/lib/isoWeek";
 import { HEUTE } from "@/lib/heute";
+import { useTranslation } from "@/lib/i18n/I18nContext";
 
 export function DashboardContent() {
+  const { t } = useTranslation();
   const summary = useAdminDashboardSummary();
   const speiseplaene = useSpeiseplaene();
   const benachrichtigungen = useBenachrichtigungen();
@@ -23,31 +25,35 @@ export function DashboardContent() {
   return (
     <>
       <PageHeader
-        title="Übersicht"
-        subtitle={`Hier ist der Stand für KW ${week} bei Daily Gourmet.`}
+        title={t("adminDashboard.title")}
+        subtitle={t("adminDashboard.subtitle", { week })}
         actions={
           <>
-            <Button variant="secondary" href="/admin/production"><Factory size={15} aria-hidden /> Produktion heute</Button>
-            <Button href="/admin/meal-plans/new"><CalendarPlus size={15} aria-hidden /> Neuer Speiseplan</Button>
+            <Button variant="secondary" href="/admin/production"><Factory size={15} aria-hidden /> {t("adminDashboard.productionToday")}</Button>
+            <Button href="/admin/meal-plans/new"><CalendarPlus size={15} aria-hidden /> {t("adminDashboard.newMealPlan")}</Button>
           </>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={`Bestellungen KW ${week}`} value={String(summary?.bestellungenDieseWoche ?? "—")} hint={summary ? `${summary.verbindlicheBestellungen} verbindlich · ${entwuerfe} Entwurf` : undefined} />
-        <StatCard label="Portionen heute" value={String(summary?.portionenHeute ?? "—")} />
-        <StatCard label="Einrichtungen ohne Bestellung" value={String(summary?.einrichtungenOhneBestellung ?? "—")} tone={summary?.einrichtungenOhneBestellung ? "warn" : "ok"} />
-        <StatCard label="Speiseplan nächste Woche" value={summary?.naechsteWocheSpeiseplanStatus ?? "Nicht angelegt"} tone={summary?.naechsteWocheSpeiseplanStatus === "REVIEW" ? "warn" : "default"} />
+        <StatCard
+          label={t("adminDashboard.ordersThisWeek", { week })}
+          value={String(summary?.bestellungenDieseWoche ?? "—")}
+          hint={summary ? t("adminDashboard.bindingHint", { binding: summary.verbindlicheBestellungen, draft: entwuerfe }) : undefined}
+        />
+        <StatCard label={t("adminDashboard.portionsToday")} value={String(summary?.portionenHeute ?? "—")} />
+        <StatCard label={t("adminDashboard.facilitiesWithoutOrder")} value={String(summary?.einrichtungenOhneBestellung ?? "—")} tone={summary?.einrichtungenOhneBestellung ? "warn" : "ok"} />
+        <StatCard label={t("adminDashboard.mealPlanNextWeek")} value={summary?.naechsteWocheSpeiseplanStatus ?? t("adminDashboard.notPlanned")} tone={summary?.naechsteWocheSpeiseplanStatus === "REVIEW" ? "warn" : "default"} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card>
           <CardHeader
-            title="Bestellungen der Woche"
-            actions={<Link href="/admin/orders" className="text-xs font-medium text-basil hover:underline">Alle Bestellungen</Link>}
+            title={t("adminDashboard.ordersOfWeek")}
+            actions={<Link href="/admin/orders" className="text-xs font-medium text-basil hover:underline">{t("adminDashboard.allOrders")}</Link>}
           />
           {bestellungen.length ? (
-            <Table head={["Einrichtung", "Status", "Abgesendet", "Frist"]}>
+            <Table head={[t("common.facility"), t("common.status"), t("common.sentAt"), t("common.deadline")]}>
               {bestellungen.map((b) => (
                 <tr key={b.id} className="hover:bg-paper">
                   <Td className="font-medium text-ink">{einrichtungen.find((e) => e.id === b.einrichtungId)?.name ?? b.einrichtungId}</Td>
@@ -58,13 +64,13 @@ export function DashboardContent() {
               ))}
             </Table>
           ) : (
-            <p className="px-5 py-6 text-sm text-muted">{aktuellerPlan ? "Für diesen Speiseplan liegen noch keine Bestellungen vor." : "Für diese Woche ist noch kein Speiseplan angelegt."}</p>
+            <p className="px-5 py-6 text-sm text-muted">{aktuellerPlan ? t("adminDashboard.noOrdersForPlan") : t("adminDashboard.noPlanThisWeek")}</p>
           )}
         </Card>
 
         <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader title="Speisepläne" />
+            <CardHeader title={t("adminDashboard.mealPlans")} />
             <ul className="divide-y divide-line text-sm">
               {speiseplaene.slice(0, 6).map((p) => (
                 <li key={p.id}>
@@ -78,7 +84,7 @@ export function DashboardContent() {
           </Card>
 
           <Card>
-            <CardHeader title="Letzte Änderungen" />
+            <CardHeader title={t("adminDashboard.recentChanges")} />
             <ul className="divide-y divide-line">
               {benachrichtigungen.map((n) => (
                 <li key={n.id} className="px-5 py-3">
@@ -95,11 +101,11 @@ export function DashboardContent() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 no-print">
         <Link href="/admin/procurement" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
           <ShoppingBasket size={18} className="text-basil" aria-hidden />
-          <span className="text-sm font-medium text-ink">Einkaufslisten prüfen</span>
+          <span className="text-sm font-medium text-ink">{t("adminDashboard.checkProcurement")}</span>
         </Link>
         <Link href="/admin/production" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
           <Factory size={18} className="text-basil" aria-hidden />
-          <span className="text-sm font-medium text-ink">Produktion vorbereiten</span>
+          <span className="text-sm font-medium text-ink">{t("adminDashboard.prepareProduction")}</span>
         </Link>
       </div>
     </>

@@ -26,9 +26,6 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-daily-gourmet.png" alt="Daily Gourmet" className="mb-6 h-10 w-auto" />
-          <h2 className="font-display text-2xl font-semibold text-ink">Anmelden</h2>
-          <p className="mt-1 text-sm text-muted">Melden Sie sich mit Ihrer geschäftlichen E-Mail-Adresse an.</p>
-
           <LoginForm />
         </div>
       </div>

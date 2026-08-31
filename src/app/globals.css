@@ -35,7 +35,66 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: light dark;
+}
+
+/* Dunkelmodus — überschreibt dieselben Tokens aus dem @theme-Block oben, nichts sonst muss sich
+ * ändern, da jede Komponente schon über diese Farbnamen (bg-surface, text-ink, …) statt über feste
+ * Tailwind-Paletten arbeitet. Zwei Wege dorthin: System-Präferenz (prefers-color-scheme, nur wenn
+ * kein manueller Wert gesetzt ist) oder der explizite Umschalter (data-theme, siehe ThemeToggle) —
+ * letzterer gewinnt in beide Richtungen. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --color-paper: #12161d;
+    --color-surface: #1a2029;
+    --color-ink: #e8ecf1;
+    --color-ink-soft: #aab6c6;
+    --color-muted: #8994a6;
+    --color-line: #2a3140;
+    --color-line-strong: #3c4557;
+
+    --color-basil: #5b9bd9;
+    --color-basil-deep: #0f1e30;
+    --color-basil-soft: #1c3350;
+
+    --color-saffron: #f0508f;
+    --color-saffron-soft: #3a2030;
+
+    --color-ok: #3fd0b0;
+    --color-ok-soft: #143a32;
+    --color-warn: #eab654;
+    --color-warn-soft: #3a2f16;
+    --color-danger: #e8677a;
+    --color-danger-soft: #3a1e24;
+    --color-info: #7ab8ec;
+    --color-info-soft: #1c3350;
+  }
+}
+
+html[data-theme="dark"] {
+  --color-paper: #12161d;
+  --color-surface: #1a2029;
+  --color-ink: #e8ecf1;
+  --color-ink-soft: #aab6c6;
+  --color-muted: #8994a6;
+  --color-line: #2a3140;
+  --color-line-strong: #3c4557;
+
+  --color-basil: #5b9bd9;
+  --color-basil-deep: #0f1e30;
+  --color-basil-soft: #1c3350;
+
+  --color-saffron: #f0508f;
+  --color-saffron-soft: #3a2030;
+
+  --color-ok: #3fd0b0;
+  --color-ok-soft: #143a32;
+  --color-warn: #eab654;
+  --color-warn-soft: #3a2f16;
+  --color-danger: #e8677a;
+  --color-danger-soft: #3a1e24;
+  --color-info: #7ab8ec;
+  --color-info-soft: #1c3350;
 }
 
 body {
@@ -64,3 +123,41 @@ body {
 .scroll-x { overflow-x: auto; }
 .scroll-x::-webkit-scrollbar { height: 8px; }
 .scroll-x::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: 4px; }
+
+/* Tabellen → gestapelte Karten unterhalb von 640px (siehe components/ui Table, die jeder Zelle ihr
+ * Spaltenlabel als data-label mitgibt) — ersetzt horizontales Scrollen durch eine direkt lesbare
+ * Kartenliste, projektweit über diese eine Stelle statt in jeder einzelnen Tabellen-Nutzung. */
+@media (max-width: 640px) {
+  .responsive-table thead { display: none; }
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; width: 100%; }
+  .responsive-table tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .responsive-table tr:last-child { margin-bottom: 0; }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    border: none !important;
+    position: static !important; /* hebt den Desktop-Trick "erste Spalte sticky" wieder auf */
+    background: transparent !important;
+    text-align: right;
+  }
+  .responsive-table td:not(:last-child) { border-bottom: 1px solid var(--color-line) !important; }
+  .responsive-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    padding-right: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    text-align: left;
+  }
+  .responsive-table td[data-label=""]::before { content: none; }
+}

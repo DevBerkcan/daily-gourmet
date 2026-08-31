@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChefHat, School, Truck } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/client";
+import { useTranslation } from "@/lib/i18n/I18nContext";
 import type { Rolle } from "@/lib/auth/types";
 
 const landingByRole: Record<Rolle, string> = {
@@ -28,6 +29,7 @@ const DEV_PASSWORD = "Passwort123!";
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +43,7 @@ export function LoginForm() {
       const user = await login(loginEmail, loginPassword);
       router.push(landingByRole[user.role]);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Anmeldung fehlgeschlagen.");
+      setError(err instanceof ApiError ? err.message : t("login.failed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -49,6 +51,8 @@ export function LoginForm() {
 
   return (
     <>
+      <h2 className="font-display text-2xl font-semibold text-ink">{t("login.title")}</h2>
+      <p className="mt-1 text-sm text-muted">{t("login.subtitle")}</p>
       <form
         className="mt-7 flex flex-col gap-4"
         onSubmit={(e) => {
@@ -57,7 +61,7 @@ export function LoginForm() {
         }}
       >
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">E-Mail-Adresse</label>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">{t("login.email")}</label>
           <input
             id="email" type="email" autoComplete="email" placeholder="name@unternehmen.de"
             value={email} onChange={(e) => setEmail(e.target.value)} required
@@ -66,8 +70,8 @@ export function LoginForm() {
         </div>
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium text-ink">Passwort</label>
-            <span className="cursor-pointer text-xs font-medium text-basil hover:underline">Passwort vergessen?</span>
+            <label htmlFor="password" className="text-sm font-medium text-ink">{t("login.password")}</label>
+            <span className="cursor-pointer text-xs font-medium text-basil hover:underline">{t("login.forgotPassword")}</span>
           </div>
           <input
             id="password" type="password" autoComplete="current-password" placeholder="••••••••"
@@ -80,12 +84,12 @@ export function LoginForm() {
           type="submit" disabled={isSubmitting}
           className="min-h-11 cursor-pointer rounded-lg bg-basil text-sm font-semibold text-white transition-colors hover:bg-basil-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:opacity-60"
         >
-          {isSubmitting ? "Anmeldung läuft …" : "Anmelden"}
+          {isSubmitting ? t("login.submitting") : t("login.submit")}
         </button>
       </form>
 
       <div className="mt-9">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">Demo-Zugänge (Entwicklung)</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("login.devAccounts")}</p>
         <div className="mt-3 grid gap-2">
           {devAccounts.map((account) => (
             <button

@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactNode, type TdHTMLAttributes } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/I18nContext";
 
 /* ---------- Status-Badges ---------- */
 
@@ -57,6 +58,27 @@ export function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeStyles[status] ?? "bg-line text-ink-soft"}`}>
       {badgeLabels[status] ?? status}
     </span>
+  );
+}
+
+/** Einziger Toggle-Switch der App — vorher gab es zwei leicht unterschiedliche, handgestrickte
+ * Varianten (Checkbox+peer in FeatureFlagsBoard, absolut positioniert ohne `left` in
+ * TenantFeatureFlagsCard), deren zweite ohne verlässliche Startposition auskam und auf schmaleren
+ * Desktop-Spalten (z. B. der Mandanten-Detailseite) neben langen Labels verrutschte/abgeschnitten
+ * wirkte. `shrink-0` hält die Größe fest, egal wie breit das Label daneben ist — die eigentliche
+ * Abhilfe gegen das Abschneiden ist aber `min-w-0` auf dem Text daneben (siehe Aufrufer). */
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil ${checked ? "bg-basil" : "bg-line-strong"}`}
+    >
+      <span className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`} />
+    </button>
   );
 }
 
@@ -141,35 +163,56 @@ export function SearchInput({ placeholder = "Suchen …", value, onChange }: { p
 
 type TableHead = string | { label: string; className?: string };
 
+/** Below 640px every row becomes its own card instead of scrolling sideways (see the
+ * `.responsive-table` rules in globals.css) — each cell needs to know its own column label to show
+ * inline once stacked, so this walks the row/cell tree once and stamps a `data-label` onto every
+ * <Td> matching its column index. Anything that isn't a plain `<tr>` of cells (empty-state rows,
+ * fragments, colSpan banners, …) is left untouched and just renders unlabeled when stacked, rather
+ * than risk mangling it. */
+function withResponsiveLabels(children: ReactNode, labels: string[]): ReactNode {
+  return Children.map(children, (row) => {
+    if (!isValidElement(row) || row.type !== "tr") return row;
+    const rowProps = row.props as { children?: ReactNode };
+    const cells = Children.map(rowProps.children, (cell, i) => {
+      if (!isValidElement(cell)) return cell;
+      const cellProps = cell.props as { "data-label"?: string };
+      return cloneElement(cell as React.ReactElement<Record<string, unknown>>, { "data-label": cellProps["data-label"] ?? labels[i] ?? "" });
+    });
+    return cloneElement(row, undefined, cells);
+  });
+}
+
 export function Table({ head, children }: { head: TableHead[]; children: ReactNode }) {
+  const labels = head.map((h) => (typeof h === "string" ? h : h.label));
+
   return (
     <div className="scroll-x">
       {/* No forced min-width: a table with columns hidden on narrow screens (via a head entry's
           className, e.g. "hidden sm:table-cell" — matched by the same className on that column's
           <Td> in every row) should size to what's actually visible instead of scrolling needlessly. */}
-      <table className="w-full text-left text-sm">
+      <table className="responsive-table w-full text-left text-sm">
         <thead>
-          {/* First column stays pinned while scrolling horizontally — on a phone every table here
-              can scroll, and without this the row you're looking at scrolls out of view with its
-              label. Costs nothing at desktop widths where nothing actually overflows. */}
+          {/* First column stays pinned while scrolling horizontally on tablet/desktop widths above
+              640px; below that the whole table restacks into cards (see .responsive-table) and this
+              has no effect. */}
           <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
             {head.map((h, i) => {
               const label = typeof h === "string" ? h : h.label;
               const extra = typeof h === "string" ? "" : (h.className ?? "");
-              return <th key={label} className={`px-3 py-3 font-medium ${i === 0 ? "sticky left-0 z-10 bg-surface" : ""} ${extra}`}>{label}</th>;
+              return <th key={label || i} className={`px-3 py-3 font-medium ${i === 0 ? "sticky left-0 z-10 bg-surface" : ""} ${extra}`}>{label}</th>;
             })}
           </tr>
         </thead>
         <tbody className="divide-y divide-line [&>tr>td:first-child]:sticky [&>tr>td:first-child]:left-0 [&>tr>td:first-child]:z-10 [&>tr>td:first-child]:bg-surface">
-          {children}
+          {withResponsiveLabels(children, labels)}
         </tbody>
       </table>
     </div>
   );
 }
 
-export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <td className={`px-3 py-3 align-middle ${className}`}>{children}</td>;
+export function Td({ children, className = "", ...rest }: { children: ReactNode; className?: string } & TdHTMLAttributes<HTMLTableCellElement>) {
+  return <td className={`px-3 py-3 align-middle ${className}`} {...rest}>{children}</td>;
 }
 
 /** Pairs with lib/use-pagination.ts's usePagination() — page-size selector plus prev/next, stacked
@@ -185,17 +228,18 @@ export function Pagination({
   onPageSizeChange: (pageSize: number) => void;
   pageSizeOptions?: readonly number[];
 }) {
+  const { t } = useTranslation();
   const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalItems);
 
   return (
     <div className="flex flex-col gap-3 border-t border-line px-5 py-3.5 no-print sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs text-muted">{totalItems === 0 ? "Keine Einträge" : `${from}–${to} von ${totalItems}`}</p>
+      <p className="text-xs text-muted">{totalItems === 0 ? t("pagination.noEntries") : t("pagination.rangeOf", { from, to, total: totalItems })}</p>
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-xs text-muted">
-          Pro Seite
+          {t("pagination.perPage")}
           <select
-            aria-label="Einträge pro Seite"
+            aria-label={t("pagination.perPage")}
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             className="min-h-9 rounded-lg border border-line bg-surface px-2 text-sm text-ink"
@@ -205,14 +249,14 @@ export function Pagination({
         </label>
         <div className="flex items-center gap-1.5">
           <button
-            type="button" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite"
+            type="button" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label={t("pagination.prev")}
             className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={15} aria-hidden />
           </button>
-          <span className="min-w-[5.5rem] text-center text-xs text-muted">Seite {page} / {totalPages}</span>
+          <span className="min-w-[5.5rem] text-center text-xs text-muted">{t("pagination.page", { page, totalPages })}</span>
           <button
-            type="button" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} aria-label="Nächste Seite"
+            type="button" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} aria-label={t("pagination.next")}
             className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight size={15} aria-hidden />
@@ -227,11 +271,12 @@ export function Pagination({
 
 /** Ersetzt Tabellen/Listen/Karten während des ersten Ladens — verhindert, dass für einen Moment
  * fälschlich "keine Einträge vorhanden" aufblitzt, bevor die Daten eintreffen. */
-export function LoadingState({ text = "Wird geladen …" }: { text?: string }) {
+export function LoadingState({ text }: { text?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
       <Loader2 className="animate-spin text-muted" size={24} aria-hidden />
-      <p className="text-sm text-muted">{text}</p>
+      <p className="text-sm text-muted">{text ?? t("state.loading")}</p>
     </div>
   );
 }

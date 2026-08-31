@@ -1,25 +1,24 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Pencil, Plus, RotateCcw, X } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { PageHeader, Card, CardHeader, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useTenants,
   useGlobalUsers,
   useCreateUser,
-  useUpdateGlobalUser,
   useDeactivateGlobalUser,
   useActivateGlobalUser,
   useResetGlobalUserPassword,
-  useTenantFacilities,
+  useDeleteGlobalUser,
   type GlobalUser,
 } from "@/lib/services/super-admin";
+import { EditUserForm, ANLEGBARE_ROLLEN, ROLLEN } from "@/features/users/components/edit-user-form";
 import { ApiError } from "@/lib/api/client";
 import { usePagination } from "@/lib/use-pagination";
 
-const ROLLEN = ["TENANT_OWNER", "TENANT_ADMIN", "FACILITY_ADMIN", "FACILITY_USER", "DRIVER", "READ_ONLY"];
-const ANLEGBARE_ROLLEN = ["SUPER_ADMIN", ...ROLLEN];
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm";
 
 function CreateUserForm({ onDone }: { onDone: () => void }) {
@@ -78,71 +77,6 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-const FACILITY_ROLLEN = ["FACILITY_ADMIN", "FACILITY_USER"];
-
-function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () => void }) {
-  const toast = useToast();
-  const updateUser = useUpdateGlobalUser();
-  const facilitiesOfTenant = useTenantFacilities(user.tenantId ?? "");
-  const [name, setName] = useState(user.name);
-  const [rolle, setRolle] = useState(user.rolle);
-  const [facilityId, setFacilityId] = useState(user.facilityId ?? "");
-  const brauchtEinrichtung = FACILITY_ROLLEN.includes(rolle);
-  // Ein Wechsel zwischen Plattform- (SUPER_ADMIN) und Mandanten-Rolle ist serverseitig blockiert
-  // (SuperAdminHandler.UpdateUserAsync bewegt kein TenantId mit) — die Auswahl bietet ihn deshalb nur
-  // an, wenn der bearbeitete Benutzer ohnehin schon Super Admin ist (damit die aktuelle Rolle
-  // wenigstens korrekt angezeigt wird), sonst gar nicht erst.
-  const rollenOptionen = user.rolle === "SUPER_ADMIN" ? ANLEGBARE_ROLLEN : ROLLEN;
-
-  function speichern(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    updateUser.mutate(
-      { id: user.id, input: { name: name.trim(), role: rolle, facilityId: brauchtEinrichtung ? facilityId || null : null } },
-      { onSuccess: () => { toast.success("Benutzer wurde gespeichert."); onDone(); }, onError: () => toast.error("Speichern fehlgeschlagen. Bitte erneut versuchen.") }
-    );
-  }
-
-  return (
-    <Card className="mb-6">
-      <CardHeader
-        title={`${user.name} bearbeiten`}
-        hint={user.tenantName ? `Mandant: ${user.tenantName}` : "Plattform-Konto"}
-        actions={<button type="button" onClick={onDone} aria-label="Schließen" className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"><X size={18} aria-hidden /></button>}
-      />
-      <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-2">
-        <label className="text-xs font-medium text-muted">
-          Benutzername
-          <input value={name} onChange={(e) => setName(e.target.value)} required className={`mt-1.5 ${fieldClass}`} />
-        </label>
-        <label className="text-xs font-medium text-muted">
-          Rolle
-          <select value={rolle} onChange={(e) => setRolle(e.target.value)} required className={`mt-1.5 ${fieldClass}`}>
-            {rollenOptionen.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </label>
-        {brauchtEinrichtung && (
-          <label className="text-xs font-medium text-muted md:col-span-2">
-            Einrichtung
-            <select value={facilityId} onChange={(e) => setFacilityId(e.target.value)} className={`mt-1.5 ${fieldClass}`}>
-              <option value="">Keine Einrichtung zugeordnet</option>
-              {facilitiesOfTenant.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-          </label>
-        )}
-        {updateUser.isError && (
-          <p className="text-sm text-danger md:col-span-2">
-            {updateUser.error instanceof ApiError ? updateUser.error.message : "Der Benutzer konnte nicht gespeichert werden."}
-          </p>
-        )}
-        <div className="flex gap-2 md:col-span-2">
-          <Button type="submit" disabled={updateUser.isPending}>{updateUser.isPending ? "Wird gespeichert …" : "Änderungen speichern"}</Button>
-          <Button variant="secondary" onClick={onDone}>Abbrechen</Button>
-        </div>
-      </form>
-    </Card>
-  );
-}
-
 export function UsersContent() {
   const toast = useToast();
   const tenants = useTenants();
@@ -151,12 +85,23 @@ export function UsersContent() {
   const [rolle, setRolle] = useState("");
   const [formularOffen, setFormularOffen] = useState(false);
   const [bearbeiteBenutzer, setBearbeiteBenutzer] = useState<GlobalUser | null>(null);
+  const [loescheBenutzer, setLoescheBenutzer] = useState<GlobalUser | null>(null);
   const benutzer = useGlobalUsers({ tenantId: tenantId || undefined, role: rolle || undefined });
   const gefiltert = benutzer.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(suche.toLowerCase()));
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
   const deactivateUser = useDeactivateGlobalUser();
   const activateUser = useActivateGlobalUser();
   const resetPassword = useResetGlobalUserPassword();
+  const deleteUser = useDeleteGlobalUser();
+
+  function loeschenBestaetigt() {
+    if (!loescheBenutzer) return;
+    deleteUser.mutate(loescheBenutzer.id, {
+      onSuccess: () => toast.success(`${loescheBenutzer.name} wurde endgültig gelöscht.`),
+      onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+    });
+    setLoescheBenutzer(null);
+  }
 
   return (
     <>
@@ -226,6 +171,14 @@ export function UsersContent() {
                       Deaktivieren
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setLoescheBenutzer(u)}
+                    aria-label={`${u.name} endgültig löschen`}
+                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
+                  >
+                    <Trash2 size={13} aria-hidden /> Löschen
+                  </button>
                 </div>
               </Td>
             </tr>
@@ -236,6 +189,20 @@ export function UsersContent() {
           onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
         />
       </Card>
+      <ConfirmDialog
+        open={!!loescheBenutzer}
+        title="Benutzer endgültig löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{loescheBenutzer?.name}</strong> ({loescheBenutzer?.email}) wird unwiderruflich gelöscht — anders als „Deaktivieren“ kann das nicht rückgängig gemacht werden.
+            Ist der Benutzer noch mit anderen Datensätzen verknüpft (z. B. Rezepten, Bestellungen, Support-Tickets), schlägt das Löschen fehl; deaktivieren Sie ihn dann stattdessen.
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheBenutzer(null)}
+        onConfirm={loeschenBestaetigt}
+      />
     </>
   );
 }

@@ -12,16 +12,16 @@ import { useFeatureFlag } from "@/lib/services/feature-flags";
 const roleLabels: Record<string, string> = { TENANT_OWNER: "Tenant Owner", TENANT_ADMIN: "Tenant Admin" };
 
 const baseNav: NavItem[] = [
-  { label: "Übersicht", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Speisepläne", href: "/admin/meal-plans", icon: CalendarRange },
-  { label: "Bestellungen", href: "/admin/orders", icon: ClipboardList },
-  { label: "Rezepte", href: "/admin/recipes", icon: BookOpenText },
-  { label: "Zutaten", href: "/admin/ingredients", icon: Carrot },
-  { label: "Produktion", href: "/admin/production", icon: Factory },
-  { label: "Lieferrouten", href: "/admin/routes", icon: Truck },
-  { label: "Einkauf", href: "/admin/procurement", icon: ShoppingBasket },
-  { label: "Umsatz", href: "/admin/revenue", icon: TrendingUp },
-  { label: "Einrichtungen", href: "/admin/facilities", icon: School },
+  { labelKey: "nav.admin.dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { labelKey: "nav.admin.mealPlans", href: "/admin/meal-plans", icon: CalendarRange },
+  { labelKey: "nav.admin.orders", href: "/admin/orders", icon: ClipboardList },
+  { labelKey: "nav.admin.recipes", href: "/admin/recipes", icon: BookOpenText },
+  { labelKey: "nav.admin.ingredients", href: "/admin/ingredients", icon: Carrot },
+  { labelKey: "nav.admin.production", href: "/admin/production", icon: Factory },
+  { labelKey: "nav.admin.routes", href: "/admin/routes", icon: Truck },
+  { labelKey: "nav.admin.procurement", href: "/admin/procurement", icon: ShoppingBasket },
+  { labelKey: "nav.admin.revenue", href: "/admin/revenue", icon: TrendingUp },
+  { labelKey: "nav.admin.facilities", href: "/admin/facilities", icon: School },
 ];
 
 function AdminShell({ children }: { children: React.ReactNode }) {

@@ -6,14 +6,14 @@ import { RequireRole } from "@/lib/auth/RequireRole";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 const nav: NavItem[] = [
-  { label: "Übersicht", href: "/super-admin/dashboard", icon: LayoutDashboard },
-  { label: "Mandanten", href: "/super-admin/tenants", icon: Building2 },
-  { label: "Standorte", href: "/super-admin/locations", icon: MapPin },
-  { label: "Benutzer", href: "/super-admin/users", icon: Users },
-  { label: "System", href: "/super-admin/system", icon: Activity },
-  { label: "Audit-Log", href: "/super-admin/audit", icon: ScrollText },
-  { label: "Feature-Flags", href: "/super-admin/features", icon: ToggleLeft },
-  { label: "Support", href: "/super-admin/support", icon: LifeBuoy },
+  { labelKey: "nav.superAdmin.dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
+  { labelKey: "nav.superAdmin.tenants", href: "/super-admin/tenants", icon: Building2 },
+  { labelKey: "nav.superAdmin.locations", href: "/super-admin/locations", icon: MapPin },
+  { labelKey: "nav.superAdmin.users", href: "/super-admin/users", icon: Users },
+  { labelKey: "nav.superAdmin.system", href: "/super-admin/system", icon: Activity },
+  { labelKey: "nav.superAdmin.audit", href: "/super-admin/audit", icon: ScrollText },
+  { labelKey: "nav.superAdmin.features", href: "/super-admin/features", icon: ToggleLeft },
+  { labelKey: "nav.superAdmin.support", href: "/super-admin/support", icon: LifeBuoy },
 ];
 
 function SuperAdminShell({ children }: { children: React.ReactNode }) {

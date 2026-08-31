@@ -314,6 +314,20 @@ function useGlobalUserStatusAction(action: "deactivate" | "activate") {
 export const useDeactivateGlobalUser = () => useGlobalUserStatusAction("deactivate");
 export const useActivateGlobalUser = () => useGlobalUserStatusAction("activate");
 
+/** Endgültiges Löschen (nicht nur Deaktivieren) — schlägt serverseitig mit einer klaren Meldung fehl,
+ * falls der Benutzer noch mit anderen Datensätzen verknüpft ist (siehe SuperAdminHandler.DeleteUserAsync). */
+export function useDeleteGlobalUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/super-admin/users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenant-users"] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-tenants"] });
+    },
+  });
+}
+
 /** Admin-triggered "Passwort zurücksetzen" — sendet erneut eine "Passwort festlegen"-Mail, auch für
  * bereits aktive Benutzer (siehe SuperAdminHandler.TriggerPasswordResetAsync). */
 export function useResetGlobalUserPassword() {

@@ -3,10 +3,22 @@
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { Lock, Pencil, RotateCcw, X } from "lucide-react";
+import { Lock, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { Button, Card, CardHeader, LoadingState, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
-import { PromptDialog } from "@/components/ui/confirm-dialog";
-import { useTenants, useUpdateTenant, useLockTenant, useUnlockTenant, useTenantUsers, useGlobalAuditLog } from "@/lib/services/super-admin";
+import { PromptDialog, ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
+import {
+  useTenants,
+  useUpdateTenant,
+  useLockTenant,
+  useUnlockTenant,
+  useTenantUsers,
+  useGlobalAuditLog,
+  useDeleteGlobalUser,
+  type GlobalUser,
+} from "@/lib/services/super-admin";
+import { EditUserForm } from "@/features/users/components/edit-user-form";
 import { SupportAccess } from "./support-access";
 import { TenantProfileCard } from "./tenant-profile-card";
 import { TenantSettingsCard } from "./tenant-settings-card";
@@ -16,6 +28,7 @@ import { TenantFeatureFlagsCard } from "./tenant-feature-flags-card";
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
 export function TenantDetailView({ tenantId }: { tenantId: string }) {
+  const toast = useToast();
   const tenants = useTenants();
   const tenant = tenants.find((entry) => entry.id === tenantId);
   const ladend = useIsFetching({ queryKey: ["super-admin-tenants"] }) > 0 && tenants.length === 0;
@@ -24,12 +37,24 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
   const unlockTenant = useUnlockTenant();
   const tenantUsers = useTenantUsers(tenantId);
   const tenantAudit = useGlobalAuditLog({ tenantId });
+  const deleteUser = useDeleteGlobalUser();
   const [bearbeiten, setBearbeiten] = useState(false);
   const [name, setName] = useState(tenant?.name ?? "");
   const [ansprechpartner, setAnsprechpartner] = useState(tenant?.ansprechpartner ?? "");
   const [email, setEmail] = useState(tenant?.email ?? "");
   const [sperrenDialog, setSperrenDialog] = useState(false);
   const [reaktivierenDialog, setReaktivierenDialog] = useState(false);
+  const [bearbeiteBenutzer, setBearbeiteBenutzer] = useState<GlobalUser | null>(null);
+  const [loescheBenutzer, setLoescheBenutzer] = useState<GlobalUser | null>(null);
+
+  function benutzerLoeschenBestaetigt() {
+    if (!loescheBenutzer) return;
+    deleteUser.mutate(loescheBenutzer.id, {
+      onSuccess: () => toast.success(`${loescheBenutzer.name} wurde endgültig gelöscht.`),
+      onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+    });
+    setLoescheBenutzer(null);
+  }
 
   if (!tenant) {
     if (ladend) return <Card><LoadingState text="Mandant wird geladen …" /></Card>;
@@ -110,14 +135,25 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader title="Benutzer des Mandanten" hint="Rollen und Zugänge des Catering-Unternehmens" />
+            {bearbeiteBenutzer ? <div className="p-5 pt-0"><EditUserForm user={bearbeiteBenutzer} onDone={() => setBearbeiteBenutzer(null)} /></div> : null}
             {tenantUsers.length ? (
-              <Table head={["Name", "Rolle", "Status", "Letzte Anmeldung"]}>
+              <Table head={["Name", "Rolle", "Status", "Letzte Anmeldung", ""]}>
                 {tenantUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-paper">
                     <Td><span className="font-medium text-ink">{user.name}</span><span className="block text-xs text-muted">{user.email}</span></Td>
                     <Td><Tag tone="green">{user.rolle}</Tag></Td>
                     <Td><StatusBadge status={user.status} /></Td>
                     <Td className="text-muted">{user.letzteAnmeldung ? new Date(user.letzteAnmeldung).toLocaleString("de-DE") : "—"}</Td>
+                    <Td className="no-print">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button type="button" onClick={() => setBearbeiteBenutzer(user)} aria-label={`${user.name} bearbeiten`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline">
+                          <Pencil size={13} aria-hidden /> Bearbeiten
+                        </button>
+                        <button type="button" onClick={() => setLoescheBenutzer(user)} aria-label={`${user.name} endgültig löschen`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline">
+                          <Trash2 size={13} aria-hidden /> Löschen
+                        </button>
+                      </div>
+                    </Td>
                   </tr>
                 ))}
               </Table>
@@ -173,6 +209,20 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         confirmLabel="Reaktivieren"
         onCancel={() => setReaktivierenDialog(false)}
         onConfirm={reaktivierenBestaetigt}
+      />
+      <ConfirmDialog
+        open={!!loescheBenutzer}
+        title="Benutzer endgültig löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{loescheBenutzer?.name}</strong> ({loescheBenutzer?.email}) wird unwiderruflich gelöscht — anders als „Deaktivieren“ kann das nicht rückgängig gemacht werden.
+            Ist der Benutzer noch mit anderen Datensätzen verknüpft (z. B. Rezepten, Bestellungen, Support-Tickets), schlägt das Löschen fehl; deaktivieren Sie ihn dann stattdessen.
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheBenutzer(null)}
+        onConfirm={benutzerLoeschenBestaetigt}
       />
     </>
   );

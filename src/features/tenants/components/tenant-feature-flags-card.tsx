@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardHeader } from "@/components/ui";
+import { Card, CardHeader, Switch } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { useFeatureFlags, useSetTenantFeatureFlag } from "@/lib/services/super-admin";
 
@@ -19,27 +19,22 @@ export function TenantFeatureFlagsCard({ tenantId }: { tenantId: string }) {
         {flags.map((f) => {
           const effektiv = f.tenantAktiv ?? f.standardAktiv;
           return (
-            <li key={f.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-              <div>
+            <li key={f.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-ink">{f.name}</p>
                 {f.description && <p className="text-xs text-muted">{f.description}</p>}
                 {f.tenantAktiv === null && <p className="mt-0.5 text-[11px] text-muted">Kein Override — folgt Plattform-Standard ({f.standardAktiv ? "aktiv" : "inaktiv"})</p>}
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={effektiv}
-                aria-label={`${f.name} ${effektiv ? "deaktivieren" : "aktivieren"}`}
-                onClick={() =>
+              <Switch
+                checked={effektiv}
+                label={`${f.name} ${effektiv ? "deaktivieren" : "aktivieren"}`}
+                onChange={() =>
                   setFlag.mutate(
                     { featureFlagId: f.id, enabled: !effektiv },
                     { onError: () => toast.error("Änderung fehlgeschlagen. Bitte erneut versuchen.") }
                   )
                 }
-                className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${effektiv ? "bg-basil" : "bg-line"}`}
-              >
-                <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform ${effektiv ? "translate-x-5" : "translate-x-0.5"}`} />
-              </button>
+              />
             </li>
           );
         })}

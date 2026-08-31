@@ -8,10 +8,10 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useFeatureFlagGate } from "@/lib/services/feature-flags";
 
 const nav: NavItem[] = [
-  { label: "Übersicht", href: "/portal/dashboard", icon: LayoutDashboard },
-  { label: "Speiseplan", href: "/portal/meal-plans", icon: CalendarRange },
-  { label: "Bestellungen", href: "/portal/orders", icon: ClipboardList },
-  { label: "Einrichtung", href: "/portal/profile", icon: UserCircle },
+  { labelKey: "nav.portal.dashboard", href: "/portal/dashboard", icon: LayoutDashboard },
+  { labelKey: "nav.portal.mealPlans", href: "/portal/meal-plans", icon: CalendarRange },
+  { labelKey: "nav.portal.orders", href: "/portal/orders", icon: ClipboardList },
+  { labelKey: "nav.portal.profile", href: "/portal/profile", icon: UserCircle },
 ];
 
 const roleLabels: Record<string, string> = { FACILITY_ADMIN: "Facility Admin", FACILITY_USER: "Facility User" };

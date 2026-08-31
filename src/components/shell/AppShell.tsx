@@ -7,9 +7,13 @@ import { Menu, X, LogOut, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { HEUTE } from "@/lib/heute";
 import { formatLangdatumDe, isoWeekInfo } from "@/lib/isoWeek";
+import { useTranslation } from "@/lib/i18n/I18nContext";
+import type { TranslationKey } from "@/lib/i18n/translations";
+import { ThemeToggle } from "./ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 
 export interface NavItem {
-  label: string;
+  labelKey: TranslationKey;
   href: string;
   icon: LucideIcon;
 }
@@ -33,6 +37,7 @@ const toneStyles = {
 export function AppShell({ areaLabel, areaTone, nav, userName, userRole, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useTranslation();
   const { logout, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -76,7 +81,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
             }`}
           >
             <item.icon size={17} strokeWidth={2} aria-hidden />
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         );
       })}
@@ -103,7 +108,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
           <p className="text-sm font-medium text-ink">{userName}</p>
           <p className="text-xs text-muted">{userRole}</p>
           <button type="button" onClick={handleLogout} className="mt-3 flex items-center gap-2 text-xs font-medium text-muted hover:text-danger">
-            <LogOut size={14} aria-hidden /> Abmelden
+            <LogOut size={14} aria-hidden /> {t("shell.logout")}
           </button>
         </div>
       </aside>
@@ -117,7 +122,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
             <button
               type="button"
               onClick={() => setOpen(true)}
-              aria-label="Menü öffnen"
+              aria-label={t("shell.menuOpen")}
               className="flex size-10 items-center justify-center rounded-lg text-ink hover:bg-paper lg:hidden"
             >
               <Menu size={20} />
@@ -126,36 +131,40 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               KW {week} · {formatLangdatumDe(HEUTE)}
             </p>
           </div>
-          <div className="relative" ref={profileRef}>
-            <button
-              type="button"
-              onClick={() => setProfileOpen((v) => !v)}
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              aria-label="Profilmenü"
-              className={`flex size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink transition-colors hover:bg-basil-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil`}
-            >
-              {userName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-            </button>
-            {profileOpen && (
-              <div role="menu" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
-                <div className="border-b border-line px-4 py-3">
-                  <p className="truncate text-sm font-medium text-ink">{userName}</p>
-                  <p className="text-xs text-muted">{userRole}</p>
+          <div className="flex items-center gap-1">
+            <LanguageToggle />
+            <ThemeToggle />
+            <div className="relative" ref={profileRef}>
+              <button
+                type="button"
+                onClick={() => setProfileOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                aria-label={t("shell.profileMenu")}
+                className={`flex size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink transition-colors hover:bg-basil-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil`}
+              >
+                {userName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+              </button>
+              {profileOpen && (
+                <div role="menu" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
+                  <div className="border-b border-line px-4 py-3">
+                    <p className="truncate text-sm font-medium text-ink">{userName}</p>
+                    <p className="text-xs text-muted">{userRole}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex min-h-10 w-full cursor-pointer items-center gap-2 px-4 text-sm font-medium text-danger hover:bg-danger-soft"
+                  >
+                    <LogOut size={15} aria-hidden /> {t("shell.logout")}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    handleLogout();
-                  }}
-                  className="flex min-h-10 w-full cursor-pointer items-center gap-2 px-4 text-sm font-medium text-danger hover:bg-danger-soft"
-                >
-                  <LogOut size={15} aria-hidden /> Abmelden
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </header>
 
@@ -169,7 +178,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface shadow-xl">
             <div className="flex items-start justify-between pr-3">
               {brand}
-              <button type="button" onClick={() => setOpen(false)} aria-label="Menü schließen" className="mt-5 flex size-10 items-center justify-center rounded-lg hover:bg-paper">
+              <button type="button" onClick={() => setOpen(false)} aria-label={t("shell.menuClose")} className="mt-5 flex size-10 items-center justify-center rounded-lg hover:bg-paper">
                 <X size={20} />
               </button>
             </div>

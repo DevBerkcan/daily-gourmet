@@ -7,8 +7,8 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { DriverIssueWidget } from "@/features/support/components/DriverIssueWidget";
 
 const nav: NavItem[] = [
-  { label: "Meine heutige Route", href: "/driver", icon: Truck },
-  { label: "Meine Touren", href: "/driver/routes", icon: Route },
+  { labelKey: "nav.driver.today", href: "/driver", icon: Truck },
+  { labelKey: "nav.driver.routes", href: "/driver/routes", icon: Route },
 ];
 
 function DriverShell({ children }: { children: React.ReactNode }) {

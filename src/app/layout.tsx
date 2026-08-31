@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: { default: "Daily Gourmet", template: "%s · Daily Gourmet" },
@@ -14,7 +15,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // read, the CSP nonce in the response header has no effect on Next's own scripts and the app's
   // entire JS bundle gets silently blocked by the browser. Confirmed via headless Chrome: without
   // this line every chunk (webpack/main-app/page) and every inline RSC payload script was refused.
-  await headers();
+  // Also captured (not just read) so the theme-init script below can carry the same nonce — a plain
+  // inline <script> without it would be blocked by the same CSP.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="de" suppressHydrationWarning>
       <head>
@@ -26,9 +29,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@500..800&family=Work+Sans:wght@400..700&display=swap"
           rel="stylesheet"
         />
+        {/* Setzt ein gespeichertes Dunkel-/Hell-Design vor dem ersten Paint (siehe ThemeToggle) —
+            ohne diesen Blocker würde die Seite kurz im Systemstandard aufblitzen, bevor React
+            überhaupt geladen ist. Ohne gespeicherten Wert bleibt data-theme unangetastet und
+            globals.css' prefers-color-scheme-Regel entscheidet. */}
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{var t=localStorage.getItem("dg-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t;}}catch(e){}',
+          }}
+        />
       </head>
       <body suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <ErrorBoundary>
+          <Providers>{children}</Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );
