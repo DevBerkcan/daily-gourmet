@@ -88,6 +88,11 @@ function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () => void }
   const [rolle, setRolle] = useState(user.rolle);
   const [facilityId, setFacilityId] = useState(user.facilityId ?? "");
   const brauchtEinrichtung = FACILITY_ROLLEN.includes(rolle);
+  // Ein Wechsel zwischen Plattform- (SUPER_ADMIN) und Mandanten-Rolle ist serverseitig blockiert
+  // (SuperAdminHandler.UpdateUserAsync bewegt kein TenantId mit) — die Auswahl bietet ihn deshalb nur
+  // an, wenn der bearbeitete Benutzer ohnehin schon Super Admin ist (damit die aktuelle Rolle
+  // wenigstens korrekt angezeigt wird), sonst gar nicht erst.
+  const rollenOptionen = user.rolle === "SUPER_ADMIN" ? ANLEGBARE_ROLLEN : ROLLEN;
 
   function speichern(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,7 +117,7 @@ function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () => void }
         <label className="text-xs font-medium text-muted">
           Rolle
           <select value={rolle} onChange={(e) => setRolle(e.target.value)} required className={`mt-1.5 ${fieldClass}`}>
-            {ANLEGBARE_ROLLEN.map((r) => <option key={r} value={r}>{r}</option>)}
+            {rollenOptionen.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </label>
         {brauchtEinrichtung && (
