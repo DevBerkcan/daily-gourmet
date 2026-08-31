@@ -8,6 +8,7 @@ const ROUTE_STATUS_ORDER: RouteStatus[] = ["GEPLANT", "BELADUNG", "UNTERWEGS", "
 
 export interface Fahrer {
   id: string;
+  userId: string;
   name: string;
   telefon: string;
   fahrzeug: string;
@@ -172,7 +173,31 @@ export function useFahrer(): Fahrer[] {
     queryKey: ["drivers"],
     queryFn: () => api.get<PagedResult<DriverDto>>("/drivers?pageSize=100"),
   });
-  return (query.data?.items ?? []).map((d) => ({ id: d.id, name: d.userName, telefon: d.phone, fahrzeug: d.vehicleDescription, kennzeichen: d.licensePlate }));
+  return (query.data?.items ?? []).map((d) => ({ id: d.id, userId: d.userId, name: d.userName, telefon: d.phone, fahrzeug: d.vehicleDescription, kennzeichen: d.licensePlate }));
+}
+
+interface FahrerProfilInput {
+  phone: string;
+  vehicleDescription: string;
+  licensePlate: string;
+}
+
+/** Legt das Fahrerprofil (Telefon/Fahrzeug/Kennzeichen) für einen Benutzer mit der Rolle DRIVER an —
+ * ohne dieses Profil kann sich der Fahrer nicht anmelden (Backend verlangt es für alle Routen-Endpunkte). */
+export function useCreateFahrer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: FahrerProfilInput & { userId: string }) => api.post<DriverDto>("/drivers", input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
+  });
+}
+
+export function useUpdateFahrer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: FahrerProfilInput & { id: string }) => api.put<DriverDto>(`/drivers/${id}`, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
+  });
 }
 
 export function useLieferRouten(filters?: { datum?: string; fahrerId?: string; status?: RouteStatus }): LieferRoute[] {
