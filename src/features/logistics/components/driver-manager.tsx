@@ -3,7 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { Pencil, Plus, Truck } from "lucide-react";
 import { Button, Card, CardHeader } from "@/components/ui";
-import { useUsers } from "@/lib/services/users";
+import { useActivateUser, useDeactivateUser, useUsers } from "@/lib/services/users";
 import { useCreateFahrer, useFahrer, useUpdateFahrer } from "@/lib/services/logistics";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
@@ -16,6 +16,8 @@ export function DriverManager() {
   const fahrer = useFahrer();
   const createFahrer = useCreateFahrer();
   const updateFahrer = useUpdateFahrer();
+  const deactivateUser = useDeactivateUser();
+  const activateUser = useActivateUser();
   const [bearbeiteUserId, setBearbeiteUserId] = useState<string | null>(null);
   const [telefon, setTelefon] = useState("");
   const [fahrzeug, setFahrzeug] = useState("");
@@ -58,16 +60,26 @@ export function DriverManager() {
             <div key={person.id} className="rounded-lg border border-line p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="font-medium text-ink">{person.name}</p>
+                  <p className="font-medium text-ink">
+                    {person.name}
+                    {person.status === "DEAKTIVIERT" ? <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-medium text-danger align-middle">Deaktiviert</span> : null}
+                  </p>
                   <p className="text-xs text-muted">
                     {person.email}
                     {profil ? ` · ${profil.telefon} · ${profil.fahrzeug} · ${profil.kennzeichen}` : " · Kein Profil hinterlegt"}
                   </p>
                 </div>
                 {!bearbeitetGerade ? (
-                  <Button variant="secondary" onClick={() => bearbeitungStarten(person.id)}>
-                    {profil ? <><Pencil size={14} aria-hidden /> Bearbeiten</> : <><Plus size={14} aria-hidden /> Profil anlegen</>}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={() => bearbeitungStarten(person.id)}>
+                      {profil ? <><Pencil size={14} aria-hidden /> Bearbeiten</> : <><Plus size={14} aria-hidden /> Profil anlegen</>}
+                    </Button>
+                    {person.status === "DEAKTIVIERT" ? (
+                      <Button variant="secondary" onClick={() => activateUser.mutate(person.id)}>Aktivieren</Button>
+                    ) : (
+                      <Button variant="secondary" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }}>Deaktivieren</Button>
+                    )}
+                  </div>
                 ) : null}
               </div>
               {bearbeitetGerade ? (

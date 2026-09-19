@@ -119,6 +119,7 @@ interface DeliveryRouteDto {
   handoffDessertConfirmed: boolean;
   handoffConfirmedAt: string | null;
   stops: RouteStopDto[];
+  skippedClosedFacilities: string[];
 }
 
 const trimTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : undefined);

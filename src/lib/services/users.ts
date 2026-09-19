@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import type { PagedResult } from "@/lib/api/types";
 
@@ -25,4 +25,21 @@ interface UserDto {
 export function useUsers(): Benutzer[] {
   const query = useQuery({ queryKey: ["users"], queryFn: () => api.get<PagedResult<UserDto>>("/users?pageSize=200") });
   return (query.data?.items ?? []).map((u) => ({ id: u.id, name: u.name, email: u.email, rolle: u.role, status: u.status, facilityId: u.facilityId }));
+}
+
+/** Sperrt den Login eines Benutzers (z. B. eines Fahrers), ohne die Historie zu löschen. */
+export function useDeactivateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => api.post(`/users/${userId}/deactivate`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
+export function useActivateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => api.post(`/users/${userId}/activate`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
+  });
 }

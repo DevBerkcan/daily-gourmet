@@ -23,6 +23,7 @@ export function RouteManager() {
   const [fahrerId, setFahrerId] = useState("");
   const [start, setStart] = useState("10:15");
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
+  const [uebersprungeneEinrichtungen, setUebersprungeneEinrichtungen] = useState<string[]>([]);
   const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
 
@@ -35,7 +36,14 @@ export function RouteManager() {
     if (!name.trim() || einrichtungIds.length === 0) return;
     createRoute.mutate(
       { name: name.trim(), datum, fahrerId: fahrerId || undefined, standortId: standorte[0]?.id, start, einrichtungIds },
-      { onSuccess: () => { setName(""); setEinrichtungIds([]); setFormularOffen(false); } }
+      {
+        onSuccess: (ergebnis) => {
+          setName("");
+          setEinrichtungIds([]);
+          setFormularOffen(false);
+          setUebersprungeneEinrichtungen(ergebnis?.skippedClosedFacilities ?? []);
+        },
+      }
     );
   }
 
@@ -48,6 +56,14 @@ export function RouteManager() {
       </div>
 
       <div className="my-6 flex justify-end"><Button onClick={() => setFormularOffen((wert) => !wert)}><Plus size={16} aria-hidden /> Neue Route definieren</Button></div>
+
+      {uebersprungeneEinrichtungen.length > 0 ? (
+        <p className="mb-6 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
+          Route gespeichert. Nicht aufgenommen, da an diesem Datum geschlossen: {uebersprungeneEinrichtungen.join(", ")}.
+          <button type="button" onClick={() => setUebersprungeneEinrichtungen([])} className="ml-auto shrink-0 underline">Ausblenden</button>
+        </p>
+      ) : null}
 
       {formularOffen ? (
         <Card className="mb-6">
