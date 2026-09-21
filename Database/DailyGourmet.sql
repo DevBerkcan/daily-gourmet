@@ -2156,114 +2156,78 @@ GO
 BEGIN TRANSACTION;
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT [FK_IngredientSupplierPrices_Suppliers_SupplierId];
+    ALTER TABLE [MealPlans] ADD [FacilityId] uniqueidentifier NULL;
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    ALTER TABLE [IngredientSupplierPrices] ADD [UnitNew] nvarchar(10) NOT NULL DEFAULT N'g';
+    UPDATE mp
+    SET mp.FacilityId = (SELECT MIN(mf.FacilityId) FROM MealPlanFacilities mf WHERE mf.MealPlanId = mp.Id)
+    FROM MealPlans mp
+    WHERE (SELECT COUNT(*) FROM MealPlanFacilities mf WHERE mf.MealPlanId = mp.Id) = 1;
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    UPDATE [IngredientSupplierPrices] SET [UnitNew] = CASE [Unit]
-        WHEN 0 THEN 'g'
-        WHEN 1 THEN 'kg'
-        WHEN 2 THEN 'ml'
-        WHEN 3 THEN 'l'
-        WHEN 4 THEN 'Stueck'
-        ELSE 'g'
-    END;
+    DROP TABLE [MealPlanFacilities];
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    DECLARE @var2 nvarchar(max);
-    SELECT @var2 = QUOTENAME([d].[name])
-    FROM [sys].[default_constraints] [d]
-    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
-    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'Unit');
-    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var2 + ';');
-    ALTER TABLE [IngredientSupplierPrices] DROP COLUMN [Unit];
+    DROP INDEX [IX_MealPlans_TenantId_Year_CalendarWeek] ON [MealPlans];
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    EXEC sp_rename N'[IngredientSupplierPrices].[UnitNew]', N'Unit', 'COLUMN';
+    CREATE INDEX [IX_MealPlans_FacilityId] ON [MealPlans] ([FacilityId]);
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    DECLARE @var3 nvarchar(max);
-    SELECT @var3 = QUOTENAME([d].[name])
-    FROM [sys].[default_constraints] [d]
-    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
-    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'SupplierArticleNumber');
-    IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var3 + ';');
-    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [SupplierArticleNumber] nvarchar(50) NOT NULL;
+    EXEC(N'CREATE UNIQUE INDEX [IX_MealPlans_TenantId_FacilityId_Year_CalendarWeek] ON [MealPlans] ([TenantId], [FacilityId], [Year], [CalendarWeek]) WHERE [FacilityId] IS NOT NULL');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    DECLARE @var4 nvarchar(max);
-    SELECT @var4 = QUOTENAME([d].[name])
-    FROM [sys].[default_constraints] [d]
-    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
-    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'Price');
-    IF @var4 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var4 + ';');
-    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [Price] decimal(12,2) NOT NULL;
+    EXEC(N'ALTER TABLE [MealPlans] ADD CONSTRAINT [CK_MealPlans_FacilityRequiredUnlessTemplate] CHECK ([IsTemplate] = 1 OR [FacilityId] IS NOT NULL)');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
-    DECLARE @var5 nvarchar(max);
-    SELECT @var5 = QUOTENAME([d].[name])
-    FROM [sys].[default_constraints] [d]
-    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
-    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[IngredientSupplierPrices]') AND [c].[name] = N'AvailabilityNote');
-    IF @var5 IS NOT NULL EXEC(N'ALTER TABLE [IngredientSupplierPrices] DROP CONSTRAINT ' + @var5 + ';');
-    ALTER TABLE [IngredientSupplierPrices] ALTER COLUMN [AvailabilityNote] nvarchar(200) NULL;
+    ALTER TABLE [MealPlans] ADD CONSTRAINT [FK_MealPlans_Facilities_FacilityId] FOREIGN KEY ([FacilityId]) REFERENCES [Facilities] ([Id]) ON DELETE NO ACTION;
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
-)
-BEGIN
-    ALTER TABLE [IngredientSupplierPrices] ADD CONSTRAINT [FK_IngredientSupplierPrices_Suppliers_SupplierId] FOREIGN KEY ([SupplierId]) REFERENCES [Suppliers] ([Id]) ON DELETE NO ACTION;
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829213739_ConfigureIngredientSupplierPrice'
+    WHERE [MigrationId] = N'20260831075014_MealPlanFacilityOwnership'
 )
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20260829213739_ConfigureIngredientSupplierPrice', N'10.0.11');
+    VALUES (N'20260831075014_MealPlanFacilityOwnership', N'10.0.11');
 END;
 
 COMMIT;
@@ -2272,59 +2236,167 @@ GO
 BEGIN TRANSACTION;
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+    WHERE [MigrationId] = N'20260831081417_AddMealPlanRejectionReason'
 )
 BEGIN
-    EXEC(N'ALTER TABLE [RecipeIngredients] ADD CONSTRAINT [CK_RecipeIngredient_Quantity] CHECK ([Quantity] >= 0)');
+    ALTER TABLE [MealPlans] ADD [RejectionReason] nvarchar(1000) NULL;
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
-)
-BEGIN
-    EXEC(N'ALTER TABLE [ProcurementListItems] ADD CONSTRAINT [CK_ProcurementListItem_PurchaseQuantity] CHECK ([PurchaseQuantity] >= 0)');
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
-)
-BEGIN
-    EXEC(N'ALTER TABLE [ProcurementListItems] ADD CONSTRAINT [CK_ProcurementListItem_TotalQuantityBase] CHECK ([TotalQuantityBase] >= 0)');
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
-)
-BEGIN
-    EXEC(N'ALTER TABLE [Ingredients] ADD CONSTRAINT [CK_Ingredient_ConversionFactor] CHECK ([ConversionFactor] > 0)');
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
-)
-BEGIN
-    EXEC(N'ALTER TABLE [Ingredients] ADD CONSTRAINT [CK_Ingredient_PurchasePrice] CHECK ([PurchasePrice] IS NULL OR [PurchasePrice] >= 0)');
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
-)
-BEGIN
-    EXEC(N'ALTER TABLE [Facilities] ADD CONSTRAINT [CK_Facility_PortionPrice] CHECK ([PortionPrice] >= 0)');
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20260829215522_AddNegativeValueCheckConstraints'
+    WHERE [MigrationId] = N'20260831081417_AddMealPlanRejectionReason'
 )
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20260829215522_AddNegativeValueCheckConstraints', N'10.0.11');
+    VALUES (N'20260831081417_AddMealPlanRejectionReason', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    CREATE TABLE [MealPlanFacilities] (
+        [MealPlanId] uniqueidentifier NOT NULL,
+        [FacilityId] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [Year] int NOT NULL,
+        [CalendarWeek] int NOT NULL,
+        CONSTRAINT [PK_MealPlanFacilities] PRIMARY KEY ([MealPlanId], [FacilityId]),
+        CONSTRAINT [FK_MealPlanFacilities_Facilities_FacilityId] FOREIGN KEY ([FacilityId]) REFERENCES [Facilities] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_MealPlanFacilities_MealPlans_MealPlanId] FOREIGN KEY ([MealPlanId]) REFERENCES [MealPlans] ([Id]) ON DELETE CASCADE
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    CREATE INDEX [IX_MealPlanFacilities_FacilityId] ON [MealPlanFacilities] ([FacilityId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_MealPlanFacilities_TenantId_FacilityId_Year_CalendarWeek] ON [MealPlanFacilities] ([TenantId], [FacilityId], [Year], [CalendarWeek]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    INSERT INTO MealPlanFacilities (MealPlanId, FacilityId, TenantId, Year, CalendarWeek)
+    SELECT Id, FacilityId, TenantId, Year, CalendarWeek
+    FROM MealPlans
+    WHERE FacilityId IS NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    ALTER TABLE [MealPlans] DROP CONSTRAINT [FK_MealPlans_Facilities_FacilityId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    DROP INDEX [IX_MealPlans_FacilityId] ON [MealPlans];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    DROP INDEX [IX_MealPlans_TenantId_FacilityId_Year_CalendarWeek] ON [MealPlans];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    ALTER TABLE [MealPlans] DROP CONSTRAINT [CK_MealPlans_FacilityRequiredUnlessTemplate];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    DECLARE @var2 nvarchar(max);
+    SELECT @var2 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[MealPlans]') AND [c].[name] = N'FacilityId');
+    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [MealPlans] DROP CONSTRAINT ' + @var2 + ';');
+    ALTER TABLE [MealPlans] DROP COLUMN [FacilityId];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260831124410_MealPlanMultiFacility'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260831124410_MealPlanMultiFacility', N'10.0.11');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260919204359_AddFacilityDeliveryDetails'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [DeliveryDurationMinutes] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260919204359_AddFacilityDeliveryDetails'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [DeliveryRequirements] nvarchar(max) NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260919204359_AddFacilityDeliveryDetails'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [DeliveryWindowEnd] time NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260919204359_AddFacilityDeliveryDetails'
+)
+BEGIN
+    ALTER TABLE [Facilities] ADD [DeliveryWindowStart] time NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260919204359_AddFacilityDeliveryDetails'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260919204359_AddFacilityDeliveryDetails', N'10.0.11');
 END;
 
 COMMIT;

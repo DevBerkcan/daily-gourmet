@@ -120,6 +120,7 @@ interface DeliveryRouteDto {
   handoffConfirmedAt: string | null;
   stops: RouteStopDto[];
   skippedClosedFacilities: string[];
+  arrivalOutsideWindowWarnings: string[];
 }
 
 const trimTime = (t: string | null | undefined) => (t ? t.slice(0, 5) : undefined);
@@ -305,6 +306,30 @@ export function useRouteUebernehmen() {
       invalidateRoutes(queryClient);
       queryClient.invalidateQueries({ queryKey: ["routes-available"] });
     },
+  });
+}
+
+/** Gibt eine noch nicht gestartete Route zurück in den Pool (z. B. bei Krankheit) — Gegenstück zu
+ * useRouteUebernehmen, damit ein anderer Fahrer die ganze Tour übernehmen kann. */
+export function useRouteAbgeben() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (routeId: string) => api.post<DeliveryRouteDto>(`/routes/${routeId}/release`),
+    onSuccess: () => {
+      invalidateRoutes(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["routes-available"] });
+    },
+  });
+}
+
+/** Übergibt einen einzelnen, noch offenen Stopp direkt an die Route eines anderen Fahrers —
+ * ohne Bestätigung durch diesen, Absprache erfolgt telefonisch/persönlich. */
+export function useStoppUebertragen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, stoppId, zielRouteId }: { routeId: string; stoppId: string; zielRouteId: string }) =>
+      api.post<DeliveryRouteDto>(`/routes/${routeId}/stops/${stoppId}/transfer`, { targetRouteId: zielRouteId }),
+    onSuccess: () => invalidateRoutes(queryClient),
   });
 }
 

@@ -5,7 +5,7 @@ import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Paginati
 import { useToast } from "@/components/ui/toast";
 import { PromptDialog } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api/client";
-import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
+import { TextField, NumberField, CheckboxGroup, TimeField, TextareaField } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
 import {
   useEinrichtungen,
@@ -68,7 +68,7 @@ export function FacilitiesManager() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <Table head={["Einrichtung", "Ansprechpartner", "Standort", "Tour", "Bestellfrist", "Liefertage", "Preis/Portion", "Status", ""]}>
+        <Table head={["Einrichtung", "Ansprechpartner", "Standort", "Tour", "Liefertage", "Lieferfenster", "Preis/Portion", "Status", ""]}>
           {pageItems.map((e) => (
             <tr key={e.id} className="hover:bg-paper">
               <Td>
@@ -81,8 +81,8 @@ export function FacilitiesManager() {
               </Td>
               <Td className="text-muted">{e.standortName}</Td>
               <Td className="text-muted">{e.routeNummer ?? "—"}</Td>
-              <Td className="text-muted">Mandanten-Standard</Td>
               <Td className="text-muted">{e.aktiveWochentage.join(", ")}</Td>
+              <Td className="text-muted">{e.lieferfensterStart && e.lieferfensterEnde ? `${e.lieferfensterStart}–${e.lieferfensterEnde}` : "—"}</Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
               <Td className="no-print">
@@ -167,6 +167,10 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
   const [portionspreis, setPortionspreis] = useState(initial?.portionspreis ?? 5);
   const [wochentage, setWochentage] = useState<string[]>(initial?.aktiveWochentage ?? ["Mo", "Di", "Mi", "Do", "Fr"]);
   const [status, setStatus] = useState<Einrichtung["status"]>(initial?.status ?? "AKTIV");
+  const [lieferfensterStart, setLieferfensterStart] = useState(initial?.lieferfensterStart ?? "");
+  const [lieferfensterEnde, setLieferfensterEnde] = useState(initial?.lieferfensterEnde ?? "");
+  const [lieferdauerMinuten, setLieferdauerMinuten] = useState<number | "">(initial?.lieferdauerMinuten ?? "");
+  const [lieferBesonderheiten, setLieferBesonderheiten] = useState(initial?.lieferBesonderheiten ?? "");
 
   const mutation = initial ? updateEinrichtung : createEinrichtung;
   const kannSpeichern =
@@ -191,6 +195,10 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
       aktiveWochentage: wochentage,
       portionspreis,
       routeNummer: routeNummer.trim() || undefined,
+      lieferfensterStart: lieferfensterStart || undefined,
+      lieferfensterEnde: lieferfensterEnde || undefined,
+      lieferdauerMinuten: lieferdauerMinuten === "" ? undefined : lieferdauerMinuten,
+      lieferBesonderheiten: lieferBesonderheiten.trim() || undefined,
     };
     if (initial) {
       updateEinrichtung.mutate(
@@ -243,6 +251,9 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
           </label>
           <NumberField label="Preis je Portion" value={portionspreis} onChange={setPortionspreis} min={0} step={0.1} suffix="€" />
           <TextField label="Tour" value={routeNummer} onChange={setRouteNummer} placeholder="z. B. RT1" hint="Nummernkreis siehe Einstellungen" />
+          <TimeField label="Lieferfenster ab" value={lieferfensterStart} onChange={setLieferfensterStart} hint="Optional, z. B. 07:30" />
+          <TimeField label="Lieferfenster bis" value={lieferfensterEnde} onChange={setLieferfensterEnde} hint="Optional, z. B. 08:00" />
+          <NumberField label="Lieferdauer vor Ort" value={lieferdauerMinuten} onChange={setLieferdauerMinuten} min={1} suffix="Min." hint="Standard 15 Min., falls leer" />
           {initial && (
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium text-ink">Status</span>
@@ -258,6 +269,13 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
           )}
         </div>
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
+        <TextareaField
+          label="Besonderheiten bei der Lieferung"
+          value={lieferBesonderheiten}
+          onChange={setLieferBesonderheiten}
+          rows={2}
+          placeholder="z. B. steile Treppe, kein Rollwagen möglich, Temperaturkontrolle"
+        />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2 no-print">
           <Button variant="secondary" onClick={onClose}>Abbrechen</Button>

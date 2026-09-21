@@ -24,6 +24,7 @@ export function RouteManager() {
   const [start, setStart] = useState("10:15");
   const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
   const [uebersprungeneEinrichtungen, setUebersprungeneEinrichtungen] = useState<string[]>([]);
+  const [zeitfensterWarnungen, setZeitfensterWarnungen] = useState<string[]>([]);
   const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
 
@@ -42,6 +43,7 @@ export function RouteManager() {
           setEinrichtungIds([]);
           setFormularOffen(false);
           setUebersprungeneEinrichtungen(ergebnis?.skippedClosedFacilities ?? []);
+          setZeitfensterWarnungen(ergebnis?.arrivalOutsideWindowWarnings ?? []);
         },
       }
     );
@@ -62,6 +64,13 @@ export function RouteManager() {
           <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
           Route gespeichert. Nicht aufgenommen, da an diesem Datum geschlossen: {uebersprungeneEinrichtungen.join(", ")}.
           <button type="button" onClick={() => setUebersprungeneEinrichtungen([])} className="ml-auto shrink-0 underline">Ausblenden</button>
+        </p>
+      ) : null}
+      {zeitfensterWarnungen.length > 0 ? (
+        <p className="mb-6 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
+          Geplante Ankunft außerhalb des Lieferfensters: {zeitfensterWarnungen.join("; ")}.
+          <button type="button" onClick={() => setZeitfensterWarnungen([])} className="ml-auto shrink-0 underline">Ausblenden</button>
         </p>
       ) : null}
 

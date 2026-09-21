@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, MapPin, Navigation, PackageCheck, Phone, Route as RouteIcon, Thermometer, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, MapPin, Navigation, PackageCheck, Phone, Repeat, Route as RouteIcon, Thermometer, Truck, Undo2 } from "lucide-react";
 import { Button, Card, EmptyState, LoadingState, PageHeader, StatCard } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { PromptDialog } from "@/components/ui/confirm-dialog";
-import { useLieferRoute, useFahrer, useUpdateStoppStatus, useAdvanceRouteStatus, portionenJeRoute } from "@/lib/services/logistics";
+import { ConfirmDialog, PromptDialog } from "@/components/ui/confirm-dialog";
+import {
+  useLieferRoute, useLieferRouten, useFahrer, useUpdateStoppStatus, useAdvanceRouteStatus,
+  useRouteAbgeben, useStoppUebertragen, portionenJeRoute,
+} from "@/lib/services/logistics";
 
 const SUBTITLE = "Stopps der Reihe nach anfahren und jede Zustellung bestätigen.";
 
@@ -26,8 +29,14 @@ export function DriverRouteDetail({ id }: { id: string }) {
   const fahrer = useFahrer();
   const updateStoppStatus = useUpdateStoppStatus();
   const advanceRouteStatus = useAdvanceRouteStatus();
+  const routeAbgeben = useRouteAbgeben();
+  const stoppUebertragen = useStoppUebertragen();
+  const routenAmSelbenTag = useLieferRouten({ datum: route?.datum });
   const toast = useToast();
   const [problemStoppId, setProblemStoppId] = useState<string | null>(null);
+  const [routeAbgebenBestaetigen, setRouteAbgebenBestaetigen] = useState(false);
+  const [transferStoppId, setTransferStoppId] = useState<string | null>(null);
+  const [zielRouteId, setZielRouteId] = useState("");
   const ladend = useIsFetching({ queryKey: ["route", id] }) > 0;
 
   if (!route) {
@@ -50,6 +59,8 @@ export function DriverRouteDetail({ id }: { id: string }) {
   const zugestellt = route.stopps.filter((stopp) => stopp.status === "ZUGESTELLT").length;
   const alleZugestellt = zugestellt === route.stopps.length;
   const stoppWirdAktualisiert = (stoppId: string) => updateStoppStatus.isPending && updateStoppStatus.variables?.stoppId === stoppId;
+  // Übergabeziele: andere, bereits übernommene Routen desselben Tages, außer der eigenen.
+  const andereRoutenAmTag = routenAmSelbenTag.filter((r) => r.id !== route.id && r.fahrerId && r.status !== "ABGESCHLOSSEN");
 
   return (
     <>
@@ -61,7 +72,7 @@ export function DriverRouteDetail({ id }: { id: string }) {
         <StatCard label="Geplante Rückkehr" value={route.rueckkehr ? `${route.rueckkehr} Uhr` : "—"} hint={route.kilometer != null ? `${route.kilometer} km Gesamtroute` : undefined} />
       </div>
 
-      <Card className="my-6"><div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"><div><p className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink"><Truck size={17} className="text-basil" aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</p><p className="mt-1 text-xs text-muted">Abfahrt {route.start} Uhr · Fahrer {person?.name}</p></div><div className="flex gap-2"><a href={`tel:${person?.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-line-strong px-4 text-sm font-medium hover:bg-paper"><Phone size={16} aria-hidden /> Disposition</a>{alleZugestellt && route.status !== "ABGESCHLOSSEN" ? <Button disabled={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "ABGESCHLOSSEN" }, { onError: () => toast.error("Tour konnte nicht abgeschlossen werden. Bitte erneut versuchen.") })}><CheckCircle2 size={16} aria-hidden /> {advanceRouteStatus.isPending ? "Wird abgeschlossen …" : "Tour abschließen"}</Button> : null}</div></div></Card>
+      <Card className="my-6"><div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"><div><p className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink"><Truck size={17} className="text-basil" aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</p><p className="mt-1 text-xs text-muted">Abfahrt {route.start} Uhr · Fahrer {person?.name}</p></div><div className="flex gap-2"><a href={`tel:${person?.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-line-strong px-4 text-sm font-medium hover:bg-paper"><Phone size={16} aria-hidden /> Disposition</a>{route.status === "GEPLANT" ? <Button variant="secondary" disabled={routeAbgeben.isPending} onClick={() => setRouteAbgebenBestaetigen(true)}><Undo2 size={16} aria-hidden /> Route abgeben</Button> : null}{alleZugestellt && route.status !== "ABGESCHLOSSEN" ? <Button disabled={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "ABGESCHLOSSEN" }, { onError: () => toast.error("Tour konnte nicht abgeschlossen werden. Bitte erneut versuchen.") })}><CheckCircle2 size={16} aria-hidden /> {advanceRouteStatus.isPending ? "Wird abgeschlossen …" : "Tour abschließen"}</Button> : null}</div></div></Card>
 
       <div className="flex flex-col gap-5">
         {route.stopps.map((stopp) => {
@@ -71,7 +82,7 @@ export function DriverRouteDetail({ id }: { id: string }) {
             <div className={`flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-4 ${status === "ZUGESTELLT" ? "bg-ok-soft" : status === "PROBLEM" ? "bg-danger-soft" : ""}`}><div className="flex gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-basil font-display font-semibold text-white">{stopp.reihenfolge}</span><div><h2 className="font-display text-xl font-semibold text-ink">{stopp.einrichtungName}</h2><p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted"><MapPin size={14} aria-hidden />{stopp.einrichtungAdresse}</p></div></div><div className="text-right"><p className="font-display text-xl font-semibold text-basil">{stopp.ankunft} Uhr</p>{stopp.zeitfenster && <p className="text-xs text-muted">Lieferfenster {stopp.zeitfenster}</p>}</div></div>
             <div className="grid gap-6 p-5 lg:grid-cols-[1fr_280px]">
               <div><p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Bei diesem Kunden ausladen</p><div className="divide-y divide-line rounded-lg border border-line">{stopp.positionen.map((position) => <div key={position.id} className="flex items-start justify-between gap-3 px-4 py-3"><div><p className="font-semibold text-ink">{position.rezeptName}</p><p className="mt-1 text-xs text-muted">{position.behaelter}{position.hinweis ? ` · ${position.hinweis}` : ""}</p><p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-warn"><Thermometer size={13} aria-hidden />{position.temperatur}</p></div><p className="font-display text-xl font-semibold text-basil">{position.portionen}</p></div>)}</div>{stopp.hinweis ? <p className="mt-3 rounded-lg bg-saffron-soft px-3 py-2 text-sm font-medium text-warn">{stopp.hinweis}</p> : null}</div>
-              <div className="flex flex-col gap-3"><a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-basil px-4 text-sm font-medium text-white hover:bg-basil-deep"><Navigation size={17} aria-hidden /> Navigation starten</a><a href={`tel:${stopp.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line-strong px-4 text-sm font-medium hover:bg-paper"><Phone size={17} aria-hidden /> {stopp.kontakt} anrufen</a>{status !== "ZUGESTELLT" ? <Button disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => updateStoppStatus.mutate({ routeId: route.id, stoppId: stopp.id, status: "ZUGESTELLT" }, { onError: () => toast.error("Status konnte nicht aktualisiert werden. Bitte erneut versuchen.") })}><PackageCheck size={16} aria-hidden /> {stoppWirdAktualisiert(stopp.id) ? "Wird gespeichert …" : "Erfolgreich zugestellt"}</Button> : <div className="flex items-center justify-center gap-2 rounded-lg bg-ok-soft px-4 py-3 text-sm font-semibold text-ok"><CheckCircle2 size={17} aria-hidden /> Zugestellt</div>}{status !== "PROBLEM" && status !== "ZUGESTELLT" ? <Button variant="danger" disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => setProblemStoppId(stopp.id)}><AlertTriangle size={16} aria-hidden /> Problem melden</Button> : null}{status === "PROBLEM" ? <Button variant="secondary" disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => updateStoppStatus.mutate({ routeId: route.id, stoppId: stopp.id, status: "OFFEN" }, { onError: () => toast.error("Status konnte nicht aktualisiert werden. Bitte erneut versuchen.") })}><RouteIcon size={16} aria-hidden /> {stoppWirdAktualisiert(stopp.id) ? "Wird gespeichert …" : "Problem geklärt"}</Button> : null}</div>
+              <div className="flex flex-col gap-3"><a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-basil px-4 text-sm font-medium text-white hover:bg-basil-deep"><Navigation size={17} aria-hidden /> Navigation starten</a><a href={`tel:${stopp.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line-strong px-4 text-sm font-medium hover:bg-paper"><Phone size={17} aria-hidden /> {stopp.kontakt} anrufen</a>{status !== "ZUGESTELLT" ? <Button disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => updateStoppStatus.mutate({ routeId: route.id, stoppId: stopp.id, status: "ZUGESTELLT" }, { onError: () => toast.error("Status konnte nicht aktualisiert werden. Bitte erneut versuchen.") })}><PackageCheck size={16} aria-hidden /> {stoppWirdAktualisiert(stopp.id) ? "Wird gespeichert …" : "Erfolgreich zugestellt"}</Button> : <div className="flex items-center justify-center gap-2 rounded-lg bg-ok-soft px-4 py-3 text-sm font-semibold text-ok"><CheckCircle2 size={17} aria-hidden /> Zugestellt</div>}{status !== "PROBLEM" && status !== "ZUGESTELLT" ? <Button variant="danger" disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => setProblemStoppId(stopp.id)}><AlertTriangle size={16} aria-hidden /> Problem melden</Button> : null}{status === "PROBLEM" ? <Button variant="secondary" disabled={stoppWirdAktualisiert(stopp.id)} onClick={() => updateStoppStatus.mutate({ routeId: route.id, stoppId: stopp.id, status: "OFFEN" }, { onError: () => toast.error("Status konnte nicht aktualisiert werden. Bitte erneut versuchen.") })}><RouteIcon size={16} aria-hidden /> {stoppWirdAktualisiert(stopp.id) ? "Wird gespeichert …" : "Problem geklärt"}</Button> : null}{status === "OFFEN" && andereRoutenAmTag.length > 0 ? <Button variant="secondary" onClick={() => { setZielRouteId(""); setTransferStoppId(stopp.id); }}><Repeat size={16} aria-hidden /> An anderen Fahrer übergeben</Button> : null}</div>
             </div>
           </Card>;
         })}
@@ -95,6 +106,64 @@ export function DriverRouteDetail({ id }: { id: string }) {
           );
         }}
       />
+
+      <ConfirmDialog
+        open={routeAbgebenBestaetigen}
+        title="Route abgeben"
+        message="Die Route wird wieder in den Pool gelegt, jeder andere Fahrer kann sie übernehmen. Du bist danach nicht mehr für diese Tour eingeteilt."
+        confirmLabel={routeAbgeben.isPending ? "Wird abgegeben …" : "Route abgeben"}
+        tone="warn"
+        onCancel={() => setRouteAbgebenBestaetigen(false)}
+        onConfirm={() => routeAbgeben.mutate(route.id, {
+          onSuccess: () => setRouteAbgebenBestaetigen(false),
+          onError: () => toast.error("Route konnte nicht abgegeben werden. Bitte erneut versuchen."),
+        })}
+      />
+
+      {transferStoppId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
+          <div className="absolute inset-0 bg-ink/50" onClick={() => setTransferStoppId(null)} aria-hidden />
+          <form
+            role="dialog"
+            aria-modal="true"
+            className="relative flex w-full max-w-md flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!zielRouteId) return;
+              stoppUebertragen.mutate(
+                { routeId: route.id, stoppId: transferStoppId, zielRouteId },
+                {
+                  onSuccess: () => setTransferStoppId(null),
+                  onError: () => toast.error("Stopp konnte nicht übertragen werden. Bitte erneut versuchen."),
+                }
+              );
+            }}
+          >
+            <div className="px-5 pt-5"><h2 className="font-display text-lg font-semibold text-ink">Stopp an anderen Fahrer übergeben</h2></div>
+            <div className="flex flex-col gap-2 px-5 py-4 text-sm text-ink-soft">
+              <p>Der Stopp wird sofort auf die gewählte Route übertragen — ohne Rückfrage beim Zielfahrer. Bitte vorher telefonisch absprechen.</p>
+              <label className="text-xs font-medium text-muted">
+                Zielroute
+                <select
+                  required
+                  value={zielRouteId}
+                  onChange={(event) => setZielRouteId(event.target.value)}
+                  className="mt-1.5 min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+                >
+                  <option value="">Bitte wählen …</option>
+                  {andereRoutenAmTag.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name} · {fahrer.find((f) => f.id === r.fahrerId)?.name ?? r.fahrerName}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
+              <Button type="button" variant="secondary" onClick={() => setTransferStoppId(null)}>Abbrechen</Button>
+              <Button type="submit" disabled={!zielRouteId || stoppUebertragen.isPending}>{stoppUebertragen.isPending ? "Wird übertragen …" : "Übertragen"}</Button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </>
   );
 }

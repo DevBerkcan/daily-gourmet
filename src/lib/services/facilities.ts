@@ -20,6 +20,13 @@ export interface Einrichtung {
   /** Stabile Standard-Tour, z. B. "RT1" (Nummernkreis, siehe Einstellungen) — Grundlage für die
    * Gruppierung im gedruckten Produktionsplan. */
   routeNummer?: string;
+  /** Zugesagtes Lieferfenster, z. B. "07:30"–"08:00" — fließt bei Routenerstellung auf den Stopp ein. */
+  lieferfensterStart?: string;
+  lieferfensterEnde?: string;
+  /** Erwarteter Zeitaufwand vor Ort in Minuten. */
+  lieferdauerMinuten?: number;
+  /** Besonderheiten bei der Anlieferung, z. B. steile Treppe, kein Rollwagen möglich. */
+  lieferBesonderheiten?: string;
 }
 
 export interface FacilityDto {
@@ -33,6 +40,10 @@ export interface FacilityDto {
   locationId: string;
   locationName: string;
   activeWeekdays: string;
+  deliveryWindowStart: string | null;
+  deliveryWindowEnd: string | null;
+  deliveryDurationMinutes: number | null;
+  deliveryRequirements: string | null;
   portionPrice: number;
   status: string;
   notes: string | null;
@@ -51,7 +62,13 @@ export interface CreateEinrichtungInput {
   portionspreis: number;
   notizen?: string;
   routeNummer?: string;
+  lieferfensterStart?: string;
+  lieferfensterEnde?: string;
+  lieferdauerMinuten?: number;
+  lieferBesonderheiten?: string;
 }
+
+const trimZeit = (t: string | null | undefined) => (t ? t.slice(0, 5) : undefined);
 
 export function toEinrichtung(dto: FacilityDto): Einrichtung {
   return {
@@ -72,6 +89,10 @@ export function toEinrichtung(dto: FacilityDto): Einrichtung {
     status: dto.status as Einrichtung["status"],
     notizen: dto.notes ?? undefined,
     routeNummer: dto.routeNumber ?? undefined,
+    lieferfensterStart: trimZeit(dto.deliveryWindowStart),
+    lieferfensterEnde: trimZeit(dto.deliveryWindowEnd),
+    lieferdauerMinuten: dto.deliveryDurationMinutes ?? undefined,
+    lieferBesonderheiten: dto.deliveryRequirements ?? undefined,
   };
 }
 
@@ -105,6 +126,10 @@ export function useCreateEinrichtung() {
         phone: input.telefon,
         locationId: input.standortId,
         activeWeekdays: input.aktiveWochentage.join(","),
+        deliveryWindowStart: input.lieferfensterStart || null,
+        deliveryWindowEnd: input.lieferfensterEnde || null,
+        deliveryDurationMinutes: input.lieferdauerMinuten ?? null,
+        deliveryRequirements: input.lieferBesonderheiten,
         portionPrice: input.portionspreis,
         notes: input.notizen,
         routeNumber: input.routeNummer,
@@ -129,6 +154,10 @@ export function useUpdateEinrichtung() {
         phone: input.telefon,
         locationId: input.standortId,
         activeWeekdays: input.aktiveWochentage.join(","),
+        deliveryWindowStart: input.lieferfensterStart || null,
+        deliveryWindowEnd: input.lieferfensterEnde || null,
+        deliveryDurationMinutes: input.lieferdauerMinuten ?? null,
+        deliveryRequirements: input.lieferBesonderheiten,
         portionPrice: input.portionspreis,
         notes: input.notizen,
         routeNumber: input.routeNummer,

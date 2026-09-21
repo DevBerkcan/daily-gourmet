@@ -48,6 +48,14 @@ export function NumberField({ label, value, onChange, min, step, suffix, require
   );
 }
 
+export function TimeField({ label, value, onChange, required, hint }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string }) {
+  return (
+    <Field label={label} required={required} hint={hint}>
+      <input type="time" value={value} onChange={(e) => onChange(e.target.value)} required={required} className={inputCls} />
+    </Field>
+  );
+}
+
 export function TextareaField({ label, value, onChange, rows = 3, placeholder, hint }: { label: string; value: string; onChange: (v: string) => void; rows?: number; placeholder?: string; hint?: string }) {
   return (
     <Field label={label} hint={hint}>
