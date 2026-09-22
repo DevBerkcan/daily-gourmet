@@ -100,9 +100,7 @@ export function EtikettenGeneratorModal({
             {fehler ? (
               <p className="text-sm text-danger">{fehler}</p>
             ) : previewUrl ? (
-              <object data={previewUrl} type="application/pdf" className={`rounded-lg border border-line bg-white shadow-sm ${laedt ? "opacity-50" : ""}`} style={{ width: orientierung === "Quer" ? "100%" : "50%", minHeight: "70vh" }}>
-                <p className="text-sm text-muted">PDF-Vorschau wird von diesem Browser nicht unterstützt.</p>
-              </object>
+              <iframe src={previewUrl} title={`Etikett ${rezeptName}`} className={`rounded-lg border border-line bg-white shadow-sm ${laedt ? "opacity-50" : ""}`} style={{ width: orientierung === "Quer" ? "100%" : "50%", minHeight: "70vh" }} />
             ) : (
               <Loader2 className="animate-spin text-muted" size={28} aria-hidden />
             )}

@@ -1,9 +1,57 @@
 "use client";
 
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { Button } from "./index";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
+
+/** Gemeinsame Overlay-Hülle für Anlegen-/Bearbeiten-Formulare (Benutzer, Route, Einrichtung, …) —
+ * ersetzt das bisherige Muster, ein Formular als Card in den normalen Seitenfluss zu rendern.
+ * Formulare selbst bleiben unverändert, nur die Hülle wechselt von Card zu Overlay+Panel. */
+export function Modal({
+  open,
+  onClose,
+  title,
+  hint,
+  widthClassName = "max-w-2xl",
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  hint?: string;
+  widthClassName?: string;
+  children: ReactNode;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(open, dialogRef, onClose);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
+      <div className="absolute inset-0 bg-ink/50" onClick={onClose} aria-hidden />
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        tabIndex={-1}
+        className={`relative flex max-h-[90vh] w-full ${widthClassName} flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl`}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-3.5">
+          <div>
+            <h2 id="modal-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
+            {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
+          </div>
+          <button type="button" onClick={onClose} aria-label="Schließen" className="flex shrink-0 cursor-pointer items-center justify-center rounded-lg p-2 text-muted hover:bg-paper hover:text-ink">
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <div className="overflow-y-auto">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 /** Zentrierter Bestätigungsdialog im App-Design (siehe TenantSupportWidget für dasselbe
  * Overlay-Muster) — Ersatz für window.confirm() an Stellen, an denen eine Aktion (fast) endgültig

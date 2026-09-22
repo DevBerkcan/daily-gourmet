@@ -2,9 +2,9 @@
 
 import { type FormEvent, useState } from "react";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { PageHeader, Card, CardHeader, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
+import { PageHeader, Card, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import {
   useTenants,
   useGlobalUsers,
@@ -39,8 +39,7 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader title="Neuen Benutzer anlegen" hint="Der Benutzer erhält eine E-Mail mit einem Link, um sein Passwort festzulegen." />
+    <Modal open onClose={onDone} title="Neuen Benutzer anlegen" hint="Der Benutzer erhält eine E-Mail mit einem Link, um sein Passwort festzulegen.">
       <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-2">
         <label className="text-xs font-medium text-muted">
           Benutzername
@@ -73,7 +72,7 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
           <Button variant="secondary" onClick={onDone}>Abbrechen</Button>
         </div>
       </form>
-    </Card>
+    </Modal>
   );
 }
 
@@ -86,6 +85,7 @@ export function UsersContent() {
   const [formularOffen, setFormularOffen] = useState(false);
   const [bearbeiteBenutzer, setBearbeiteBenutzer] = useState<GlobalUser | null>(null);
   const [loescheBenutzer, setLoescheBenutzer] = useState<GlobalUser | null>(null);
+  const [resetBenutzer, setResetBenutzer] = useState<GlobalUser | null>(null);
   const benutzer = useGlobalUsers({ tenantId: tenantId || undefined, role: rolle || undefined });
   const gefiltert = benutzer.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(suche.toLowerCase()));
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
@@ -143,12 +143,7 @@ export function UsersContent() {
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      resetPassword.mutate(u.id, {
-                        onSuccess: () => toast.success(`Zurücksetzen-Link wurde an ${u.email} gesendet.`),
-                        onError: () => toast.error("Zurücksetzen fehlgeschlagen. Bitte erneut versuchen."),
-                      })
-                    }
+                    onClick={() => setResetBenutzer(u)}
                     aria-label={`Passwort von ${u.name} zurücksetzen`}
                     className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
                   >
@@ -202,6 +197,21 @@ export function UsersContent() {
         confirmLabel="Endgültig löschen"
         onCancel={() => setLoescheBenutzer(null)}
         onConfirm={loeschenBestaetigt}
+      />
+      <ConfirmDialog
+        open={!!resetBenutzer}
+        title="Passwort zurücksetzen"
+        message={<>An <strong>{resetBenutzer?.email}</strong> wird ein Link zum Festlegen eines neuen Passworts gesendet. Das aktuelle Passwort bleibt bis dahin gültig.</>}
+        confirmLabel={resetPassword.isPending ? "Wird gesendet …" : "Link senden"}
+        onCancel={() => setResetBenutzer(null)}
+        onConfirm={() => {
+          if (!resetBenutzer) return;
+          resetPassword.mutate(resetBenutzer.id, {
+            onSuccess: () => toast.success(`Zurücksetzen-Link wurde an ${resetBenutzer.email} gesendet.`),
+            onError: () => toast.error("Zurücksetzen fehlgeschlagen. Bitte erneut versuchen."),
+          });
+          setResetBenutzer(null);
+        }}
       />
     </>
   );

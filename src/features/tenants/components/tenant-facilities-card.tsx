@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Table, Td, StatusBadge, Button } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { PromptDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -15,7 +15,7 @@ import {
   useDeleteTenantFacility,
 } from "@/lib/services/super-admin";
 import type { Einrichtung } from "@/lib/services/facilities";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -162,12 +162,8 @@ function EinrichtungFormular({
   }
 
   return (
-    <div className="border-b border-line px-5 py-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-ink">{initial ? `${initial.name} bearbeiten` : "Neue Einrichtung"}</h3>
-        <button type="button" onClick={onClose} aria-label="Schließen" className="cursor-pointer text-muted hover:text-ink"><X size={18} aria-hidden /></button>
-      </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <Modal open onClose={onClose} title={initial ? `${initial.name} bearbeiten` : "Neue Einrichtung"} widthClassName="max-w-3xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Name" value={name} onChange={setName} required />
           <TextField label="Anschrift" value={anschrift} onChange={setAnschrift} required />
@@ -199,6 +195,6 @@ function EinrichtungFormular({
           <Button type="submit" disabled={!kannSpeichern}>{mutation.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

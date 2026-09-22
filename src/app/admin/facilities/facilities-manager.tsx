@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { PromptDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api/client";
 import { TextField, NumberField, CheckboxGroup, TimeField, TextareaField } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
@@ -16,7 +16,7 @@ import {
   type Einrichtung,
 } from "@/lib/services/facilities";
 import { usePagination } from "@/lib/use-pagination";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -225,13 +225,7 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
   }
 
   return (
-    <Card className="mb-4">
-      <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-ink">{initial ? `${initial.name} bearbeiten` : "Neue Einrichtung"}</h2>
-        <button type="button" onClick={onClose} aria-label="Schließen" className="cursor-pointer text-muted hover:text-ink">
-          <X size={18} aria-hidden />
-        </button>
-      </div>
+    <Modal open onClose={onClose} title={initial ? `${initial.name} bearbeiten` : "Neue Einrichtung"} widthClassName="max-w-3xl">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-5 py-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Name" value={name} onChange={setName} required />
@@ -282,6 +276,6 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
           <Button type="submit" disabled={!kannSpeichern}>{mutation.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
         </div>
       </form>
-    </Card>
+    </Modal>
   );
 }

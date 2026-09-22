@@ -1,8 +1,8 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { X } from "lucide-react";
-import { Button, Card, CardHeader } from "@/components/ui";
+import { Button } from "@/components/ui";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useUpdateGlobalUser, useTenantFacilities, type GlobalUser } from "@/lib/services/super-admin";
 import { ApiError } from "@/lib/api/client";
@@ -37,12 +37,7 @@ export function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () =>
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader
-        title={`${user.name} bearbeiten`}
-        hint={user.tenantName ? `Mandant: ${user.tenantName}` : "Plattform-Konto"}
-        actions={<button type="button" onClick={onDone} aria-label="Schließen" className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"><X size={18} aria-hidden /></button>}
-      />
+    <Modal open onClose={onDone} title={`${user.name} bearbeiten`} hint={user.tenantName ? `Mandant: ${user.tenantName}` : "Plattform-Konto"}>
       <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-2">
         <label className="text-xs font-medium text-muted">
           Benutzername
@@ -73,6 +68,6 @@ export function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () =>
           <Button variant="secondary" onClick={onDone}>Abbrechen</Button>
         </div>
       </form>
-    </Card>
+    </Modal>
   );
 }

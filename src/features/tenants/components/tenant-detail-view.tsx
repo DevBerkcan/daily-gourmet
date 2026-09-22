@@ -3,9 +3,9 @@
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { Lock, Pencil, RotateCcw, Trash2, X } from "lucide-react";
+import { Lock, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { Button, Card, CardHeader, LoadingState, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
-import { PromptDialog, ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog, ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -119,17 +119,14 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         <Tag tone="green">Tenant Owner: {tenant.ansprechpartner}</Tag>
       </div>
 
-      {bearbeiten ? (
-        <Card className="mb-6">
-          <CardHeader title="Mandant bearbeiten" hint="Stammdaten und verantwortlichen Tenant Owner verwalten" actions={<button type="button" onClick={() => setBearbeiten(false)} aria-label="Bearbeitung schließen" className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"><X size={18} aria-hidden /></button>} />
-          <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-3">
-            <label className="text-xs font-medium text-muted">Unternehmen<input required value={name} onChange={(event) => setName(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
-            <label className="text-xs font-medium text-muted">Tenant Owner<input required value={ansprechpartner} onChange={(event) => setAnsprechpartner(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
-            <label className="text-xs font-medium text-muted">E-Mail<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
-            <div className="flex gap-2 md:col-span-3"><Button type="submit">Änderungen speichern</Button><Button variant="secondary" onClick={() => setBearbeiten(false)}>Abbrechen</Button></div>
-          </form>
-        </Card>
-      ) : null}
+      <Modal open={bearbeiten} onClose={() => setBearbeiten(false)} title="Mandant bearbeiten" hint="Stammdaten und verantwortlichen Tenant Owner verwalten" widthClassName="max-w-3xl">
+        <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-3">
+          <label className="text-xs font-medium text-muted">Unternehmen<input required value={name} onChange={(event) => setName(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
+          <label className="text-xs font-medium text-muted">Tenant Owner<input required value={ansprechpartner} onChange={(event) => setAnsprechpartner(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
+          <label className="text-xs font-medium text-muted">E-Mail<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
+          <div className="flex gap-2 md:col-span-3"><Button type="submit">Änderungen speichern</Button><Button variant="secondary" onClick={() => setBearbeiten(false)}>Abbrechen</Button></div>
+        </form>
+      </Modal>
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="flex flex-col gap-6">

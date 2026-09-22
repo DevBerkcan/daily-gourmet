@@ -31,6 +31,10 @@ export function middleware(request: NextRequest) {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
     `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}`,
+    // blob: needed for the in-app PDF preview (Etikett/Produktionsplan-Vorschau) — those PDFs are
+    // fetched from the API and rendered via an <iframe src={URL.createObjectURL(blob)}>, which is
+    // NOT covered by 'self' since a blob: URL's origin isn't matched by CSP's 'self' keyword.
+    "frame-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

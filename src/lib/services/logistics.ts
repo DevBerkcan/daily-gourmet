@@ -210,21 +210,25 @@ export function useUpdateFahrer() {
 /** Pollt alle 30s — das ist die Ansicht, über die ein Admin den Fortschritt der Fahrer auf ihren
  * Touren mitverfolgt (zugestellte/offene/Problem-Stopps), soll sich also ohne manuelles Neuladen
  * aktualisieren. */
-export function useLieferRouten(filters?: { datum?: string; fahrerId?: string; status?: RouteStatus }): LieferRoute[] {
+export function useLieferRouten(filters?: { datum?: string; datumVon?: string; datumBis?: string; fahrerId?: string; status?: RouteStatus }): LieferRoute[] {
   const query = useQuery({
     queryKey: ["routes", filters],
-    queryFn: () => api.get<PagedResult<DeliveryRouteDto>>(`/routes${toQueryString({ date: filters?.datum, driverId: filters?.fahrerId, status: filters?.status, pageSize: 200 })}`),
+    queryFn: () => api.get<PagedResult<DeliveryRouteDto>>(`/routes${toQueryString({ date: filters?.datum, dateFrom: filters?.datumVon, dateTo: filters?.datumBis, driverId: filters?.fahrerId, status: filters?.status, pageSize: 200 })}`),
     refetchInterval: 30_000,
   });
   return (query.data?.items ?? []).map(toLieferRoute);
 }
 
-/** Einzelne Route per Id — anders als /routes (Liste) auch für Fahrer erlaubt (mit serverseitiger Zugriffsprüfung). */
-export function useLieferRoute(id: string): LieferRoute | undefined {
+/** Einzelne Route per Id — anders als /routes (Liste) auch für Fahrer erlaubt (mit serverseitiger
+ * Zugriffsprüfung). `aktiv: false` schaltet die Abfrage komplett ab (z. B. sobald ein Fahrer die
+ * Route gerade abgibt/übergibt und danach keinen Zugriff mehr hätte — siehe useRouteAbgeben) — ein
+ * bloßes Entfernen aus dem Cache reicht nicht, weil die Komponente meist noch gemountet ist und beim
+ * nächsten Render sofort neu abfragen würde, solange die Query aktiviert bleibt. */
+export function useLieferRoute(id: string, aktiv = true): LieferRoute | undefined {
   const query = useQuery({
     queryKey: ["route", id],
     queryFn: () => api.get<DeliveryRouteDto>(`/routes/${id}`),
-    enabled: !!id,
+    enabled: !!id && aktiv,
     retry: false,
   });
   return query.data ? toLieferRoute(query.data) : undefined;
@@ -239,11 +243,31 @@ export function useAktuelleFahrerRouten(nurHeute = false): LieferRoute[] {
   return (query.data ?? []).map(toLieferRoute);
 }
 
+export interface LieferRouteInput { name: string; datum: string; fahrerId?: string; standortId?: string; start: string; einrichtungIds: string[] }
+
 export function useCreateLieferRoute() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; datum: string; fahrerId?: string; standortId?: string; start: string; einrichtungIds: string[] }) =>
+    mutationFn: (input: LieferRouteInput) =>
       api.post<DeliveryRouteDto>("/routes", {
+        name: input.name,
+        date: input.datum,
+        driverId: input.fahrerId || null,
+        locationId: input.standortId,
+        plannedDepartureTime: input.start,
+        facilityIds: input.einrichtungIds,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["routes"] }),
+  });
+}
+
+/** Bearbeiten einer bestehenden Route (Name, Datum, Fahrer, Standort, Abfahrt, Kundenliste) — nur
+ * möglich, solange die Route noch GEPLANT ist (siehe DeliveryRouteHandler.UpdateAsync). */
+export function useUpdateLieferRoute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: LieferRouteInput }) =>
+      api.put<DeliveryRouteDto>(`/routes/${id}`, {
         name: input.name,
         date: input.datum,
         driverId: input.fahrerId || null,
@@ -315,8 +339,14 @@ export function useRouteAbgeben() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (routeId: string) => api.post<DeliveryRouteDto>(`/routes/${routeId}/release`),
-    onSuccess: () => {
-      invalidateRoutes(queryClient);
+    onSuccess: (_, routeId) => {
+      // Nicht invalidateRoutes(): das würde die noch gemountete ["route", routeId]-Detailabfrage neu
+      // laden, aber der Fahrer hat nach der Abgabe keinen Zugriff mehr darauf (GetByIdAsync antwortet
+      // mit 403) — die Query wird deshalb aus dem Cache entfernt statt neu abgefragt, damit dieser
+      // Request gar nicht erst losgeschickt wird.
+      queryClient.removeQueries({ queryKey: ["route", routeId] });
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-current-routes"] });
       queryClient.invalidateQueries({ queryKey: ["routes-available"] });
     },
   });
@@ -330,6 +360,30 @@ export function useStoppUebertragen() {
     mutationFn: ({ routeId, stoppId, zielRouteId }: { routeId: string; stoppId: string; zielRouteId: string }) =>
       api.post<DeliveryRouteDto>(`/routes/${routeId}/stops/${stoppId}/transfer`, { targetRouteId: zielRouteId }),
     onSuccess: () => invalidateRoutes(queryClient),
+  });
+}
+
+/** Kurzfristiger Sonderauftrag/Zusatzkunde — hängt eine Einrichtung als neuen Stopp an eine
+ * bestehende Route an, auch wenn diese schon beladen/unterwegs ist (nur ABGESCHLOSSEN sperrt). */
+export function useStoppHinzufuegen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, einrichtungId }: { routeId: string; einrichtungId: string }) =>
+      api.post<DeliveryRouteDto>(`/routes/${routeId}/stops`, { facilityId: einrichtungId }),
+    onSuccess: () => invalidateRoutes(queryClient),
+  });
+}
+
+interface DuplicateWeekResultDto { createdCount: number; skippedExisting: string[] }
+
+/** Übernimmt alle Routen einer Woche (Mo–So) als Ausgangspunkt für eine andere Woche — Stopps
+ * werden für die Zielwoche frisch aufgebaut (aktuelle Bestellungen/Schließtage berücksichtigt). */
+export function useWocheDuplizieren() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ quellwocheMontag, zielwocheMontag }: { quellwocheMontag: string; zielwocheMontag: string }) =>
+      api.post<DuplicateWeekResultDto>("/routes/duplicate-week", { sourceWeekStart: quellwocheMontag, targetWeekStart: zielwocheMontag }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["routes"] }),
   });
 }
 

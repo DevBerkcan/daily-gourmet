@@ -1,32 +1,43 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Plus, Route, Truck, UserRound } from "lucide-react";
-import { Button, Card, CardHeader, StatCard, StatusBadge, Pagination } from "@/components/ui";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Pencil, Plus, Truck, UserPlus, UserRound } from "lucide-react";
+import { Button, Card, StatCard, StatusBadge, Pagination } from "@/components/ui";
+import { Modal } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useStandorte } from "@/lib/services/locations";
-import { useFahrer, useLieferRouten, useCreateLieferRoute, portionenJeRoute, behaelterPositionenJeRoute } from "@/lib/services/logistics";
+import {
+  useFahrer, useLieferRouten, useCreateLieferRoute, useUpdateLieferRoute, useStoppHinzufuegen, portionenJeRoute, behaelterPositionenJeRoute,
+  type LieferRoute,
+} from "@/lib/services/logistics";
 import { usePagination } from "@/lib/use-pagination";
+import { RoutesWeekView } from "./routes-week-view";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
-export function RouteManager() {
-  const routen = useLieferRouten();
+function RouteFormular({
+  initial,
+  onClose,
+  onSaved,
+}: {
+  initial?: LieferRoute;
+  onClose: () => void;
+  onSaved: (skippedClosedFacilities: string[], arrivalOutsideWindowWarnings: string[]) => void;
+}) {
   const einrichtungen = useEinrichtungen();
   const standorte = useStandorte();
   const fahrer = useFahrer();
   const createRoute = useCreateLieferRoute();
-  const [formularOffen, setFormularOffen] = useState(false);
-  const [details, setDetails] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [datum, setDatum] = useState("2026-08-07");
-  const [fahrerId, setFahrerId] = useState("");
-  const [start, setStart] = useState("10:15");
-  const [einrichtungIds, setEinrichtungIds] = useState<string[]>([]);
-  const [uebersprungeneEinrichtungen, setUebersprungeneEinrichtungen] = useState<string[]>([]);
-  const [zeitfensterWarnungen, setZeitfensterWarnungen] = useState<string[]>([]);
-  const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
-  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
+  const updateRoute = useUpdateLieferRoute();
+  const [name, setName] = useState(initial?.name ?? "");
+  const [datum, setDatum] = useState(initial?.datum ?? "2026-08-07");
+  const [fahrerId, setFahrerId] = useState(initial?.fahrerId ?? "");
+  const [start, setStart] = useState(initial?.start ?? "10:15");
+  const [einrichtungIds, setEinrichtungIds] = useState<string[]>(initial?.stopps.map((s) => s.einrichtungId) ?? []);
+  const mutation = initial ? updateRoute : createRoute;
+  const toast = useToast();
 
   function toggleEinrichtung(id: string) {
     setEinrichtungIds((aktuell) => aktuell.includes(id) ? aktuell.filter((eintrag) => eintrag !== id) : [...aktuell, id]);
@@ -35,18 +46,95 @@ export function RouteManager() {
   function speichern(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim() || einrichtungIds.length === 0) return;
-    createRoute.mutate(
-      { name: name.trim(), datum, fahrerId: fahrerId || undefined, standortId: standorte[0]?.id, start, einrichtungIds },
-      {
-        onSuccess: (ergebnis) => {
-          setName("");
-          setEinrichtungIds([]);
-          setFormularOffen(false);
-          setUebersprungeneEinrichtungen(ergebnis?.skippedClosedFacilities ?? []);
-          setZeitfensterWarnungen(ergebnis?.arrivalOutsideWindowWarnings ?? []);
-        },
-      }
-    );
+    const input = { name: name.trim(), datum, fahrerId: fahrerId || undefined, standortId: initial?.standortId ?? standorte[0]?.id, start, einrichtungIds };
+    const onSuccess = (ergebnis?: { skippedClosedFacilities: string[]; arrivalOutsideWindowWarnings: string[] }) => {
+      onClose();
+      onSaved(ergebnis?.skippedClosedFacilities ?? [], ergebnis?.arrivalOutsideWindowWarnings ?? []);
+    };
+    const onError = (error: unknown) => toast.error(error instanceof ApiError ? error.message : "Speichern fehlgeschlagen. Bitte erneut versuchen.");
+    if (initial) updateRoute.mutate({ id: initial.id, input }, { onSuccess, onError });
+    else createRoute.mutate(input, { onSuccess, onError });
+  }
+
+  return (
+    <Modal open onClose={onClose} title={initial ? `${initial.name} bearbeiten` : "Neue Liefertour"} hint="Fahrer, Startzeit und Kunden in der gewünschten Reihenfolge zuordnen." widthClassName="max-w-3xl">
+      <form onSubmit={speichern} className="grid gap-5 p-5 md:grid-cols-2">
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Routenname<input value={name} onChange={(event) => setName(event.target.value)} placeholder="z. B. Route Innenstadt" required className={fieldClass} /></label>
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Fahrer<select value={fahrerId} onChange={(event) => setFahrerId(event.target.value)} className={fieldClass}><option value="">Noch nicht vergeben (Fahrer übernimmt selbst)</option>{fahrer.map((person) => <option key={person.id} value={person.id}>{person.name} · {person.kennzeichen}</option>)}</select></label>
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Datum<input type="date" value={datum} onChange={(event) => setDatum(event.target.value)} required className={fieldClass} /></label>
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Abfahrt<input type="time" value={start} onChange={(event) => setStart(event.target.value)} required className={fieldClass} /></label>
+        <fieldset className="md:col-span-2"><legend className="mb-2 text-xs font-medium text-muted">Kunden auswählen · Reihenfolge entspricht der Auswahl</legend><p className="mb-3 rounded-lg bg-info-soft px-3 py-2 text-xs text-info">Die bestellten Speisen und Portionen des gewählten Tages werden automatisch als Ladepositionen übernommen.</p><div className="grid gap-2 sm:grid-cols-2">{einrichtungen.filter((einrichtung) => einrichtung.status === "AKTIV").map((einrichtung) => <label key={einrichtung.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm ${einrichtungIds.includes(einrichtung.id) ? "border-basil bg-basil-soft" : "border-line bg-surface"}`}><input type="checkbox" checked={einrichtungIds.includes(einrichtung.id)} onChange={() => toggleEinrichtung(einrichtung.id)} className="mt-0.5 size-4 accent-basil" /><span><strong className="block text-ink">{einrichtung.name}</strong><span className="text-xs text-muted">{einrichtung.anschrift}</span></span></label>)}</div></fieldset>
+        <div className="flex gap-2 md:col-span-2"><Button type="submit" disabled={!name.trim() || einrichtungIds.length === 0 || mutation.isPending}>{mutation.isPending ? "Wird gespeichert …" : "Route speichern"}</Button><Button variant="secondary" onClick={onClose}>Abbrechen</Button></div>
+      </form>
+    </Modal>
+  );
+}
+
+/** Kurzfristiger Sonderauftrag/Zusatzkunde — Einrichtung auswählen, die noch nicht Teil der Route
+ * ist; funktioniert auch bei bereits gestarteten Touren (nur ABGESCHLOSSEN sperrt, siehe Backend). */
+function SonderauftragDialog({
+  route,
+  einrichtungen,
+  onClose,
+  onHinzufuegen,
+  wirdGespeichert,
+}: {
+  route: LieferRoute;
+  einrichtungen: ReturnType<typeof useEinrichtungen>;
+  onClose: () => void;
+  onHinzufuegen: (einrichtungId: string) => void;
+  wirdGespeichert: boolean;
+}) {
+  const [einrichtungId, setEinrichtungId] = useState("");
+  const bereitsAufRoute = new Set(route.stopps.map((s) => s.einrichtungId));
+  const auswahl = einrichtungen.filter((e) => e.status === "AKTIV" && !bereitsAufRoute.has(e.id));
+
+  return (
+    <Modal open onClose={onClose} title="Sonderauftrag hinzufügen" hint={`Neuer Stopp für „${route.name}“ — bestehende verbindliche Bestellungen der Einrichtung für diesen Tag werden automatisch übernommen.`}>
+      <form
+        onSubmit={(event) => { event.preventDefault(); if (einrichtungId) onHinzufuegen(einrichtungId); }}
+        className="flex flex-col gap-4 p-5"
+      >
+        <label className="text-xs font-medium text-muted">
+          Einrichtung
+          <select
+            required
+            value={einrichtungId}
+            onChange={(event) => setEinrichtungId(event.target.value)}
+            className="mt-1.5 min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+          >
+            <option value="">Bitte wählen …</option>
+            {auswahl.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </label>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>Abbrechen</Button>
+          <Button type="submit" disabled={!einrichtungId || wirdGespeichert}>{wirdGespeichert ? "Wird hinzugefügt …" : "Hinzufügen"}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function RouteManager() {
+  const toast = useToast();
+  const routen = useLieferRouten();
+  const einrichtungen = useEinrichtungen();
+  const fahrer = useFahrer();
+  const [ansicht, setAnsicht] = useState<"liste" | "woche">("liste");
+  const [formularOffen, setFormularOffen] = useState(false);
+  const [bearbeiteRoute, setBearbeiteRoute] = useState<LieferRoute | null>(null);
+  const [sonderauftragRoute, setSonderauftragRoute] = useState<LieferRoute | null>(null);
+  const [details, setDetails] = useState<string | null>(null);
+  const [uebersprungeneEinrichtungen, setUebersprungeneEinrichtungen] = useState<string[]>([]);
+  const [zeitfensterWarnungen, setZeitfensterWarnungen] = useState<string[]>([]);
+  const stoppHinzufuegen = useStoppHinzufuegen();
+  const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
+  const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
+
+  function formularGespeichert(skipped: string[], warnungen: string[]) {
+    setUebersprungeneEinrichtungen(skipped);
+    setZeitfensterWarnungen(warnungen);
   }
 
   return (
@@ -57,7 +145,13 @@ export function RouteManager() {
         <StatCard label="Auszuliefernde Portionen" value={String(portionen)} tone="ok" />
       </div>
 
-      <div className="my-6 flex justify-end"><Button onClick={() => setFormularOffen((wert) => !wert)}><Plus size={16} aria-hidden /> Neue Route definieren</Button></div>
+      <div className="my-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-lg border border-line bg-surface p-1">
+          <button type="button" onClick={() => setAnsicht("liste")} className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium ${ansicht === "liste" ? "bg-basil text-white" : "text-ink-soft hover:bg-paper"}`}>Liste</button>
+          <button type="button" onClick={() => setAnsicht("woche")} className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium ${ansicht === "woche" ? "bg-basil text-white" : "text-ink-soft hover:bg-paper"}`}>Woche</button>
+        </div>
+        <Button onClick={() => setFormularOffen(true)}><Plus size={16} aria-hidden /> Neue Route definieren</Button>
+      </div>
 
       {uebersprungeneEinrichtungen.length > 0 ? (
         <p className="mb-6 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
@@ -74,20 +168,11 @@ export function RouteManager() {
         </p>
       ) : null}
 
-      {formularOffen ? (
-        <Card className="mb-6">
-          <CardHeader title="Neue Liefertour" hint="Fahrer, Startzeit und Kunden in der gewünschten Reihenfolge zuordnen." actions={<Route size={19} className="text-basil" aria-hidden />} />
-          <form onSubmit={speichern} className="grid gap-5 p-5 md:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Routenname<input value={name} onChange={(event) => setName(event.target.value)} placeholder="z. B. Route Innenstadt" required className={fieldClass} /></label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Fahrer<select value={fahrerId} onChange={(event) => setFahrerId(event.target.value)} className={fieldClass}><option value="">Noch nicht vergeben (Fahrer übernimmt selbst)</option>{fahrer.map((person) => <option key={person.id} value={person.id}>{person.name} · {person.kennzeichen}</option>)}</select></label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Datum<input type="date" value={datum} onChange={(event) => setDatum(event.target.value)} required className={fieldClass} /></label>
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Abfahrt<input type="time" value={start} onChange={(event) => setStart(event.target.value)} required className={fieldClass} /></label>
-            <fieldset className="md:col-span-2"><legend className="mb-2 text-xs font-medium text-muted">Kunden auswählen · Reihenfolge entspricht der Auswahl</legend><p className="mb-3 rounded-lg bg-info-soft px-3 py-2 text-xs text-info">Die bestellten Speisen und Portionen des gewählten Tages werden automatisch als Ladepositionen übernommen.</p><div className="grid gap-2 sm:grid-cols-2">{einrichtungen.filter((einrichtung) => einrichtung.status === "AKTIV").map((einrichtung) => <label key={einrichtung.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm ${einrichtungIds.includes(einrichtung.id) ? "border-basil bg-basil-soft" : "border-line bg-surface"}`}><input type="checkbox" checked={einrichtungIds.includes(einrichtung.id)} onChange={() => toggleEinrichtung(einrichtung.id)} className="mt-0.5 size-4 accent-basil" /><span><strong className="block text-ink">{einrichtung.name}</strong><span className="text-xs text-muted">{einrichtung.anschrift}</span></span></label>)}</div></fieldset>
-            <div className="flex gap-2 md:col-span-2"><Button type="submit" disabled={!name.trim() || einrichtungIds.length === 0}>Route speichern</Button><Button variant="secondary" onClick={() => setFormularOffen(false)}>Abbrechen</Button></div>
-          </form>
-        </Card>
-      ) : null}
+      {formularOffen ? <RouteFormular onClose={() => setFormularOffen(false)} onSaved={formularGespeichert} /> : null}
+      {bearbeiteRoute ? <RouteFormular initial={bearbeiteRoute} onClose={() => setBearbeiteRoute(null)} onSaved={formularGespeichert} /> : null}
 
+      {ansicht === "woche" ? <RoutesWeekView onEditRoute={setBearbeiteRoute} /> : (
+      <>
       <div className="flex flex-col gap-5">
         {pageItems.map((route) => {
           const istOffen = details === route.id;
@@ -102,7 +187,7 @@ export function RouteManager() {
                 {route.status !== "GEPLANT" && <span className="text-xs font-medium text-muted">{zugestellt}/{route.stopps.length} zugestellt</span>}
                 {probleme > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden />{probleme} {probleme === 1 ? "Problem" : "Probleme"}</span>}
               </div><h2 className="mt-2 font-display text-xl font-semibold text-ink">{route.name}</h2><div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted"><span className="inline-flex items-center gap-1.5"><UserRound size={15} aria-hidden />{route.fahrerName ?? "Nicht vergeben"}</span><span className="inline-flex items-center gap-1.5"><Truck size={15} aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</span><span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{route.start}{route.rueckkehr ? `–${route.rueckkehr}` : ""} Uhr</span></div></div>
-              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div><Button variant="secondary" onClick={() => setDetails(istOffen ? null : route.id)}>{istOffen ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}{istOffen ? "Schließen" : "Tour anzeigen"}</Button></div>
+              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div>{route.status === "GEPLANT" ? <Button variant="secondary" onClick={() => setBearbeiteRoute(route)}><Pencil size={16} aria-hidden /> Bearbeiten</Button> : null}{route.status !== "ABGESCHLOSSEN" ? <Button variant="secondary" onClick={() => setSonderauftragRoute(route)}><UserPlus size={16} aria-hidden /> Sonderauftrag</Button> : null}<Button variant="secondary" onClick={() => setDetails(istOffen ? null : route.id)}>{istOffen ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}{istOffen ? "Schließen" : "Tour anzeigen"}</Button></div>
             </div>
             {istOffen ? <div className="border-t border-line bg-paper/50 px-5 py-5"><div className="relative ml-3 border-l-2 border-basil-soft pl-6">{route.stopps.map((stopp) => {
               const einrichtung = einrichtungen.find((e) => e.id === stopp.einrichtungId);
@@ -118,6 +203,26 @@ export function RouteManager() {
           onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
         />
       </Card>
+      </>
+      )}
+
+      {sonderauftragRoute ? (
+        <SonderauftragDialog
+          route={sonderauftragRoute}
+          einrichtungen={einrichtungen}
+          onClose={() => setSonderauftragRoute(null)}
+          onHinzufuegen={(einrichtungId) => {
+            stoppHinzufuegen.mutate(
+              { routeId: sonderauftragRoute.id, einrichtungId },
+              {
+                onSuccess: () => { toast.success("Stopp wurde hinzugefügt."); setSonderauftragRoute(null); },
+                onError: (error) => toast.error(error instanceof ApiError ? error.message : "Stopp konnte nicht hinzugefügt werden."),
+              }
+            );
+          }}
+          wirdGespeichert={stoppHinzufuegen.isPending}
+        />
+      ) : null}
     </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, CheckCircle2, MapPin, Navigation, PackageCheck, Phone, Repeat, Route as RouteIcon, Thermometer, Truck, Undo2 } from "lucide-react";
@@ -25,7 +26,13 @@ function Breadcrumb() {
 }
 
 export function DriverRouteDetail({ id }: { id: string }) {
-  const route = useLieferRoute(id);
+  const router = useRouter();
+  // Sobald die Abgabe bestätigt wurde, hat dieser Fahrer bald keinen Zugriff mehr auf die Route —
+  // die Detailabfrage wird deshalb sofort abgeschaltet, statt sich auf Cache-Invalidierung/Timing zu
+  // verlassen (die Komponente bleibt bis zur Navigation noch kurz gemountet und würde sonst beim
+  // nächsten Render sofort neu abfragen und mit 403 scheitern).
+  const [routeWirdAbgegeben, setRouteWirdAbgegeben] = useState(false);
+  const route = useLieferRoute(id, !routeWirdAbgegeben);
   const fahrer = useFahrer();
   const updateStoppStatus = useUpdateStoppStatus();
   const advanceRouteStatus = useAdvanceRouteStatus();
@@ -114,10 +121,20 @@ export function DriverRouteDetail({ id }: { id: string }) {
         confirmLabel={routeAbgeben.isPending ? "Wird abgegeben …" : "Route abgeben"}
         tone="warn"
         onCancel={() => setRouteAbgebenBestaetigen(false)}
-        onConfirm={() => routeAbgeben.mutate(route.id, {
-          onSuccess: () => setRouteAbgebenBestaetigen(false),
-          onError: () => toast.error("Route konnte nicht abgegeben werden. Bitte erneut versuchen."),
-        })}
+        onConfirm={() => {
+          setRouteWirdAbgegeben(true);
+          routeAbgeben.mutate(route.id, {
+            // Nach dem Abgeben gehört die Route diesem Fahrer nicht mehr — ein GET auf sie würde
+            // jetzt mit 403 fehlschlagen (siehe DeliveryRouteHandler.GetByIdAsync); die Detailabfrage
+            // ist seit dem Setzen von routeWirdAbgegeben schon deaktiviert, zusätzlich wird sofort
+            // weg von dieser Seite navigiert.
+            onSuccess: () => { setRouteAbgebenBestaetigen(false); router.push("/driver/routes"); },
+            onError: () => {
+              setRouteWirdAbgegeben(false);
+              toast.error("Route konnte nicht abgegeben werden. Bitte erneut versuchen.");
+            },
+          });
+        }}
       />
 
       {transferStoppId ? (
