@@ -1,15 +1,15 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Pencil, Plus, Truck, UserPlus, UserRound } from "lucide-react";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Clock3, MapPin, Pencil, Plus, Trash2, Truck, UserPlus, UserRound } from "lucide-react";
 import { Button, Card, StatCard, StatusBadge, Pagination } from "@/components/ui";
-import { Modal } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useStandorte } from "@/lib/services/locations";
 import {
-  useFahrer, useLieferRouten, useCreateLieferRoute, useUpdateLieferRoute, useStoppHinzufuegen, portionenJeRoute, behaelterPositionenJeRoute,
+  useFahrer, useLieferRouten, useCreateLieferRoute, useUpdateLieferRoute, useDeleteLieferRoute, useStoppHinzufuegen, portionenJeRoute, behaelterPositionenJeRoute,
   type LieferRoute,
 } from "@/lib/services/logistics";
 import { usePagination } from "@/lib/use-pagination";
@@ -125,16 +125,27 @@ export function RouteManager() {
   const [formularOffen, setFormularOffen] = useState(false);
   const [bearbeiteRoute, setBearbeiteRoute] = useState<LieferRoute | null>(null);
   const [sonderauftragRoute, setSonderauftragRoute] = useState<LieferRoute | null>(null);
+  const [loescheRoute, setLoescheRoute] = useState<LieferRoute | null>(null);
   const [details, setDetails] = useState<string | null>(null);
   const [uebersprungeneEinrichtungen, setUebersprungeneEinrichtungen] = useState<string[]>([]);
   const [zeitfensterWarnungen, setZeitfensterWarnungen] = useState<string[]>([]);
   const stoppHinzufuegen = useStoppHinzufuegen();
+  const deleteRoute = useDeleteLieferRoute();
   const portionen = routen.reduce((summe, route) => summe + portionenJeRoute(route), 0);
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(routen);
 
   function formularGespeichert(skipped: string[], warnungen: string[]) {
     setUebersprungeneEinrichtungen(skipped);
     setZeitfensterWarnungen(warnungen);
+  }
+
+  function loeschenBestaetigt() {
+    if (!loescheRoute) return;
+    deleteRoute.mutate(loescheRoute.id, {
+      onSuccess: () => toast.success(`„${loescheRoute.name}“ wurde gelöscht.`),
+      onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+    });
+    setLoescheRoute(null);
   }
 
   return (
@@ -187,7 +198,7 @@ export function RouteManager() {
                 {route.status !== "GEPLANT" && <span className="text-xs font-medium text-muted">{zugestellt}/{route.stopps.length} zugestellt</span>}
                 {probleme > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden />{probleme} {probleme === 1 ? "Problem" : "Probleme"}</span>}
               </div><h2 className="mt-2 font-display text-xl font-semibold text-ink">{route.name}</h2><div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted"><span className="inline-flex items-center gap-1.5"><UserRound size={15} aria-hidden />{route.fahrerName ?? "Nicht vergeben"}</span><span className="inline-flex items-center gap-1.5"><Truck size={15} aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</span><span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{route.start}{route.rueckkehr ? `–${route.rueckkehr}` : ""} Uhr</span></div></div>
-              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div>{route.status === "GEPLANT" ? <Button variant="secondary" onClick={() => setBearbeiteRoute(route)}><Pencil size={16} aria-hidden /> Bearbeiten</Button> : null}{route.status !== "ABGESCHLOSSEN" ? <Button variant="secondary" onClick={() => setSonderauftragRoute(route)}><UserPlus size={16} aria-hidden /> Sonderauftrag</Button> : null}<Button variant="secondary" onClick={() => setDetails(istOffen ? null : route.id)}>{istOffen ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}{istOffen ? "Schließen" : "Tour anzeigen"}</Button></div>
+              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div>{route.status === "GEPLANT" ? <Button variant="secondary" onClick={() => setBearbeiteRoute(route)}><Pencil size={16} aria-hidden /> Bearbeiten</Button> : null}{route.status !== "ABGESCHLOSSEN" ? <Button variant="secondary" onClick={() => setSonderauftragRoute(route)}><UserPlus size={16} aria-hidden /> Sonderauftrag</Button> : null}<Button variant="secondary" onClick={() => setLoescheRoute(route)}><Trash2 size={16} aria-hidden /> Löschen</Button><Button variant="secondary" onClick={() => setDetails(istOffen ? null : route.id)}>{istOffen ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />}{istOffen ? "Schließen" : "Tour anzeigen"}</Button></div>
             </div>
             {istOffen ? <div className="border-t border-line bg-paper/50 px-5 py-5"><div className="relative ml-3 border-l-2 border-basil-soft pl-6">{route.stopps.map((stopp) => {
               const einrichtung = einrichtungen.find((e) => e.id === stopp.einrichtungId);
@@ -223,6 +234,16 @@ export function RouteManager() {
           wirdGespeichert={stoppHinzufuegen.isPending}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={!!loescheRoute}
+        title="Route löschen"
+        tone="warn"
+        message={<><strong>{loescheRoute?.name}</strong> wird unwiderruflich gelöscht — inklusive aller Stopps und Ladepositionen, unabhängig vom Status der Tour.</>}
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheRoute(null)}
+        onConfirm={loeschenBestaetigt}
+      />
     </>
   );
 }

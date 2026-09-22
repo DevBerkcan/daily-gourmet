@@ -3,9 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination, LoadingState } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE } from "../data";
-import { useZutaten } from "@/lib/services/ingredients";
+import { useZutaten, useDeleteZutat, type Zutat } from "@/lib/services/ingredients";
 import { usePagination } from "@/lib/use-pagination";
 
 const QUELLE_KURZ: Record<string, string> = {
@@ -17,12 +21,24 @@ const QUELLE_KURZ: Record<string, string> = {
 const NAEHRWERTQUELLEN = ["Bundeslebensmittelschlüssel (BLS)", "Manuell", "Open Food Facts", "USDA FoodData Central"] as const;
 
 export function ZutatenTabelle() {
+  const toast = useToast();
   const zutaten = useZutaten();
+  const deleteZutat = useDeleteZutat();
   const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
   const [allergen, setAllergen] = useState("Alle Allergene");
   const [naehrwertquelle, setNaehrwertquelle] = useState("Alle Quellen");
+  const [loescheZutat, setLoescheZutat] = useState<Zutat | null>(null);
+
+  function loeschenBestaetigt() {
+    if (!loescheZutat) return;
+    deleteZutat.mutate(loescheZutat.id, {
+      onSuccess: () => toast.success(`„${loescheZutat.name}“ wurde gelöscht.`),
+      onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+    });
+    setLoescheZutat(null);
+  }
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
@@ -81,6 +97,7 @@ export function ZutatenTabelle() {
           { label: "Ernährung", className: "hidden lg:table-cell" },
           { label: "Lieferant", className: "hidden lg:table-cell" },
           "Status",
+          "",
         ]}
       >
         {pageItems.map((z) => (
@@ -112,6 +129,16 @@ export function ZutatenTabelle() {
             </Td>
             <Td className="hidden text-muted lg:table-cell">{z.lieferant}</Td>
             <Td><StatusBadge status={z.aktiv ? "AKTIV" : "INAKTIV"} /></Td>
+            <Td className="no-print">
+              <button
+                type="button"
+                onClick={() => setLoescheZutat(z)}
+                aria-label={`${z.name} löschen`}
+                className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
+              >
+                <Trash2 size={13} aria-hidden /> Löschen
+              </button>
+            </Td>
           </tr>
         ))}
       </Table>
@@ -122,6 +149,20 @@ export function ZutatenTabelle() {
       />
       </>
       )}
+      <ConfirmDialog
+        open={!!loescheZutat}
+        title="Zutat löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{loescheZutat?.name}</strong> wird unwiderruflich gelöscht. Wird sie bereits in einer Rezeptur oder einer
+            Beschaffungsliste verwendet, schlägt das Löschen fehl.
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheZutat(null)}
+        onConfirm={loeschenBestaetigt}
+      />
     </Card>
   );
 }

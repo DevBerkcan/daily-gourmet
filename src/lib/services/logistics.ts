@@ -279,6 +279,16 @@ export function useUpdateLieferRoute() {
   });
 }
 
+/** Endgültiges Löschen — anders als bei Rezepten/Zutaten in jedem Status möglich (siehe
+ * DeliveryRouteHandler.DeleteAsync), da Stopps/Ladepositionen kaskadierend mitgelöscht werden. */
+export function useDeleteLieferRoute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/routes/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["routes"] }),
+  });
+}
+
 /** Pool nicht übernommener Routen, die ein Fahrer sich selbst nehmen kann. */
 export function useVerfuegbareRouten(datum?: string): LieferRoute[] {
   const query = useQuery({

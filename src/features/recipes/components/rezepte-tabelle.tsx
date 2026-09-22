@@ -4,22 +4,38 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { Table, Td, StatusBadge, SearchInput, Tag, Pagination, LoadingState } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
 import { REZEPT_KATEGORIEN } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
-import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
+import { useRezepte, useDeleteRezept, rezeptAllergeneLive, type Rezept } from "@/lib/services/recipes";
 import { usePagination } from "@/lib/use-pagination";
 
 type Sortierung = "name" | "neu";
 
 export function RezepteTabelle() {
   const router = useRouter();
+  const toast = useToast();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
+  const deleteRezept = useDeleteRezept();
   const ladend = useIsFetching({ queryKey: ["recipes"] }) > 0 && rezepte.length === 0;
   const [suche, setSuche] = useState("");
   const [kategorie, setKategorie] = useState("Alle Kategorien");
   const [sortierung, setSortierung] = useState<Sortierung>("name");
+  const [loescheRezept, setLoescheRezept] = useState<Rezept | null>(null);
+
+  function loeschenBestaetigt() {
+    if (!loescheRezept) return;
+    deleteRezept.mutate(loescheRezept.id, {
+      onSuccess: () => toast.success(`„${loescheRezept.name}“ wurde gelöscht.`),
+      onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+    });
+    setLoescheRezept(null);
+  }
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
@@ -62,6 +78,7 @@ export function RezepteTabelle() {
           { label: "Ernährung", className: "hidden lg:table-cell" },
           { label: "Version", className: "hidden lg:table-cell" },
           "Status",
+          "",
         ]}
       >
         {pageItems.map((r) => {
@@ -72,7 +89,7 @@ export function RezepteTabelle() {
               key={r.id}
               tabIndex={0}
               onClick={(event) => {
-                if ((event.target as HTMLElement).closest("a")) return;
+                if ((event.target as HTMLElement).closest("a, button")) return;
                 router.push(href);
               }}
               onKeyDown={(event) => {
@@ -98,6 +115,16 @@ export function RezepteTabelle() {
               <Td className="hidden lg:table-cell">{r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : <span className="text-muted">—</span>}</Td>
               <Td className="hidden text-muted lg:table-cell">v{r.version}</Td>
               <Td><StatusBadge status={r.aktiv ? "AKTIV" : "ARCHIVIERT"} /></Td>
+              <Td className="no-print">
+                <button
+                  type="button"
+                  onClick={() => setLoescheRezept(r)}
+                  aria-label={`${r.name} löschen`}
+                  className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
+                >
+                  <Trash2 size={13} aria-hidden /> Löschen
+                </button>
+              </Td>
             </tr>
           );
         })}
@@ -108,6 +135,20 @@ export function RezepteTabelle() {
       />
       </>
       )}
+      <ConfirmDialog
+        open={!!loescheRezept}
+        title="Rezept löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{loescheRezept?.name}</strong> wird unwiderruflich gelöscht. Wird es bereits in einem Wochenplan, einer
+            Bestellung, einer Route oder Produktion verwendet, schlägt das Löschen fehl — archivieren Sie es dann stattdessen.
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        onCancel={() => setLoescheRezept(null)}
+        onConfirm={loeschenBestaetigt}
+      />
     </>
   );
 }

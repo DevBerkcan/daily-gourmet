@@ -282,6 +282,16 @@ export function useUpdateZutat() {
   });
 }
 
+/** Endgültiges Löschen — schlägt mit 409 fehl, wenn die Zutat bereits in einer Rezeptur oder einer
+ * Beschaffungsliste verwendet wird (siehe IngredientHandler.DeleteAsync). */
+export function useDeleteZutat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/ingredients/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
+  });
+}
+
 // ---- Lieferantenpreise ----
 
 export function useIngredientSupplierPrices(zutatId: string) {

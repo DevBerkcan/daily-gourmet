@@ -246,6 +246,17 @@ export function useArchiveRezept() {
   });
 }
 
+/** Endgültiges Löschen — schlägt mit 409 fehl, wenn das Rezept bereits in einem Wochenplan, einer
+ * Bestellung, einer Route oder Produktion verwendet wird (siehe RecipeHandler.DeleteAsync); in dem
+ * Fall bleibt nur useArchiveRezept. */
+export function useDeleteRezept() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/recipes/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] }),
+  });
+}
+
 // ---- Rezeptrechner-Import (Rezepte + die darin verwendeten Zutaten in einem Schritt) ----
 
 export interface RezeptImportErgebnis {
