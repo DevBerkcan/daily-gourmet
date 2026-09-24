@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, Table, Td, Button } from "@/components/ui";
+import { Card, CardHeader, Table, Td, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField } from "@/components/ui/form-fields";
 import { usePortalSchliesstage, useAddPortalSchliesstag, useDeletePortalSchliesstag } from "@/lib/services/facilities";
 
@@ -26,7 +26,7 @@ export function SchliesstagePanel() {
       <CardHeader
         title="Schließtage / Abwesenheit"
         hint="Am besten für das ganze Jahr im Voraus eintragen (z. B. Ferien) — dann fragen wir nicht jede Woche einzeln nach."
-        actions={!offen ? <Button variant="secondary" onClick={() => setOffen(true)}>Zeitraum hinzufügen</Button> : undefined}
+        actions={!offen ? <Button icon={ACTION_ICONS.create} label="Zeitraum hinzufügen" variant="secondary" onClick={() => setOffen(true)} /> : undefined}
       />
 
       {schliesstage.length === 0 && !offen && <p className="px-5 py-4 text-sm text-muted">Noch keine Schließtage eingetragen.</p>}
@@ -39,9 +39,7 @@ export function SchliesstagePanel() {
               <Td>{formatiert(s.bis)}</Td>
               <Td className="text-muted">{s.hinweis || "—"}{s.vonVerwaltungErfasst && <span className="ml-2 text-xs text-muted">(von Verwaltung erfasst)</span>}</Td>
               <Td>
-                <button type="button" onClick={() => entfernen.mutate(s.id)} className="cursor-pointer text-xs font-medium text-danger hover:underline">
-                  Entfernen
-                </button>
+                <Button icon={ACTION_ICONS.delete} label="Entfernen" variant="danger" size="sm" onClick={() => entfernen.mutate(s.id)} />
               </Td>
             </tr>
           ))}
@@ -69,8 +67,8 @@ export function SchliesstagePanel() {
             <TextField label="Hinweis" value={hinweis} onChange={setHinweis} placeholder="z. B. Sommerferien" />
           </div>
           <div className="col-span-full flex gap-2">
-            <Button type="submit" disabled={!kannSpeichern || hinzufuegen.isPending}>Speichern</Button>
-            <Button variant="secondary" onClick={() => setOffen(false)}>Abbrechen</Button>
+            <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" disabled={!kannSpeichern} loading={hinzufuegen.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setOffen(false)} />
           </div>
         </form>
       )}

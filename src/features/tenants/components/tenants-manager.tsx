@@ -2,8 +2,8 @@
 
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
-import { Button, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { Search } from "lucide-react";
+import { ACTION_ICONS, Button, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
 import { useTenants, useCreateTenant } from "@/lib/services/super-admin";
 import type { TenantStatus } from "@/lib/services/super-admin";
 import { usePagination } from "@/lib/use-pagination";
@@ -52,14 +52,14 @@ export function TenantsManager() {
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className={`mt-1.5 ${fieldClass}`} />
             </label>
             <div className="flex gap-2 sm:col-span-2 md:col-span-3">
-              <Button type="submit">Mandant anlegen</Button>
-              <Button variant="secondary" onClick={() => setOffen(false)}>Abbrechen</Button>
+              <Button icon={ACTION_ICONS.create} label="Mandant anlegen" type="submit" />
+              <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setOffen(false)} />
             </div>
           </form>
         </Card>
       ) : (
         <div className="mb-6 flex justify-end">
-          <Button onClick={() => setOffen(true)}><Plus size={16} aria-hidden /> Mandant anlegen</Button>
+          <Button icon={ACTION_ICONS.create} label="Mandant anlegen" onClick={() => setOffen(true)} />
         </div>
       )}
       <Card>

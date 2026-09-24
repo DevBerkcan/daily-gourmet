@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Button, Tag, StatusBadge, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Button, ACTION_ICONS, Tag, StatusBadge, EmptyState, LoadingState } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TextField } from "@/components/ui/form-fields";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
@@ -13,7 +13,6 @@ import { useSaveBestellung, useBestellungen, useAdjustBestellungSameDay } from "
 import type { Speiseplan } from "@/features/meal-plans/types";
 import type { Rezept } from "@/features/recipes/types";
 import type { Bestellung } from "@/lib/types";
-import { Save, Send } from "lucide-react";
 import { HEUTE as heute } from "@/lib/heute";
 
 /** Anpassung am Liefertag selbst — nur für heutige Positionen einer bereits abgesendeten
@@ -57,7 +56,10 @@ function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezep
             <TextField label="Begründung" value={hinweis} onChange={setHinweis} placeholder="Grund für die Reduzierung" />
           </div>
           <Button
-            disabled={!hinweis.trim() || anpassen.isPending}
+            icon={ACTION_ICONS.send}
+            label="Anpassung absenden"
+            disabled={!hinweis.trim()}
+            loading={anpassen.isPending}
             onClick={() =>
               anpassen.mutate(
                 {
@@ -69,9 +71,7 @@ function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezep
                 { onSuccess: () => setGespeichert(true) }
               )
             }
-          >
-            Anpassung absenden
-          </Button>
+          />
         </div>
       )}
       {gespeichert && <p className="mt-2 text-sm text-ok">Anpassung wurde übermittelt.</p>}
@@ -201,8 +201,8 @@ function WochenTage({
     <>
       {!readOnly && (
         <div className="mb-4 flex justify-end gap-2 no-print">
-          <Button variant="secondary" onClick={() => speichern(false)}><Save size={15} aria-hidden /> Als Entwurf speichern</Button>
-          <Button disabled={gesamt === 0} onClick={absendenAnklicken}><Send size={15} aria-hidden /> Absenden</Button>
+          <Button variant="secondary" onClick={() => speichern(false)} icon={ACTION_ICONS.save} label="Als Entwurf speichern" />
+          <Button disabled={gesamt === 0} onClick={absendenAnklicken} icon={ACTION_ICONS.send} label="Absenden" />
         </div>
       )}
 
@@ -211,6 +211,7 @@ function WochenTage({
         title="Bestellung absenden?"
         tone={absendenBestaetigung && absendenBestaetigung.length > 0 ? "warn" : "default"}
         confirmLabel="Ja, absenden"
+        confirmIcon={ACTION_ICONS.send}
         onCancel={() => setAbsendenBestaetigung(null)}
         onConfirm={() => { setAbsendenBestaetigung(null); speichern(true); }}
         message={

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState, LoadingState, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ZutatFormular } from "./zutat-formular";
 import { PreisePanel } from "./preise-panel";
@@ -24,7 +24,7 @@ export function ZutatDetail({ id }: { id: string }) {
           {ladend ? (
             <LoadingState text="Zutat wird geladen …" />
           ) : (
-            <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button href="/admin/ingredients">Zurück zur Übersicht</Button>} />
+            <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/ingredients" />} />
           )}
         </Card>
       </>
@@ -68,7 +68,7 @@ export function ZutatDetail({ id }: { id: string }) {
       <PageHeader
         title={zutat.name}
         subtitle={`${zutat.kategorie} · ${zutat.artikelnummer} · ${zutat.lieferant}`}
-        actions={<Button onClick={() => setBearbeiten(true)}>Bearbeiten</Button>}
+        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" onClick={() => setBearbeiten(true)} />}
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-2">

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button } from "@/components/ui";
-import { CalendarRange } from "lucide-react";
+import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button, ACTION_ICONS } from "@/components/ui";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { usePortalDashboardSummary } from "@/lib/services/dashboard";
 import { useBestellungen } from "@/lib/services/orders";
@@ -19,7 +18,7 @@ export function DashboardContent() {
       <PageHeader
         title={`Willkommen, ${user?.facilityName ?? user?.name ?? ""}`}
         subtitle="Ihr Überblick über Speisepläne und Bestellungen bei Daily Gourmet."
-        actions={<Button href="/portal/meal-plans"><CalendarRange size={15} aria-hidden /> Speiseplan öffnen</Button>}
+        actions={<Button href="/portal/meal-plans" icon={ACTION_ICONS.open} label="Speiseplan öffnen" />}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

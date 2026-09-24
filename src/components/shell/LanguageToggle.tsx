@@ -1,5 +1,7 @@
 "use client";
 
+import { Languages } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 import { useFeatureFlag } from "@/lib/services/feature-flags";
 
@@ -14,14 +16,12 @@ export function LanguageToggle() {
   if (!aktiv) return null;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
+      icon={Languages}
+      label={`${t("shell.language")} (${locale === "de" ? "DE" : "EN"})`}
       onClick={() => setLocale(locale === "de" ? "en" : "de")}
-      aria-label={t("shell.language")}
-      title={t("shell.language")}
-      className="flex h-9 shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-ink-soft hover:bg-paper hover:text-ink"
-    >
-      {locale === "de" ? "DE" : "EN"}
-    </button>
+    />
   );
 }

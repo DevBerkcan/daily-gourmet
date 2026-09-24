@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AlertTriangle, X } from "lucide-react";
-import { Button } from "./index";
+import { AlertTriangle, type LucideIcon } from "lucide-react";
+import { Button } from "./button";
+import { ACTION_ICONS } from "./icons";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 /** Gemeinsame Overlay-Hülle für Anlegen-/Bearbeiten-Formulare (Benutzer, Route, Einrichtung, …) —
@@ -43,9 +44,7 @@ export function Modal({
             <h2 id="modal-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
             {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
           </div>
-          <button type="button" onClick={onClose} aria-label="Schließen" className="flex shrink-0 cursor-pointer items-center justify-center rounded-lg p-2 text-muted hover:bg-paper hover:text-ink">
-            <X size={18} aria-hidden />
-          </button>
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" size="sm" onClick={onClose} />
         </div>
         <div className="overflow-y-auto">{children}</div>
       </div>
@@ -62,6 +61,7 @@ export function ConfirmDialog({
   message,
   confirmLabel = "Bestätigen",
   cancelLabel = "Abbrechen",
+  confirmIcon = ACTION_ICONS.confirm,
   tone = "default",
   onConfirm,
   onCancel,
@@ -71,6 +71,8 @@ export function ConfirmDialog({
   message: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
+  /** Icon des Bestätigen-Buttons, z. B. ACTION_ICONS.delete bei Löschdialogen (wird dann rot). */
+  confirmIcon?: LucideIcon;
   tone?: "default" | "warn";
   onConfirm: () => void;
   onCancel: () => void;
@@ -96,8 +98,8 @@ export function ConfirmDialog({
         </div>
         <div className="max-h-[50vh] overflow-y-auto px-5 py-4 text-sm text-ink-soft">{message}</div>
         <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
-          <Button variant="secondary" onClick={onCancel}>{cancelLabel}</Button>
-          <Button onClick={onConfirm}>{confirmLabel}</Button>
+          <Button icon={ACTION_ICONS.cancel} label={cancelLabel} variant="secondary" onClick={onCancel} />
+          <Button icon={confirmIcon} label={confirmLabel} variant={confirmIcon === ACTION_ICONS.delete ? "danger" : "primary"} onClick={onConfirm} />
         </div>
       </div>
     </div>
@@ -113,6 +115,7 @@ export function PromptDialog({
   placeholder,
   confirmLabel = "Bestätigen",
   cancelLabel = "Abbrechen",
+  confirmIcon = ACTION_ICONS.confirm,
   onConfirm,
   onCancel,
 }: {
@@ -123,6 +126,7 @@ export function PromptDialog({
   placeholder?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  confirmIcon?: LucideIcon;
   onConfirm: (wert: string) => void;
   onCancel: () => void;
 }) {
@@ -174,8 +178,8 @@ export function PromptDialog({
           </label>
         </div>
         <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
-          <Button type="button" variant="secondary" onClick={abbrechen}>{cancelLabel}</Button>
-          <Button type="submit" disabled={!wert.trim()}>{confirmLabel}</Button>
+          <Button icon={ACTION_ICONS.cancel} label={cancelLabel} variant="secondary" onClick={abbrechen} />
+          <Button icon={confirmIcon} label={confirmLabel} type="submit" disabled={!wert.trim()} />
         </div>
       </form>
     </div>

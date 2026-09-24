@@ -3,8 +3,7 @@
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { Lock, Pencil, RotateCcw, Trash2 } from "lucide-react";
-import { Button, Card, CardHeader, LoadingState, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
+import { ACTION_ICONS, Button, Card, CardHeader, LoadingState, PageHeader, StatusBadge, Table, Tag, Td } from "@/components/ui";
 import { PromptDialog, ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
@@ -62,7 +61,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
       <Card className="p-8 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">Mandant nicht gefunden</h1>
         <p className="mt-2 text-sm text-muted">Dieser Mandant existiert nicht (mehr).</p>
-        <div className="mt-5"><Button href="/super-admin/tenants">Zur Mandantenübersicht</Button></div>
+        <div className="mt-5 flex justify-center"><Button icon={ACTION_ICONS.back} label="Zur Mandantenübersicht" href="/super-admin/tenants" /></div>
       </Card>
     );
   }
@@ -102,11 +101,11 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         subtitle={`Angelegt am ${new Date(tenant.erstelltAm).toLocaleDateString("de-DE")} · Tenant Owner: ${tenant.ansprechpartner} (${tenant.email})`}
         actions={
           <>
-            <Button variant="secondary" onClick={editierenStarten}><Pencil size={15} aria-hidden /> Bearbeiten</Button>
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={editierenStarten} />
             {tenant.status === "AKTIV" ? (
-              <Button variant="danger" onClick={() => setSperrenDialog(true)}><Lock size={15} aria-hidden /> Mandant sperren</Button>
+              <Button icon={ACTION_ICONS.reject} label="Mandant sperren" variant="danger" onClick={() => setSperrenDialog(true)} />
             ) : (
-              <Button onClick={() => setReaktivierenDialog(true)}><RotateCcw size={15} aria-hidden /> Reaktivieren</Button>
+              <Button icon={ACTION_ICONS.activate} label="Reaktivieren" onClick={() => setReaktivierenDialog(true)} />
             )}
           </>
         }
@@ -124,7 +123,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           <label className="text-xs font-medium text-muted">Unternehmen<input required value={name} onChange={(event) => setName(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
           <label className="text-xs font-medium text-muted">Tenant Owner<input required value={ansprechpartner} onChange={(event) => setAnsprechpartner(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
           <label className="text-xs font-medium text-muted">E-Mail<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
-          <div className="flex gap-2 md:col-span-3"><Button type="submit">Änderungen speichern</Button><Button variant="secondary" onClick={() => setBearbeiten(false)}>Abbrechen</Button></div>
+          <div className="flex gap-2 md:col-span-3"><Button icon={ACTION_ICONS.save} label="Änderungen speichern" type="submit" /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} /></div>
         </form>
       </Modal>
 
@@ -142,13 +141,9 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
                     <Td><StatusBadge status={user.status} /></Td>
                     <Td className="text-muted">{user.letzteAnmeldung ? new Date(user.letzteAnmeldung).toLocaleString("de-DE") : "—"}</Td>
                     <Td className="no-print">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button type="button" onClick={() => setBearbeiteBenutzer(user)} aria-label={`${user.name} bearbeiten`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline">
-                          <Pencil size={13} aria-hidden /> Bearbeiten
-                        </button>
-                        <button type="button" onClick={() => setLoescheBenutzer(user)} aria-label={`${user.name} endgültig löschen`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline">
-                          <Trash2 size={13} aria-hidden /> Löschen
-                        </button>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Button icon={ACTION_ICONS.edit} label={`${user.name} bearbeiten`} variant="ghost" size="sm" onClick={() => setBearbeiteBenutzer(user)} />
+                        <Button icon={ACTION_ICONS.delete} label={`${user.name} endgültig löschen`} variant="danger" size="sm" onClick={() => setLoescheBenutzer(user)} />
                       </div>
                     </Td>
                   </tr>
@@ -195,6 +190,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         label="Begründung für die Sperrung"
         placeholder="z. B. Zahlungsrückstand"
         confirmLabel="Sperren"
+        confirmIcon={ACTION_ICONS.reject}
         onCancel={() => setSperrenDialog(false)}
         onConfirm={sperrenBestaetigt}
       />
@@ -204,6 +200,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         label="Begründung für die Reaktivierung"
         placeholder="z. B. Zahlung eingegangen"
         confirmLabel="Reaktivieren"
+        confirmIcon={ACTION_ICONS.activate}
         onCancel={() => setReaktivierenDialog(false)}
         onConfirm={reaktivierenBestaetigt}
       />
@@ -218,6 +215,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           </>
         }
         confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
         onCancel={() => setLoescheBenutzer(null)}
         onConfirm={benutzerLoeschenBestaetigt}
       />

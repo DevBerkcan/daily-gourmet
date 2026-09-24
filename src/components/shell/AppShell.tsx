@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, LogOut, type LucideIcon } from "lucide-react";
+import { Menu, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ACTION_ICONS } from "@/components/ui/icons";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { HEUTE } from "@/lib/heute";
 import { formatLangdatumDe, isoWeekInfo } from "@/lib/isoWeek";
@@ -107,9 +109,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         <div className="border-t border-line px-6 py-4">
           <p className="text-sm font-medium text-ink">{userName}</p>
           <p className="text-xs text-muted">{userRole}</p>
-          <button type="button" onClick={handleLogout} className="mt-3 flex items-center gap-2 text-xs font-medium text-muted hover:text-danger">
-            <LogOut size={14} aria-hidden /> {t("shell.logout")}
-          </button>
+          <Button variant="ghost" size="sm" icon={ACTION_ICONS.logout} label={t("shell.logout")} onClick={handleLogout} className="mt-3" />
         </div>
       </aside>
       <div className="hidden lg:block" aria-hidden />
@@ -119,14 +119,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         {/* Topbar */}
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur md:px-8 no-print">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              aria-label={t("shell.menuOpen")}
-              className="flex size-10 items-center justify-center rounded-lg text-ink hover:bg-paper lg:hidden"
-            >
-              <Menu size={20} />
-            </button>
+            <Button variant="ghost" icon={Menu} label={t("shell.menuOpen")} onClick={() => setOpen(true)} className="lg:hidden" />
             <p className="hidden text-sm text-muted sm:block">
               KW {week} · {formatLangdatumDe(HEUTE)}
             </p>
@@ -138,7 +131,6 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               <button
                 type="button"
                 onClick={() => setProfileOpen((v) => !v)}
-                aria-haspopup="menu"
                 aria-expanded={profileOpen}
                 aria-label={t("shell.profileMenu")}
                 className={`flex size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink transition-colors hover:bg-basil-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil`}
@@ -146,22 +138,23 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
                 {userName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
               </button>
               {profileOpen && (
-                <div role="menu" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
+                <div role="dialog" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
                   <div className="border-b border-line px-4 py-3">
                     <p className="truncate text-sm font-medium text-ink">{userName}</p>
                     <p className="text-xs text-muted">{userRole}</p>
                   </div>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex min-h-10 w-full cursor-pointer items-center gap-2 px-4 text-sm font-medium text-danger hover:bg-danger-soft"
-                  >
-                    <LogOut size={15} aria-hidden /> {t("shell.logout")}
-                  </button>
+                  <div className="flex justify-end px-4 py-2">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={ACTION_ICONS.logout}
+                      label={t("shell.logout")}
+                      onClick={() => {
+                        setProfileOpen(false);
+                        handleLogout();
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -178,9 +171,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface shadow-xl">
             <div className="flex items-start justify-between pr-3">
               {brand}
-              <button type="button" onClick={() => setOpen(false)} aria-label={t("shell.menuClose")} className="mt-5 flex size-10 items-center justify-center rounded-lg hover:bg-paper">
-                <X size={20} />
-              </button>
+              <Button variant="ghost" icon={ACTION_ICONS.cancel} label={t("shell.menuClose")} onClick={() => setOpen(false)} className="mt-5" />
             </div>
             <div className="flex-1 overflow-y-auto pb-6">{navList}</div>
           </div>

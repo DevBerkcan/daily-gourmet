@@ -1,5 +1,4 @@
-import { PageHeader, Button } from "@/components/ui";
-import { Plus } from "lucide-react";
+import { PageHeader, Button, ACTION_ICONS } from "@/components/ui";
 import { ZutatenTabelle } from "@/features/ingredients/components/zutaten-tabelle";
 import { PreislisteImportPanel } from "@/features/ingredients/components/preisliste-import-panel";
 import { RezeptrechnerImportPanel } from "@/features/recipes/components/rezeptrechner-import-panel";
@@ -12,7 +11,7 @@ export default function IngredientsPage() {
       <PageHeader
         title="Zutaten"
         subtitle="Zutatenstamm mit Einheiten, Allergenen und Nährwerten. Neue Zutaten kommen über den Rezeptrechner-Import weiter unten herein, oder werden hier manuell angelegt."
-        actions={<Button href="/admin/ingredients/new"><Plus size={16} aria-hidden /> Zutat anlegen</Button>}
+        actions={<Button href="/admin/ingredients/new" icon={ACTION_ICONS.create} label="Zutat anlegen" />}
       />
 
       <ZutatenTabelle />

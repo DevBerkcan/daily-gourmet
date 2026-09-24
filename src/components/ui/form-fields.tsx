@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Button } from "./button";
+import { ACTION_ICONS } from "./icons";
 
 const inputCls = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
@@ -127,9 +129,7 @@ export function ImageField({ label, value, onChange, hint }: { label: string; va
             className="text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink hover:file:bg-paper"
           />
           {value && (
-            <button type="button" onClick={() => onChange(undefined)} className="cursor-pointer text-left text-xs text-muted hover:text-danger hover:underline">
-              Foto entfernen
-            </button>
+            <Button icon={ACTION_ICONS.delete} label="Foto entfernen" variant="danger" size="sm" onClick={() => onChange(undefined)} />
           )}
         </div>
       </div>

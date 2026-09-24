@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { Button, ACTION_ICONS, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
 import { usePortalSpeiseplaene } from "@/lib/services/meal-plans";
 import { useRezepte } from "@/lib/services/recipes";
 import { useBestellungen } from "@/lib/services/orders";
@@ -25,7 +25,7 @@ export function OrdersHistory() {
               actions={
                 <div className="flex items-center gap-2">
                   <StatusBadge status={bestellung.status} />
-                  {bestellung.status !== "LOCKED" ? <Button href="/portal/meal-plans" variant="secondary">Bearbeiten</Button> : null}
+                  {bestellung.status !== "LOCKED" ? <Button href="/portal/meal-plans" variant="secondary" size="sm" icon={ACTION_ICONS.edit} label="Bearbeiten" /> : null}
                 </div>
               }
             />

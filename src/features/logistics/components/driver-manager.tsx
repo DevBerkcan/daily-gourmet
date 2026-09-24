@@ -1,8 +1,8 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Pencil, Plus, Truck } from "lucide-react";
-import { Button, Card, CardHeader } from "@/components/ui";
+import { Truck } from "lucide-react";
+import { Button, Card, CardHeader, ACTION_ICONS } from "@/components/ui";
 import { useActivateUser, useDeactivateUser, useUsers } from "@/lib/services/users";
 import { useCreateFahrer, useFahrer, useUpdateFahrer } from "@/lib/services/logistics";
 
@@ -71,13 +71,11 @@ export function DriverManager() {
                 </div>
                 {!bearbeitetGerade ? (
                   <div className="flex gap-2">
-                    <Button variant="secondary" onClick={() => bearbeitungStarten(person.id)}>
-                      {profil ? <><Pencil size={14} aria-hidden /> Bearbeiten</> : <><Plus size={14} aria-hidden /> Profil anlegen</>}
-                    </Button>
+                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={profil ? "Bearbeiten" : "Profil anlegen"} variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
                     {person.status === "DEAKTIVIERT" ? (
-                      <Button variant="secondary" onClick={() => activateUser.mutate(person.id)}>Aktivieren</Button>
+                      <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" variant="secondary" onClick={() => activateUser.mutate(person.id)} />
                     ) : (
-                      <Button variant="secondary" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }}>Deaktivieren</Button>
+                      <Button icon={ACTION_ICONS.userDeactivate} label="Deaktivieren" variant="danger" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }} />
                     )}
                   </div>
                 ) : null}
@@ -88,8 +86,8 @@ export function DriverManager() {
                   <input value={fahrzeug} onChange={(event) => setFahrzeug(event.target.value)} placeholder="Fahrzeug, z. B. Sprinter 3.5t" required className={fieldClass} />
                   <input value={kennzeichen} onChange={(event) => setKennzeichen(event.target.value)} placeholder="Kennzeichen" required className={fieldClass} />
                   <div className="flex gap-2 sm:col-span-3">
-                    <Button type="submit">Speichern</Button>
-                    <Button variant="secondary" onClick={() => setBearbeiteUserId(null)}>Abbrechen</Button>
+                    <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" />
+                    <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiteUserId(null)} />
                   </div>
                 </form>
               ) : null}

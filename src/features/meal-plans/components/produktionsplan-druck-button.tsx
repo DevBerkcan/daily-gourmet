@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Printer } from "lucide-react";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { apiFetchBlob } from "@/lib/api/client";
 
 /** Ersetzt die entfallene Küchen-Ansicht — ein serverseitig gerendertes PDF je Wochentag, gruppiert
@@ -25,13 +25,14 @@ export function ProduktionsplanDruckButton({ mealPlanId, datum, wochentag }: { m
   };
 
   return (
-    <button
-      type="button"
+    <Button
+      icon={ACTION_ICONS.print}
+      label={`Produktionsplan ${wochentag} drucken`}
+      variant="secondary"
+      size="sm"
       onClick={herunterladen}
-      disabled={laedt}
-      className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line-strong py-1.5 text-xs font-medium text-muted hover:border-basil hover:text-basil no-print disabled:opacity-60"
-    >
-      <Printer size={13} aria-hidden /> {laedt ? "Erzeuge PDF …" : `Produktionsplan ${wochentag} drucken`}
-    </button>
+      loading={laedt}
+      className="mt-1 no-print"
+    />
   );
 }

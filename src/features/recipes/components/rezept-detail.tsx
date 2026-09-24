@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Card, CardHeader, Table, Td, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, Button, ACTION_ICONS, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { Copy, Printer, Sigma } from "lucide-react";
+import { Scale, Sigma, Utensils } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
 import { EtikettButton } from "./etikett-button";
@@ -42,7 +42,7 @@ export function RezeptDetail({ id }: { id: string }) {
         {ladend ? (
           <LoadingState text="Rezept wird geladen …" />
         ) : (
-          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button href="/admin/recipes">Zurück zur Übersicht</Button>} />
+          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/recipes" />} />
         )}
       </Card>
     );
@@ -92,10 +92,12 @@ export function RezeptDetail({ id }: { id: string }) {
         subtitle={`${rezept.rezeptnummer ? rezept.rezeptnummer + " · " : ""}${rezept.kategorie} · Standard: ${rezept.standardPortionen} Portionen · ${rezept.zubereitungszeitMin} Min. · ${rezept.schwierigkeit} · Version ${rezept.version}`}
         actions={
           <>
-            <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
-            <Button variant="secondary" onClick={() => setNaehrwerteAnsehen(true)}><Sigma size={15} aria-hidden /> Nährwerte ansehen</Button>
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
+            <Button icon={Sigma} label="Nährwerte ansehen" variant="secondary" onClick={() => setNaehrwerteAnsehen(true)} />
             <EtikettButton rezeptId={rezept.id} rezeptName={rezept.name} portionsgewichtG={rezept.portionsgewichtG} />
             <Button
+              icon={ACTION_ICONS.copy}
+              label="Duplizieren"
               variant="secondary"
               onClick={() => {
                 duplicateRezept.mutate(rezept.id, {
@@ -103,10 +105,8 @@ export function RezeptDetail({ id }: { id: string }) {
                   onError: () => toast.error("Duplizieren fehlgeschlagen. Bitte erneut versuchen."),
                 });
               }}
-            >
-              <Copy size={15} aria-hidden /> Duplizieren
-            </Button>
-            <Button onClick={() => setBearbeiten(true)}>Bearbeiten</Button>
+            />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" onClick={() => setBearbeiten(true)} />
           </>
         }
       />
@@ -167,9 +167,9 @@ export function RezeptDetail({ id }: { id: string }) {
                 hint={rezept.nutriScoreKategorie ? `Aus Kennzeichnungsdaten importiert · ${rezept.nutriScoreKategorie}` : "Aus Kennzeichnungsdaten importiert"}
                 actions={
                   rezept.portionsgewichtG ? (
-                    <div className="flex overflow-hidden rounded-lg border border-line text-xs no-print">
-                      <button type="button" onClick={() => setNaehrwertModus("portion")} className={`px-2.5 py-1.5 font-medium ${naehrwertModus === "portion" ? "bg-basil-soft text-basil" : "text-muted hover:bg-paper"}`}>je Portion</button>
-                      <button type="button" onClick={() => setNaehrwertModus("100g")} className={`px-2.5 py-1.5 font-medium ${naehrwertModus === "100g" ? "bg-basil-soft text-basil" : "text-muted hover:bg-paper"}`}>je 100 g</button>
+                    <div className="flex items-center gap-1.5 no-print">
+                      <Button icon={Utensils} label="je Portion" variant="ghost" size="sm" pressed={naehrwertModus === "portion"} onClick={() => setNaehrwertModus("portion")} />
+                      <Button icon={Scale} label="je 100 g" variant="ghost" size="sm" pressed={naehrwertModus === "100g"} onClick={() => setNaehrwertModus("100g")} />
                     </div>
                   ) : undefined
                 }

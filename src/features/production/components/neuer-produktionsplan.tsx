@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, Card, CardHeader, Button, EmptyState } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Button, ACTION_ICONS, EmptyState } from "@/components/ui";
 import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useBestellungen } from "@/lib/services/orders";
@@ -80,15 +80,15 @@ export function NeuerProduktionsplan() {
       </Card>
 
       <div className="mt-6 flex justify-end gap-2 no-print">
-        <Button variant="secondary" href="/admin/production">Abbrechen</Button>
+        <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/production" />
         <Button
+          icon={ACTION_ICONS.create}
+          label="Produktionsplan anlegen"
           disabled={!kannAnlegen}
           onClick={() => {
             createPlan.mutate({ datum, standortId }, { onSuccess: (plan) => router.push(`/admin/production/${plan.id}`) });
           }}
-        >
-          Produktionsplan anlegen
-        </Button>
+        />
       </div>
     </>
   );

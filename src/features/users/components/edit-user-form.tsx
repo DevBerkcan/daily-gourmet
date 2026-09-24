@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Button } from "@/components/ui";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useUpdateGlobalUser, useTenantFacilities, type GlobalUser } from "@/lib/services/super-admin";
@@ -64,8 +64,8 @@ export function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () =>
           </p>
         )}
         <div className="flex gap-2 md:col-span-2">
-          <Button type="submit" disabled={updateUser.isPending}>{updateUser.isPending ? "Wird gespeichert …" : "Änderungen speichern"}</Button>
-          <Button variant="secondary" onClick={onDone}>Abbrechen</Button>
+          <Button icon={ACTION_ICONS.save} label="Änderungen speichern" type="submit" loading={updateUser.isPending} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onDone} />
         </div>
       </form>
     </Modal>

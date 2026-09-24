@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageHeader, Card, Table, Td, StatusBadge, Button, SearchInput, Pagination } from "@/components/ui";
+import { PageHeader, Card, Table, Td, StatusBadge, Button, ACTION_ICONS, SearchInput, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api/client";
@@ -16,7 +16,6 @@ import {
   type Einrichtung,
 } from "@/lib/services/facilities";
 import { usePagination } from "@/lib/use-pagination";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -47,7 +46,7 @@ export function FacilitiesManager() {
       <PageHeader
         title="Einrichtungen"
         subtitle="Schulen, Kitas und weitere Abnehmer, die über das Kundenportal bestellen."
-        actions={<Button onClick={() => setFormularOffen(true)}><Plus size={16} aria-hidden /> Einrichtung anlegen</Button>}
+        actions={<Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Einrichtung anlegen" />}
       />
 
       {formularOffen && <EinrichtungFormular standorte={standorte} onClose={() => setFormularOffen(false)} />}
@@ -86,23 +85,9 @@ export function FacilitiesManager() {
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
               <Td className="no-print">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setBearbeiteEinrichtung(e)}
-                    aria-label={`${e.name} bearbeiten`}
-                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
-                  >
-                    <Pencil size={13} aria-hidden /> Bearbeiten
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLoescheEinrichtung(e)}
-                    aria-label={`${e.name} löschen`}
-                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
-                  >
-                    <Trash2 size={13} aria-hidden /> Löschen
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" variant="ghost" icon={ACTION_ICONS.edit} label={`${e.name} bearbeiten`} onClick={() => setBearbeiteEinrichtung(e)} />
+                  <Button size="sm" variant="danger" icon={ACTION_ICONS.delete} label={`${e.name} löschen`} onClick={() => setLoescheEinrichtung(e)} />
                 </div>
               </Td>
             </tr>
@@ -272,8 +257,8 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
         />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2 no-print">
-          <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
-          <Button type="submit" disabled={!kannSpeichern}>{mutation.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
+          <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" />
+          <Button type="submit" disabled={!kannSpeichern} loading={mutation.isPending} icon={ACTION_ICONS.save} label="Einrichtung speichern" />
         </div>
       </form>
     </Modal>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, Table, Td, Button, Tag } from "@/components/ui";
+import { Card, CardHeader, Table, Td, Button, Tag, ACTION_ICONS } from "@/components/ui";
 import { NumberField, SelectField, TextField } from "@/components/ui/form-fields";
 import {
   useIngredientSupplierPrices,
@@ -36,9 +36,7 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
         hint="Der günstigste Preis wird automatisch für Kalkulation und Einkauf verwendet."
         actions={
           !neu && lieferanten.length > 0 ? (
-            <Button variant="secondary" onClick={() => setNeu(leeresFormular(lieferanten[0].id))}>
-              Preis hinzufügen
-            </Button>
+            <Button icon={ACTION_ICONS.create} label="Preis hinzufügen" variant="secondary" onClick={() => setNeu(leeresFormular(lieferanten[0].id))} />
           ) : undefined
         }
       />
@@ -57,13 +55,7 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
               <Td className="text-muted">{p.einheit}</Td>
               <Td className="text-muted">{p.verfuegbarkeitshinweis || "—"}</Td>
               <Td>
-                <button
-                  type="button"
-                  onClick={() => deletePrice.mutate(p.id)}
-                  className="cursor-pointer text-xs font-medium text-danger hover:underline"
-                >
-                  Entfernen
-                </button>
+                <Button icon={ACTION_ICONS.delete} label="Entfernen" variant="danger" size="sm" onClick={() => deletePrice.mutate(p.id)} />
               </Td>
             </tr>
           ))}
@@ -93,8 +85,8 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
           <SelectField label="Einheit" value={neu.einheit} onChange={(v) => setNeu({ ...neu, einheit: v as Einheit })} options={EINHEITEN} />
           <TextField label="Verfügbarkeit / Hinweis" value={neu.verfuegbarkeitshinweis ?? ""} onChange={(v) => setNeu({ ...neu, verfuegbarkeitshinweis: v })} placeholder="z. B. Vorlaufzeit 3 Tage" />
           <div className="col-span-full flex gap-2">
-            <Button type="submit" disabled={!neu.lieferantId || savePrice.isPending}>Speichern</Button>
-            <Button variant="secondary" onClick={() => setNeu(null)}>Abbrechen</Button>
+            <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" disabled={!neu.lieferantId} loading={savePrice.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setNeu(null)} />
           </div>
         </form>
       )}

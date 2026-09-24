@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
-import { Table, Td, StatusBadge, SearchInput, Tag, Pagination, LoadingState } from "@/components/ui";
+import { ACTION_ICONS, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination, LoadingState } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
@@ -116,14 +115,7 @@ export function RezepteTabelle() {
               <Td className="hidden text-muted lg:table-cell">v{r.version}</Td>
               <Td><StatusBadge status={r.aktiv ? "AKTIV" : "ARCHIVIERT"} /></Td>
               <Td className="no-print">
-                <button
-                  type="button"
-                  onClick={() => setLoescheRezept(r)}
-                  aria-label={`${r.name} löschen`}
-                  className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
-                >
-                  <Trash2 size={13} aria-hidden /> Löschen
-                </button>
+                <Button icon={ACTION_ICONS.delete} label={`${r.name} löschen`} variant="danger" size="sm" onClick={() => setLoescheRezept(r)} />
               </Td>
             </tr>
           );
@@ -146,6 +138,7 @@ export function RezepteTabelle() {
           </>
         }
         confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
         onCancel={() => setLoescheRezept(null)}
         onConfirm={loeschenBestaetigt}
       />

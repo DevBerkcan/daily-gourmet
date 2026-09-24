@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { useRezeptNaehrwerteDetail } from "@/lib/services/recipes";
 import type { Rezept, RezeptNaehrwerte100 } from "../types";
 
@@ -80,9 +80,7 @@ export function NaehrwerteModal({ rezept, onClose }: { rezept: Rezept; onClose: 
             <h2 id="naehrwerte-modal-title" className="font-display text-lg font-semibold text-ink">Nährwerte ansehen</h2>
             <p className="mt-0.5 text-sm text-muted">Rezept: {rezept.name}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Schließen" className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-paper hover:text-ink">
-            <X size={19} aria-hidden />
-          </button>
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
         </header>
 
         <div className="overflow-y-auto px-6 py-5">

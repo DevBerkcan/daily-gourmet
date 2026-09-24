@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertTriangle, Check, MapPin, Navigation, PackageCheck, Phone, Play, Route, Soup } from "lucide-react";
-import { Button, Card, CardHeader, StatCard } from "@/components/ui";
+import { AlertTriangle, Check, MapPin, PackageCheck, Route, Soup } from "lucide-react";
+import { Button, Card, CardHeader, StatCard, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { useAktuelleFahrerRouten, useFahrer, useToggleGeladen, useAdvanceRouteStatus, useHandoffBestaetigen, useVerfuegbareRouten, useRouteUebernehmen, portionenJeRoute } from "@/lib/services/logistics";
 import { HEUTE } from "@/lib/heute";
@@ -25,7 +25,7 @@ function VerfuegbareRouten() {
               <p className="font-semibold text-ink">{r.name}</p>
               <p className="mt-0.5 text-sm text-muted">{r.stopps.length} Stopps · Abfahrt {r.start} Uhr</p>
             </div>
-            <Button onClick={() => uebernehmen.mutate(r.id, { onError: () => toast.error("Route konnte nicht übernommen werden. Bitte erneut versuchen.") })} disabled={uebernehmen.isPending}>{uebernehmen.isPending ? "Wird übernommen …" : "Route übernehmen"}</Button>
+            <Button icon={ACTION_ICONS.confirm} label="Route übernehmen" onClick={() => uebernehmen.mutate(r.id, { onError: () => toast.error("Route konnte nicht übernommen werden. Bitte erneut versuchen.") })} loading={uebernehmen.isPending} />
           </div>
         ))}
       </div>
@@ -110,9 +110,11 @@ export function DriverDashboard() {
           )}
           {!handoffVollstaendig && route.status === "GEPLANT" ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Abnahme von der Küche fehlt</strong><span className="text-muted">Bitte alle drei Komponenten bestätigen, bevor die Tour startet.</span></p></div> : null}
           {!allesGeladen ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Ladung noch unvollständig</strong><span className="text-muted">Tourstart wird freigegeben, sobald alle Positionen kontrolliert wurden.</span></p></div> : null}
-          {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button disabled={!allesGeladen || !handoffVollstaendig || advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" }, { onError: () => toast.error("Tour konnte nicht gestartet werden. Bitte erneut versuchen.") })}><Play size={16} aria-hidden /> {advanceRouteStatus.isPending ? "Wird gestartet …" : "Tour starten"}</Button> : null}
-          <Button href={`/driver/routes/${route.id}`} variant="secondary"><Navigation size={16} aria-hidden /> Routenansicht öffnen</Button>
-          <a href={`tel:${person?.telefon.replace(/\s/g, "")}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-paper"><Phone size={16} aria-hidden /> Disposition anrufen</a>
+          <div className="flex flex-wrap items-center gap-2">
+            {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button icon={ACTION_ICONS.start} label="Tour starten" disabled={!allesGeladen || !handoffVollstaendig} loading={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" }, { onError: () => toast.error("Tour konnte nicht gestartet werden. Bitte erneut versuchen.") })} /> : null}
+            <Button icon={ACTION_ICONS.open} label="Routenansicht öffnen" href={`/driver/routes/${route.id}`} variant="secondary" />
+            <Button icon={ACTION_ICONS.call} label="Disposition anrufen" href={`tel:${person?.telefon.replace(/\s/g, "")}`} external variant="secondary" />
+          </div>
         </div>
       </div>
     </>

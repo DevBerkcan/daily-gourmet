@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, Button } from "@/components/ui";
+import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField, NumberField, TextareaField, SelectField, CheckboxRow, CheckboxGroup, ImageField } from "@/components/ui/form-fields";
 import { REZEPT_KATEGORIEN, ZIELGRUPPEN_LISTE, SCHWIERIGKEITSGRADE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import type { Rezept, RezeptZutat, Schwierigkeitsgrad } from "../types";
-import { Plus, Trash2 } from "lucide-react";
 
 export type RezeptFormDaten = Omit<Rezept, "id" | "version" | "erstelltVon" | "erstelltAm" | "aktualisiertAm">;
 
@@ -97,7 +96,7 @@ export function RezeptFormular({
       </Card>
 
       <Card>
-        <CardHeader title="Zutaten" actions={<button type="button" onClick={addZutatRow} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline no-print"><Plus size={13} aria-hidden /> Zutat hinzufügen</button>} />
+        <CardHeader title="Zutaten" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Zutat hinzufügen" variant="ghost" size="sm" onClick={addZutatRow} /></div>} />
         <div className="flex flex-col gap-2 px-5 py-4">
           {r.zutaten.length === 0 && <p className="text-sm text-muted">Noch keine Zutaten hinzugefügt.</p>}
           {r.zutaten.map((rz, i) => {
@@ -127,9 +126,7 @@ export function RezeptFormular({
                   className="min-h-10 w-24 rounded-lg border border-line bg-surface px-3 text-sm text-right"
                 />
                 <span className="min-h-10 flex items-center px-1 text-sm text-muted">{zutat?.basiseinheit ?? rz.einheit}</span>
-                <button type="button" onClick={() => removeZutatRow(i)} aria-label="Zutat entfernen" className="flex min-h-10 cursor-pointer items-center px-2 text-muted hover:text-danger no-print">
-                  <Trash2 size={15} aria-hidden />
-                </button>
+                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" className="mb-1 no-print" onClick={() => removeZutatRow(i)} />
               </div>
             );
           })}
@@ -137,7 +134,7 @@ export function RezeptFormular({
       </Card>
 
       <Card>
-        <CardHeader title="Zubereitungsschritte" actions={<button type="button" onClick={addSchritt} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline no-print"><Plus size={13} aria-hidden /> Schritt hinzufügen</button>} />
+        <CardHeader title="Zubereitungsschritte" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Schritt hinzufügen" variant="ghost" size="sm" onClick={addSchritt} /></div>} />
         <div className="flex flex-col gap-2 px-5 py-4">
           {r.zubereitungsschritte.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -149,9 +146,7 @@ export function RezeptFormular({
                 onChange={(e) => updateSchritt(i, e.target.value)}
                 className="min-h-10 flex-1 rounded-lg border border-line bg-surface px-3 text-sm"
               />
-              <button type="button" onClick={() => removeSchritt(i)} aria-label="Schritt entfernen" className="flex min-h-10 cursor-pointer items-center px-2 text-muted hover:text-danger no-print">
-                <Trash2 size={15} aria-hidden />
-              </button>
+              <Button icon={ACTION_ICONS.delete} label="Schritt entfernen" variant="danger" size="sm" className="no-print" onClick={() => removeSchritt(i)} />
             </div>
           ))}
         </div>
@@ -176,8 +171,8 @@ export function RezeptFormular({
       </Card>
 
       <div className="flex justify-end gap-2 no-print">
-        {onAbbrechen && <Button variant="secondary" onClick={onAbbrechen}>Abbrechen</Button>}
-        <Button type="submit" disabled={!kannSpeichern}>{initial ? "Änderungen speichern" : "Rezept anlegen"}</Button>
+        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onAbbrechen} />}
+        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Rezept anlegen"} type="submit" disabled={!kannSpeichern} />
       </div>
     </form>
   );

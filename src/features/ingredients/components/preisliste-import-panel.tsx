@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Card, CardHeader, Table, Td, Button } from "@/components/ui";
+import { Card, CardHeader, Table, Td, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField } from "@/components/ui/form-fields";
 import { useSuppliers, useCreateSupplier, useImportSupplierPriceList, type PreislistenImportErgebnis } from "@/lib/services/ingredients";
 
@@ -27,9 +27,7 @@ function LieferantImportZeile({ supplierId, name }: { supplierId: string; name: 
             importieren.mutate(file, { onSuccess: setErgebnis });
           }}
         />
-        <Button variant="secondary" onClick={() => inputRef.current?.click()} disabled={importieren.isPending}>
-          {importieren.isPending ? "Importiere …" : "Preisliste importieren (CSV/XLSX)"}
-        </Button>
+        <Button icon={ACTION_ICONS.upload} label="Preisliste importieren (CSV/XLSX)" variant="secondary" onClick={() => inputRef.current?.click()} loading={importieren.isPending} />
       </Td>
       <Td className="text-xs text-muted">
         {ergebnis && (
@@ -75,7 +73,7 @@ export function PreislisteImportPanel() {
         <div className="w-64">
           <TextField label="Neuer Lieferant" value={neuerName} onChange={setNeuerName} placeholder="Name" />
         </div>
-        <Button type="submit" variant="secondary" disabled={!neuerName.trim() || createSupplier.isPending}>Hinzufügen</Button>
+        <Button icon={ACTION_ICONS.create} label="Hinzufügen" type="submit" variant="secondary" disabled={!neuerName.trim()} loading={createSupplier.isPending} />
       </form>
     </Card>
   );

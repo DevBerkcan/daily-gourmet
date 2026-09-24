@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock3, Download, Eye, LockKeyhole, Search } from "lucide-react";
-import { Button, Card, CardHeader, StatCard, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { AlertTriangle, BellRing, Clock3, Search } from "lucide-react";
+import { ACTION_ICONS, Button, Card, CardHeader, StatCard, StatusBadge, Table, Td, Pagination } from "@/components/ui";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useRezepte } from "@/lib/services/recipes";
@@ -66,14 +66,14 @@ export function OrdersBoard() {
             <option value="ALLE">Alle Kalenderwochen</option>
             {verfuegbareWochen.map((w) => <option key={w} value={w}>KW {w}</option>)}
           </select>
-          <Button variant="secondary" onClick={csvExportieren}><Download size={15} aria-hidden /> CSV exportieren</Button>
+          <Button icon={ACTION_ICONS.download} label="CSV exportieren" variant="secondary" onClick={csvExportieren} />
         </div>
         <Table head={["Bestellung & Einrichtung", "Woche", "Portionen", "Status", "Abgesendet", "Frist", "Aktion"]}>
           {pageItems.map((bestellung) => {
             const plan = speiseplaene.find((eintrag) => eintrag.id === bestellung.speiseplanId);
             const gesamt = bestellung.positionen.reduce((summe, position) => summe + position.portionen, 0);
             const istEntwurf = bestellung.status === "DRAFT";
-            return <tr key={bestellung.id} className="hover:bg-paper"><Td><button type="button" onClick={() => setDetailBestellung(bestellung)} className="cursor-pointer text-left font-semibold text-ink hover:text-basil hover:underline">{einrichtungById(bestellung.einrichtungId)?.name}</button><p className="mt-0.5 text-xs text-muted">{bestellung.id}</p></Td><Td>KW {plan?.kalenderwoche ?? "—"}</Td><Td className="font-display text-lg font-semibold text-basil">{gesamt}</Td><Td><StatusBadge status={bestellung.status} /></Td><Td className="text-muted">{bestellung.abgesendetAm ?? "—"}</Td><Td><span className={`inline-flex items-center gap-1.5 text-xs ${istEntwurf ? "font-medium text-warn" : "text-muted"}`}><Clock3 size={14} aria-hidden />{bestellung.frist}</span>{istEntwurf ? <p className="mt-1 text-xs text-warn">Noch nicht abgesendet</p> : null}</Td><Td><div className="flex flex-wrap gap-2"><Button variant="ghost" onClick={() => setDetailBestellung(bestellung)}><Eye size={15} aria-hidden /> Details</Button>{bestellung.status === "SUBMITTED" ? <Button onClick={() => confirmBestellung.mutate(bestellung.id)}><CheckCircle2 size={15} aria-hidden /> Bestätigen</Button> : null}{bestellung.status === "CONFIRMED" ? <Button variant="secondary" onClick={() => lockBestellung.mutate(bestellung.id)}><LockKeyhole size={15} aria-hidden /> Sperren</Button> : null}{bestellung.status === "LOCKED" ? <Button variant="secondary" onClick={() => setKorrekturId(bestellung.id)}>Korrektur</Button> : null}{bestellung.status === "DRAFT" ? <Button variant="ghost" onClick={() => setMeldung(`Fristerinnerung an ${einrichtungById(bestellung.einrichtungId)?.name} wurde vorgemerkt.`)}>Erinnerung senden</Button> : null}</div></Td></tr>;
+            return <tr key={bestellung.id} className="hover:bg-paper"><Td><button type="button" onClick={() => setDetailBestellung(bestellung)} className="cursor-pointer text-left font-semibold text-ink hover:text-basil hover:underline">{einrichtungById(bestellung.einrichtungId)?.name}</button><p className="mt-0.5 text-xs text-muted">{bestellung.id}</p></Td><Td>KW {plan?.kalenderwoche ?? "—"}</Td><Td className="font-display text-lg font-semibold text-basil">{gesamt}</Td><Td><StatusBadge status={bestellung.status} /></Td><Td className="text-muted">{bestellung.abgesendetAm ?? "—"}</Td><Td><span className={`inline-flex items-center gap-1.5 text-xs ${istEntwurf ? "font-medium text-warn" : "text-muted"}`}><Clock3 size={14} aria-hidden />{bestellung.frist}</span>{istEntwurf ? <p className="mt-1 text-xs text-warn">Noch nicht abgesendet</p> : null}</Td><Td><div className="flex flex-wrap items-center gap-1.5"><Button icon={ACTION_ICONS.view} label="Details" variant="ghost" size="sm" onClick={() => setDetailBestellung(bestellung)} />{bestellung.status === "SUBMITTED" ? <Button icon={ACTION_ICONS.confirm} label="Bestätigen" variant="ghost" size="sm" onClick={() => confirmBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "CONFIRMED" ? <Button icon={ACTION_ICONS.reject} label="Sperren" variant="danger" size="sm" onClick={() => lockBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "LOCKED" ? <Button icon={ACTION_ICONS.edit} label="Korrektur" variant="ghost" size="sm" onClick={() => setKorrekturId(bestellung.id)} /> : null}{bestellung.status === "DRAFT" ? <Button icon={BellRing} label="Erinnerung senden" variant="ghost" size="sm" onClick={() => setMeldung(`Fristerinnerung an ${einrichtungById(bestellung.einrichtungId)?.name} wurde vorgemerkt.`)} /> : null}</div></Td></tr>;
           })}
         </Table>
         <Pagination
@@ -82,7 +82,7 @@ export function OrdersBoard() {
         />
       </Card>
 
-      {korrekturId ?<Card className="mt-6 border-warn/40"><CardHeader title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert." actions={<AlertTriangle size={19} className="text-warn" aria-hidden />} /><div className="p-5"><label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label><div className="mt-4 flex gap-2"><Button disabled={!begruendung.trim()} onClick={() => { overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }}>Korrektur freigeben</Button><Button variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }}>Abbrechen</Button></div></div></Card> : null}
+      {korrekturId ?<Card className="mt-6 border-warn/40"><CardHeader title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert." actions={<AlertTriangle size={19} className="text-warn" aria-hidden />} /><div className="p-5"><label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label><div className="mt-4 flex gap-2"><Button icon={ACTION_ICONS.approve} label="Korrektur freigeben" disabled={!begruendung.trim()} onClick={() => { overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }} /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }} /></div></div></Card> : null}
 
       {detailBestellung ? (
         <BestellungDetailModal

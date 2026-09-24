@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, Table, Td, StatusBadge, Button } from "@/components/ui";
+import { Card, CardHeader, Table, Td, StatusBadge, Button, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
@@ -15,7 +15,6 @@ import {
   useDeleteTenantFacility,
 } from "@/lib/services/super-admin";
 import type { Einrichtung } from "@/lib/services/facilities";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -37,7 +36,7 @@ export function TenantFacilitiesCard({ tenantId }: { tenantId: string }) {
       <CardHeader
         title="Einrichtungen des Mandanten"
         hint="Schulen, Kitas und weitere Abnehmer dieses Mandanten"
-        actions={<Button variant="secondary" onClick={() => setFormularOffen(true)}><Plus size={15} aria-hidden /> Einrichtung anlegen</Button>}
+        actions={<Button icon={ACTION_ICONS.create} label="Einrichtung anlegen" variant="secondary" onClick={() => setFormularOffen(true)} />}
       />
 
       {formularOffen && (
@@ -55,13 +54,9 @@ export function TenantFacilitiesCard({ tenantId }: { tenantId: string }) {
               <Td><span>{e.ansprechpartner}</span><span className="block text-xs text-muted">{e.email}</span></Td>
               <Td><StatusBadge status={e.status} /></Td>
               <Td>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setBearbeiteEinrichtung(e)} aria-label={`${e.name} bearbeiten`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline">
-                    <Pencil size={13} aria-hidden /> Bearbeiten
-                  </button>
-                  <button type="button" onClick={() => setLoescheEinrichtung(e)} aria-label={`${e.name} löschen`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline">
-                    <Trash2 size={13} aria-hidden /> Löschen
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <Button icon={ACTION_ICONS.edit} label={`${e.name} bearbeiten`} variant="ghost" size="sm" onClick={() => setBearbeiteEinrichtung(e)} />
+                  <Button icon={ACTION_ICONS.delete} label={`${e.name} löschen`} variant="danger" size="sm" onClick={() => setLoescheEinrichtung(e)} />
                 </div>
               </Td>
             </tr>
@@ -191,8 +186,8 @@ function EinrichtungFormular({
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
-          <Button type="submit" disabled={!kannSpeichern}>{mutation.isPending ? "Wird gespeichert …" : "Einrichtung speichern"}</Button>
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onClose} />
+          <Button icon={ACTION_ICONS.save} label="Einrichtung speichern" type="submit" disabled={!kannSpeichern} loading={mutation.isPending} />
         </div>
       </form>
     </Modal>

@@ -1,7 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
-import { StatusBadge, Table, Td } from "@/components/ui";
+import { ACTION_ICONS, Button, StatusBadge, Table, Td } from "@/components/ui";
 import type { Bestellung } from "@/lib/types";
 import type { Rezept } from "@/features/recipes/types";
 import type { Einrichtung } from "@/lib/services/facilities";
@@ -43,9 +42,7 @@ export function BestellungDetailModal({
               {bestellung.abgesendetAm && ` · Abgesendet ${bestellung.abgesendetAm}`}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Schließen" className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-paper hover:text-ink">
-            <X size={19} aria-hidden />
-          </button>
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
         </header>
 
         <div className="overflow-y-auto px-6 py-5">

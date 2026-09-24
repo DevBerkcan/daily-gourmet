@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Card, CardHeader, Button } from "@/components/ui";
+import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
 import { useImportRezeptrechner, type RezeptImportErgebnis } from "@/lib/services/recipes";
 import { ApiError } from "@/lib/api/client";
 
@@ -49,9 +49,10 @@ export function RezeptrechnerImportPanel() {
             className="hidden"
             onChange={(e) => setZutatenFile(e.target.files?.[0] ?? null)}
           />
-          <Button variant="secondary" onClick={() => zutatenRef.current?.click()}>
-            {zutatenFile ? zutatenFile.name : "Datei wählen …"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button icon={ACTION_ICONS.upload} label={zutatenFile ? zutatenFile.name : "Datei wählen …"} variant="secondary" onClick={() => zutatenRef.current?.click()} />
+            {zutatenFile && <span className="truncate text-xs text-muted">{zutatenFile.name}</span>}
+          </div>
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-ink">Artikeldaten-Kennzeichnung (CSV)</span>
@@ -62,9 +63,10 @@ export function RezeptrechnerImportPanel() {
             className="hidden"
             onChange={(e) => setArtikelFile(e.target.files?.[0] ?? null)}
           />
-          <Button variant="secondary" onClick={() => artikelRef.current?.click()}>
-            {artikelFile ? artikelFile.name : "Datei wählen …"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button icon={ACTION_ICONS.upload} label={artikelFile ? artikelFile.name : "Datei wählen …"} variant="secondary" onClick={() => artikelRef.current?.click()} />
+            {artikelFile && <span className="truncate text-xs text-muted">{artikelFile.name}</span>}
+          </div>
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-ink">Allergene-Liste (CSV, optional)</span>
@@ -75,15 +77,14 @@ export function RezeptrechnerImportPanel() {
             className="hidden"
             onChange={(e) => setAllergeneFile(e.target.files?.[0] ?? null)}
           />
-          <Button variant="secondary" onClick={() => allergeneRef.current?.click()}>
-            {allergeneFile ? allergeneFile.name : "Datei wählen …"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button icon={ACTION_ICONS.upload} label={allergeneFile ? allergeneFile.name : "Datei wählen …"} variant="secondary" onClick={() => allergeneRef.current?.click()} />
+            {allergeneFile && <span className="truncate text-xs text-muted">{allergeneFile.name}</span>}
+          </div>
         </label>
       </div>
       <div className="flex items-center gap-3 border-t border-line px-5 py-4">
-        <Button onClick={starten} disabled={!bereit || importieren.isPending}>
-          {importieren.isPending ? "Importiere …" : "Import starten"}
-        </Button>
+        <Button icon={ACTION_ICONS.start} label="Import starten" onClick={starten} disabled={!bereit} loading={importieren.isPending} />
         {importieren.isError && (
           <p className="text-sm text-danger">
             {importieren.error instanceof ApiError ? importieren.error.message : "Der Import ist fehlgeschlagen."}

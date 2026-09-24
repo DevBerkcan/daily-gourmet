@@ -3,6 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { Button, ACTION_ICONS } from "@/components/ui";
 import { useInvitation, useAcceptInvitation } from "@/lib/services/invitations";
 import { ApiError } from "@/lib/api/client";
 
@@ -86,12 +87,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
             {formError ?? (acceptInvitation.error instanceof ApiError ? acceptInvitation.error.message : "Das Passwort konnte nicht gespeichert werden.")}
           </p>
         )}
-        <button
-          type="submit" disabled={acceptInvitation.isPending}
-          className="min-h-11 cursor-pointer rounded-lg bg-basil text-sm font-semibold text-white transition-colors hover:bg-basil-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:opacity-60"
-        >
-          {acceptInvitation.isPending ? "Wird gespeichert …" : "Konto aktivieren"}
-        </button>
+        <Button type="submit" icon={ACTION_ICONS.userActivate} label="Konto aktivieren" loading={acceptInvitation.isPending} />
       </form>
     </>
   );

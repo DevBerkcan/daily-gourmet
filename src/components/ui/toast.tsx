@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2, X, XCircle } from "lucide-react";
+import { Button } from "./button";
 
 type ToastTone = "success" | "error";
 interface ToastEntry {
@@ -55,9 +56,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <XCircle size={18} className="mt-0.5 shrink-0 text-danger" aria-hidden />
             )}
             <span className="flex-1">{t.text}</span>
-            <button type="button" onClick={() => dismiss(t.id)} aria-label="Meldung schließen" className="shrink-0 cursor-pointer text-muted hover:text-ink">
-              <X size={15} aria-hidden />
-            </button>
+            <Button icon={X} label="Meldung schließen" variant="ghost" size="sm" className="-my-1.5 -mr-2" onClick={() => dismiss(t.id)} />
           </div>
         ))}
       </div>

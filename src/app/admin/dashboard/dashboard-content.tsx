@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button } from "@/components/ui";
-import { CalendarPlus, ShoppingBasket, Factory } from "lucide-react";
+import { PageHeader, StatCard, Card, CardHeader, Table, Td, StatusBadge, Button, ACTION_ICONS } from "@/components/ui";
+import { ShoppingBasket, Factory } from "lucide-react";
 import { useAdminDashboardSummary, useBenachrichtigungen } from "@/lib/services/dashboard";
 import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useBestellungen } from "@/lib/services/orders";
@@ -29,8 +29,8 @@ export function DashboardContent() {
         subtitle={t("adminDashboard.subtitle", { week })}
         actions={
           <>
-            <Button variant="secondary" href="/admin/production"><Factory size={15} aria-hidden /> {t("adminDashboard.productionToday")}</Button>
-            <Button href="/admin/meal-plans/new"><CalendarPlus size={15} aria-hidden /> {t("adminDashboard.newMealPlan")}</Button>
+            <Button variant="secondary" href="/admin/production" icon={Factory} label={t("adminDashboard.productionToday")} />
+            <Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label={t("adminDashboard.newMealPlan")} />
           </>
         }
       />

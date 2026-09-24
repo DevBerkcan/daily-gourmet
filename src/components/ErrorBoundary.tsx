@@ -2,6 +2,8 @@
 
 import { Component, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ACTION_ICONS } from "@/components/ui/icons";
 
 interface Props {
   children: ReactNode;
@@ -38,13 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="mt-2 text-sm text-muted">
               Die Seite ist in einen unerwarteten Zustand geraten. Ein Neuladen behebt das in der Regel.
             </p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-basil px-4 text-sm font-medium text-white hover:bg-basil-deep"
-            >
-              Seite neu laden
-            </button>
+            <Button icon={ACTION_ICONS.refresh} label="Seite neu laden" onClick={() => window.location.reload()} className="mt-5" />
           </div>
         </div>
       );

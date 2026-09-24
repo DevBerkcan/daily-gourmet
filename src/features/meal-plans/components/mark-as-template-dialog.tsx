@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
 import { useMealPlanTemplates } from "@/lib/services/meal-plans";
 
@@ -76,8 +76,8 @@ export function MarkAsTemplateDialog({
           </div>
         </fieldset>
         <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
-          <Button variant="secondary" onClick={onCancel}>Abbrechen</Button>
-          <Button onClick={() => slot && onConfirm(slot)} disabled={!slot || submitting}>Vorlage anlegen</Button>
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onCancel} />
+          <Button icon={ACTION_ICONS.template} label="Vorlage anlegen" onClick={() => slot && onConfirm(slot)} disabled={!slot || submitting} />
         </div>
       </div>
     </div>

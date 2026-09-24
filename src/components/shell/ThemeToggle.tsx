@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 
 type Theme = "light" | "dark";
@@ -32,7 +33,7 @@ export function ThemeToggle() {
     setTheme(stored === "dark" || stored === "light" ? stored : null);
   }, []);
 
-  if (!mounted) return <span className="block size-9 shrink-0" aria-hidden />;
+  if (!mounted) return <span className="block size-8 shrink-0" aria-hidden />;
 
   const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const isDark = theme ? theme === "dark" : systemPrefersDark;
@@ -45,14 +46,12 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
+      icon={isDark ? Sun : Moon}
+      label={isDark ? t("shell.theme.toLight") : t("shell.theme.toDark")}
       onClick={toggle}
-      aria-label={isDark ? t("shell.theme.toLight") : t("shell.theme.toDark")}
-      title={isDark ? t("shell.theme.light") : t("shell.theme.dark")}
-      className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-paper hover:text-ink"
-    >
-      {isDark ? <Sun size={17} aria-hidden /> : <Moon size={17} aria-hidden />}
-    </button>
+    />
   );
 }

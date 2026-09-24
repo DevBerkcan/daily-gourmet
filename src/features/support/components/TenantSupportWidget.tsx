@@ -1,9 +1,9 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
-import { CheckCircle2, LifeBuoy, MessageSquareText, Paperclip, X } from "lucide-react";
+import { type FormEvent, useRef, useState } from "react";
+import { CheckCircle2, LifeBuoy, Paperclip } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { useCreateSupportTicket, useSupportTickets, useUploadSupportAnhang } from "@/lib/services/support";
 import type { SupportKategorie, SupportPrioritaet } from "@/lib/services/support";
 import { useFeatureFlag } from "@/lib/services/feature-flags";
@@ -25,6 +25,7 @@ export function TenantSupportWidget() {
   const [titel, setTitel] = useState("");
   const [nachricht, setNachricht] = useState("");
   const [datei, setDatei] = useState<File | null>(null);
+  const dateiRef = useRef<HTMLInputElement>(null);
 
   /** Die Datei wird schon im Formular ausgewählt, aber erst nach dem Anlegen des Tickets
    * hochgeladen — der Anhang-Endpunkt braucht zwingend eine Ticket-Id (siehe
@@ -55,16 +56,14 @@ export function TenantSupportWidget() {
               <p id="support-title" className="font-display text-lg font-semibold">Support kontaktieren</p>
               <p className="text-xs text-white/70">Direkt an den Super Admin</p>
             </div>
-            <button type="button" onClick={() => { setOffen(false); setGesendet(null); }} aria-label="Supportfenster schließen" className="flex size-9 items-center justify-center rounded-lg hover:bg-white/10">
-              <X size={19} aria-hidden />
-            </button>
+            <Button icon={ACTION_ICONS.cancel} label="Supportfenster schließen" variant="ghost" className="!text-white hover:!bg-white/10" onClick={() => { setOffen(false); setGesendet(null); }} />
           </header>
           {gesendet ? (
             <div className="p-5 text-center">
               <CheckCircle2 size={35} className="mx-auto text-ok" aria-hidden />
               <p className="mt-3 font-semibold text-ink">Anfrage wurde gesendet</p>
               <p className="mt-1 text-sm text-muted">Ticket {gesendet} ist jetzt beim Super Admin sichtbar.{anhangHochgeladen && " Ihr Anhang wurde mitgesendet."}</p>
-              <div className="mt-4"><Button onClick={() => { setGesendet(null); setAnhangHochgeladen(false); setOffen(false); }}>Schließen</Button></div>
+              <div className="mt-4"><Button icon={ACTION_ICONS.cancel} label="Schließen" onClick={() => { setGesendet(null); setAnhangHochgeladen(false); setOffen(false); }} /></div>
             </div>
           ) : (
             <>
@@ -94,17 +93,19 @@ export function TenantSupportWidget() {
                   <textarea value={nachricht} onChange={(event) => setNachricht(event.target.value)} required rows={4} placeholder="Beschreiben Sie die Frage oder den Fehler möglichst genau." className={`${fieldClass} py-2`} />
                 </label>
                 {anhaengeAktiv && (
-                  <label className="flex cursor-pointer items-center gap-2 self-start rounded-lg border border-line-strong bg-surface px-4 py-2 text-xs font-medium text-ink hover:bg-paper">
-                    <Paperclip size={14} aria-hidden /> {datei ? datei.name : "Screenshot anhängen"}
+                  <div className="flex items-center gap-2 self-start">
+                    <Button icon={Paperclip} label={datei ? datei.name : "Screenshot anhängen"} variant="secondary" onClick={() => dateiRef.current?.click()} />
+                    {datei && <span className="truncate text-xs text-muted">{datei.name}</span>}
                     <input
+                      ref={dateiRef}
                       type="file"
                       accept="image/*"
                       className="hidden"
                       onChange={(event) => setDatei(event.target.files?.[0] ?? null)}
                     />
-                  </label>
+                  </div>
                 )}
-                <Button type="submit" disabled={wirdGesendet}><MessageSquareText size={16} aria-hidden /> {wirdGesendet ? "Wird gesendet …" : "Anfrage senden"}</Button>
+                <Button icon={ACTION_ICONS.send} label="Anfrage senden" type="submit" loading={wirdGesendet} className="self-end" />
               </form>
               <div className="border-t border-line px-5 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Meine letzten Anfragen</p>
@@ -127,7 +128,8 @@ export function TenantSupportWidget() {
           )}
         </section>
       ) : null}
-      <button type="button" onClick={() => setOffen((wert) => !wert)} aria-expanded={offen} aria-label={offen ? "Support schließen" : "Hilfe & Support öffnen"} title={offen ? "Schließen" : "Hilfe & Support"} className="ml-auto flex size-11 items-center justify-center rounded-full bg-basil text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-basil-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil">{offen ? <X size={18} aria-hidden /> : <LifeBuoy size={18} aria-hidden />}</button>
+      <div className="flex justify-end"><Button icon={offen ? ACTION_ICONS.cancel : LifeBuoy}
+          expanded={offen} label={offen ? "Support schließen" : "Hilfe & Support öffnen"} size="lg" className="!rounded-full shadow-lg" onClick={() => setOffen((wert) => !wert)} /></div>
     </div>
   );
 }

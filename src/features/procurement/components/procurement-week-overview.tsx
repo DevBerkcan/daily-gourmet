@@ -56,13 +56,9 @@ export function ProcurementWeekOverview() {
                 </button>
                 {offen ? (
                   <div className="border-t border-line bg-paper/50 px-5 py-5">
-                    <div className="mb-4 flex gap-2">
-                      <Button variant={ansicht === "rezepte" ? "primary" : "secondary"} onClick={() => setAnsicht("rezepte")}>
-                        <UtensilsCrossed size={15} aria-hidden /> Rezepte
-                      </Button>
-                      <Button variant={ansicht === "zutaten" ? "primary" : "secondary"} onClick={() => setAnsicht("zutaten")}>
-                        <PackageSearch size={15} aria-hidden /> Zutaten-Detail
-                      </Button>
+                    <div className="mb-4 flex items-center gap-1.5">
+                      <Button icon={UtensilsCrossed} label="Rezepte" variant="ghost" size="sm" pressed={ansicht === "rezepte"} onClick={() => setAnsicht("rezepte")} />
+                      <Button icon={PackageSearch} label="Zutaten-Detail" variant="ghost" size="sm" pressed={ansicht === "zutaten"} onClick={() => setAnsicht("zutaten")} />
                     </div>
                     {ansicht === "rezepte" ? (
                       rezepte.length === 0 ? (

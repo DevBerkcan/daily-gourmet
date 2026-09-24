@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, Table, Td, StatusBadge, Pagination, Button } from "@/components/ui";
-import { Printer } from "lucide-react";
+import { Card, Table, Td, StatusBadge, Pagination, Button, ACTION_ICONS } from "@/components/ui";
 import { useProduktionsplaene } from "@/lib/services/production";
 import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useStandorte } from "@/lib/services/locations";
@@ -47,7 +46,7 @@ export function Produktionstabelle() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
           <div className="ml-auto">
-            <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
           </div>
         </div>
       </Card>

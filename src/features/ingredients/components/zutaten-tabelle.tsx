@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
-import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination, LoadingState } from "@/components/ui";
+import { Card, Table, Td, StatusBadge, Tag, SearchInput, Pagination, LoadingState, Button, ACTION_ICONS } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
@@ -82,7 +81,7 @@ export function ZutatenTabelle() {
           <option>Alle Quellen</option>
           {NAEHRWERTQUELLEN.map((q) => <option key={q} value={q}>{QUELLE_KURZ[q] ?? q}</option>)}
         </select>
-        <button type="button" onClick={csvExport} className="ml-auto cursor-pointer text-xs font-medium text-basil hover:underline">CSV-Export</button>
+        <Button icon={ACTION_ICONS.download} label="CSV-Export" variant="secondary" onClick={csvExport} className="ml-auto" />
       </div>
       {ladend ? <LoadingState text="Zutaten werden geladen …" /> : (
       <>
@@ -130,14 +129,7 @@ export function ZutatenTabelle() {
             <Td className="hidden text-muted lg:table-cell">{z.lieferant}</Td>
             <Td><StatusBadge status={z.aktiv ? "AKTIV" : "INAKTIV"} /></Td>
             <Td className="no-print">
-              <button
-                type="button"
-                onClick={() => setLoescheZutat(z)}
-                aria-label={`${z.name} löschen`}
-                className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
-              >
-                <Trash2 size={13} aria-hidden /> Löschen
-              </button>
+              <Button icon={ACTION_ICONS.delete} label={`${z.name} löschen`} variant="danger" size="sm" onClick={() => setLoescheZutat(z)} />
             </Td>
           </tr>
         ))}
@@ -160,6 +152,7 @@ export function ZutatenTabelle() {
           </>
         }
         confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
         onCancel={() => setLoescheZutat(null)}
         onConfirm={loeschenBestaetigt}
       />

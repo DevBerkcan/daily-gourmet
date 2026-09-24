@@ -12,9 +12,7 @@ export function EtikettButton({ rezeptId, rezeptName, portionsgewichtG }: { reze
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setOffen(true)}>
-        <TagIcon size={15} aria-hidden /> Etikett drucken
-      </Button>
+      <Button icon={TagIcon} label="Etikett drucken" variant="secondary" onClick={() => setOffen(true)} />
       {offen && (
         <EtikettenGeneratorModal rezeptId={rezeptId} rezeptName={rezeptName} portionsgewichtG={portionsgewichtG} onClose={() => setOffen(false)} />
       )}

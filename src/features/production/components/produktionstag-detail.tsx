@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, ACTION_ICONS, EmptyState, LoadingState } from "@/components/ui";
 import { useRezepte } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
 import {
@@ -14,7 +14,6 @@ import {
   type ProduktionsStatus,
   type ProduktionsPosition,
 } from "@/lib/services/production";
-import { Printer, Download, RefreshCw } from "lucide-react";
 
 const STATUS_OPTIONEN: { value: ProduktionsStatus; label: string }[] = [
   { value: "PLANNED", label: "Geplant" },
@@ -87,7 +86,7 @@ export function ProduktionstagDetail({ id }: { id: string }) {
         <EmptyState
           title="Produktionsplan nicht gefunden"
           text="Dieser Produktionsplan existiert nicht (mehr)."
-          action={<Button href="/admin/production">Zurück zur Übersicht</Button>}
+          action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/production" />}
         />
       </Card>
     );
@@ -123,9 +122,9 @@ export function ProduktionstagDetail({ id }: { id: string }) {
         subtitle={pp.standortName}
         actions={
           <>
-            <Button variant="secondary" onClick={() => refreshPlan.mutate(pp.id)}><RefreshCw size={15} aria-hidden /> Bestellmengen aktualisieren</Button>
-            <Button variant="secondary" onClick={csvExport}><Download size={15} aria-hidden /> Export</Button>
-            <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
+            <Button icon={ACTION_ICONS.refresh} label="Bestellmengen aktualisieren" variant="secondary" onClick={() => refreshPlan.mutate(pp.id)} />
+            <Button icon={ACTION_ICONS.download} label="Export" variant="secondary" onClick={csvExport} />
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
           </>
         }
       />

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChefHat, School, Truck } from "lucide-react";
+import { Button, ACTION_ICONS } from "@/components/ui";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/client";
 import { useTranslation } from "@/lib/i18n/I18nContext";
@@ -80,12 +81,7 @@ export function LoginForm() {
           />
         </div>
         {error && <p className="text-sm text-danger">{error}</p>}
-        <button
-          type="submit" disabled={isSubmitting}
-          className="min-h-11 cursor-pointer rounded-lg bg-basil text-sm font-semibold text-white transition-colors hover:bg-basil-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:opacity-60"
-        >
-          {isSubmitting ? t("login.submitting") : t("login.submit")}
-        </button>
+        <Button type="submit" icon={ACTION_ICONS.login} label={t("login.submit")} loading={isSubmitting} />
       </form>
 
       <div className="mt-9">

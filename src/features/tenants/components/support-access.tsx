@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, LogOut, ShieldAlert } from "lucide-react";
+import { LifeBuoy, ShieldAlert, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useSupportSitzungFuerTenant, useStarteSupportSitzung, useEndeSupportSitzungAlsSuperAdmin } from "@/lib/services/support";
 
@@ -19,9 +19,9 @@ export function SupportAccess({ tenantId }: { tenantId: string; tenantName: stri
       </p>
       <div className="mt-4">
         {sitzung ? (
-          <Button variant="secondary" onClick={() => endeSitzung.mutate(sitzung.id)}><LogOut size={15} aria-hidden /> Zugriff beenden</Button>
+          <Button icon={ShieldOff} label="Zugriff beenden" variant="secondary" onClick={() => endeSitzung.mutate(sitzung.id)} />
         ) : (
-          <Button variant="secondary" onClick={() => starteSitzung.mutate(tenantId)}><Eye size={15} aria-hidden /> Supportzugriff starten</Button>
+          <Button icon={LifeBuoy} label="Supportzugriff starten" variant="secondary" onClick={() => starteSitzung.mutate(tenantId)} />
         )}
       </div>
     </div>

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
-import { CheckCircle2, Download, Printer, Send } from "lucide-react";
-import { Button, Card, CardHeader, EmptyState, LoadingState, StatCard, StatusBadge, Table, Td, Tag, Pagination } from "@/components/ui";
+import { CheckCircle2, FileText, type LucideIcon } from "lucide-react";
+import { ACTION_ICONS, Button, Card, CardHeader, EmptyState, LoadingState, StatCard, StatusBadge, Table, Td, Tag, Pagination } from "@/components/ui";
 import {
   useEinkaufslisten,
   useUpdateEinkaufsmenge,
@@ -29,6 +29,14 @@ const STATUS_AKTION_LABEL: Record<EinkaufslistenStatus, string> = {
   APPROVED: "Bestellung auslösen",
   ORDERED: "Lieferung abschließen",
   COMPLETED: "",
+};
+const STATUS_AKTION_ICON: Record<EinkaufslistenStatus, LucideIcon> = {
+  DRAFT: ACTION_ICONS.confirm,
+  REVIEWED: ACTION_ICONS.send,
+  READY_FOR_APPROVAL: ACTION_ICONS.approve,
+  APPROVED: ACTION_ICONS.send,
+  ORDERED: ACTION_ICONS.confirm,
+  COMPLETED: ACTION_ICONS.confirm,
 };
 
 export function ProcurementBoard() {
@@ -81,9 +89,9 @@ export function ProcurementBoard() {
           actions={<><StatusBadge status={aktuelle.status} />{aktuelle.lieferantName && <Tag>{aktuelle.lieferantName}</Tag>}</>}
         />
         <div className="flex flex-wrap justify-end gap-2 border-b border-line px-5 py-3 no-print">
-          <Button variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "csv", `einkauf-kw-${aktuelle.kalenderwoche}.csv`)}><Download size={15} aria-hidden /> CSV-Export</Button>
-          <Button variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "pdf", `einkauf-kw-${aktuelle.kalenderwoche}.pdf`)}><Download size={15} aria-hidden /> PDF-Export</Button>
-          <Button variant="secondary" onClick={() => window.print()}><Printer size={15} aria-hidden /> Druckansicht</Button>
+          <Button icon={ACTION_ICONS.download} label="CSV-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "csv", `einkauf-kw-${aktuelle.kalenderwoche}.csv`)} />
+          <Button icon={FileText} label="PDF-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "pdf", `einkauf-kw-${aktuelle.kalenderwoche}.pdf`)} />
+          <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
         </div>
         <Table head={["Zutat", "Gesamtbedarf", "Bestellmenge", "Preis", "Lieferant"]}>
           {aktuelle.positionen.map((position) => {
@@ -119,9 +127,11 @@ export function ProcurementBoard() {
             <p className="text-xs text-muted">Armin wurde per E-Mail zur Freigabe eingeladen — er kann alternativ auch hier direkt freigeben.</p>
           )}
           {naechsterStatus ? (
-            <Button onClick={() => updateStatus.mutate({ id: aktuelle.id, status: naechsterStatus })}>
-              {naechsterStatus === "ORDERED" || naechsterStatus === "READY_FOR_APPROVAL" ? <Send size={16} aria-hidden /> : <CheckCircle2 size={16} aria-hidden />} {STATUS_AKTION_LABEL[aktuelle.status]}
-            </Button>
+            <Button
+              icon={STATUS_AKTION_ICON[aktuelle.status]}
+              label={STATUS_AKTION_LABEL[aktuelle.status]}
+              onClick={() => updateStatus.mutate({ id: aktuelle.id, status: naechsterStatus })}
+            />
           ) : (
             <span className="inline-flex items-center gap-2 text-sm font-medium text-ok"><CheckCircle2 size={17} aria-hidden />Abgeschlossen</span>
           )}

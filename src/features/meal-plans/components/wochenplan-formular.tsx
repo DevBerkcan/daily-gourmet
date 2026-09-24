@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, Card, CardHeader, Button, StatusBadge } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Button, ACTION_ICONS, StatusBadge } from "@/components/ui";
 import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { nextUpcomingWeeks } from "@/lib/isoWeek";
@@ -210,8 +210,8 @@ export function WochenplanFormular() {
         </Card>
 
         <div className="flex justify-end gap-2 no-print">
-          <Button variant="secondary" href="/admin/meal-plans">Abbrechen</Button>
-          <Button type="submit" disabled={!kannAbsenden}>Wochenplan anlegen</Button>
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/meal-plans" />
+          <Button icon={ACTION_ICONS.create} label="Wochenplan anlegen" type="submit" disabled={!kannAbsenden} />
         </div>
       </form>
     </>

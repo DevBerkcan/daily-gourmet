@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Copy } from "lucide-react";
-import { Button, Card, StatusBadge } from "@/components/ui";
+import { CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button, Card, StatusBadge, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { isoWeekInfo, mondayOfIsoWeek } from "@/lib/isoWeek";
 import { useLieferRouten, useWocheDuplizieren, portionenJeRoute, type LieferRoute } from "@/lib/services/logistics";
@@ -50,15 +50,13 @@ export function RoutesWeekView({ onEditRoute }: { onEditRoute: (route: LieferRou
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" onClick={() => setMontag((m) => addDays(m, -7))} aria-label="Vorherige Woche"><ChevronLeft size={16} aria-hidden /></Button>
+          <Button icon={ChevronLeft} label="Vorherige Woche" variant="secondary" onClick={() => setMontag((m) => addDays(m, -7))} />
           <h2 className="font-display text-base font-semibold text-ink">KW {info.week}/{info.year}</h2>
           <span className="text-xs text-muted">{montag.toLocaleDateString("de-DE")} – {sonntag.toLocaleDateString("de-DE")}</span>
-          <Button variant="secondary" onClick={() => setMontag((m) => addDays(m, 7))} aria-label="Nächste Woche"><ChevronRight size={16} aria-hidden /></Button>
-          <Button variant="secondary" onClick={() => setMontag(heuteMontag)}>Heute</Button>
+          <Button icon={ChevronRight} label="Nächste Woche" variant="secondary" onClick={() => setMontag((m) => addDays(m, 7))} />
+          <Button icon={CalendarCheck} label="Heute" variant="secondary" onClick={() => setMontag(heuteMontag)} />
         </div>
-        <Button variant="secondary" disabled={duplizieren.isPending} onClick={wocheDuplizieren}>
-          <Copy size={15} aria-hidden /> {duplizieren.isPending ? "Wird dupliziert …" : "Als Vorlage für nächste Woche"}
-        </Button>
+        <Button icon={ACTION_ICONS.template} label="Als Vorlage für nächste Woche" variant="secondary" loading={duplizieren.isPending} onClick={wocheDuplizieren} />
       </div>
       <div className="grid divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-7">
         {tage.map((tag, i) => {

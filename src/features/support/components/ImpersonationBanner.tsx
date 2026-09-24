@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Eye, LogOut } from "lucide-react";
+import { Eye, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -54,9 +54,7 @@ export function ImpersonationBanner() {
           </p>
         </div>
       </div>
-      <Button variant="secondary" onClick={beenden} disabled={endeSitzung.isPending}>
-        <LogOut size={15} aria-hidden /> {endeSitzung.isPending ? "Wird beendet …" : "Beenden"}
-      </Button>
+      <Button icon={ShieldOff} label="Beenden" variant="secondary" onClick={beenden} loading={endeSitzung.isPending} />
     </div>
   );
 }

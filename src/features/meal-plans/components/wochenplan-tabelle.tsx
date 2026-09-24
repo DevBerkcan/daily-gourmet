@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Table, Td, StatusBadge, Pagination } from "@/components/ui";
+import { Megaphone } from "lucide-react";
+import { Table, Td, StatusBadge, Pagination, Button, ACTION_ICONS } from "@/components/ui";
 import { ConfirmDialog, PromptDialog } from "@/components/ui/confirm-dialog";
 import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen } from "@/lib/services/facilities";
@@ -36,19 +37,13 @@ export function WochenplanTabelle() {
           <Td>{p.einrichtungIds.length > 0 ? p.einrichtungIds.map((id) => einrichtungen.find((e) => e.id === id)?.name ?? "—").join(", ") : <span className="text-muted">Vorlage</span>}</Td>
           <Td>{p.tage.reduce((sum, t) => sum + t.gerichte.length, 0)}</Td>
           <Td>
-            <div className="flex gap-3 text-xs font-medium no-print">
-              {p.status === "REVIEW" && <button type="button" onClick={() => publish.mutate(p.id)} className="cursor-pointer text-basil hover:underline">Veröffentlichen</button>}
-              {p.status === "REVIEW" && <button type="button" onClick={() => setAblehnenPlan(p)} className="cursor-pointer text-warn hover:underline">Ablehnen</button>}
-              {p.status === "DRAFT" && <button type="button" onClick={() => submitReview.mutate(p.id)} className="cursor-pointer text-basil hover:underline">Zur Prüfung</button>}
-              <button type="button" onClick={() => duplicateSpeiseplan.mutate(p.id)} className="cursor-pointer text-muted hover:text-ink hover:underline">Duplizieren</button>
+            <div className="flex items-center gap-1.5 no-print">
+              {p.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" variant="ghost" size="sm" onClick={() => publish.mutate(p.id)} />}
+              {p.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="ghost" size="sm" onClick={() => setAblehnenPlan(p)} />}
+              {p.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung" variant="ghost" size="sm" onClick={() => submitReview.mutate(p.id)} />}
+              <Button icon={ACTION_ICONS.copy} label="Duplizieren" variant="ghost" size="sm" onClick={() => duplicateSpeiseplan.mutate(p.id)} />
               {(p.status === "DRAFT" || p.status === "REVIEW") && (
-                <button
-                  type="button"
-                  onClick={() => setLoeschenBestaetigung(p)}
-                  className="cursor-pointer text-muted hover:text-danger hover:underline"
-                >
-                  Löschen
-                </button>
+                <Button icon={ACTION_ICONS.delete} label="Löschen" variant="danger" size="sm" onClick={() => setLoeschenBestaetigung(p)} />
               )}
             </div>
           </Td>
@@ -64,6 +59,7 @@ export function WochenplanTabelle() {
         title="Wochenplan löschen?"
         tone="warn"
         confirmLabel="Ja, löschen"
+        confirmIcon={ACTION_ICONS.delete}
         onCancel={() => setLoeschenBestaetigung(null)}
         onConfirm={() => { if (loeschenBestaetigung) deleteSpeiseplan.mutate(loeschenBestaetigung.id); setLoeschenBestaetigung(null); }}
         message={
@@ -82,6 +78,7 @@ export function WochenplanTabelle() {
         label="Grund der Ablehnung"
         placeholder="z. B. Menülinie Alternativ fehlt an zwei Tagen"
         confirmLabel="Ablehnen"
+        confirmIcon={ACTION_ICONS.reject}
         onCancel={() => setAblehnenPlan(null)}
         onConfirm={(grund) => { if (ablehnenPlan) reject.mutate({ id: ablehnenPlan.id, grund }); setAblehnenPlan(null); }}
       />

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, X } from "lucide-react";
-import { Button, Card, CardHeader } from "@/components/ui";
+import { ACTION_ICONS, Button, Card, CardHeader } from "@/components/ui";
 import { ImageField } from "@/components/ui/form-fields";
 import { useTenantProfile, useUpdateTenantProfile, type TenantProfile } from "@/lib/services/super-admin";
 
@@ -44,9 +43,9 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
         hint="Stammdaten und Branding — nur durch Daily Gourmet editierbar"
         actions={
           bearbeiten ? (
-            <button type="button" onClick={() => setBearbeiten(false)} aria-label="Bearbeitung schließen" className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"><X size={18} aria-hidden /></button>
+            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" onClick={() => setBearbeiten(false)} />
           ) : (
-            <Button variant="secondary" onClick={starten} disabled={!profile}><Pencil size={15} aria-hidden /> Bearbeiten</Button>
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={starten} disabled={!profile} />
           )
         }
       />
@@ -78,8 +77,8 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
           </div>
           <ImageField label="Logo" value={form.logoUrl} onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))} hint="PNG oder SVG, max. 1 MB" />
           <div className="flex gap-2">
-            <Button onClick={speichern} disabled={updateProfile.isPending}>Änderungen speichern</Button>
-            <Button variant="secondary" onClick={() => setBearbeiten(false)}>Abbrechen</Button>
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" onClick={speichern} loading={updateProfile.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} />
           </div>
         </div>
       )}

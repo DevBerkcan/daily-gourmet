@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, X } from "lucide-react";
-import { Button, Card, CardHeader, Tag } from "@/components/ui";
+import { ACTION_ICONS, Button, Card, CardHeader, Tag } from "@/components/ui";
 import { useTenantSettings, useUpdateTenantSettings, notificationLabel, type TenantSettings } from "@/lib/services/super-admin";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
@@ -44,9 +43,9 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
         hint="Bestellfristen, Freigaben und Standardwerte — nur durch Daily Gourmet editierbar"
         actions={
           bearbeiten ? (
-            <button type="button" onClick={() => setBearbeiten(false)} aria-label="Bearbeitung schließen" className="rounded-lg p-2 text-muted hover:bg-paper hover:text-ink"><X size={18} aria-hidden /></button>
+            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" onClick={() => setBearbeiten(false)} />
           ) : (
-            <Button variant="secondary" onClick={starten} disabled={!settings}><Pencil size={15} aria-hidden /> Bearbeiten</Button>
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={starten} disabled={!settings} />
           )
         }
       />
@@ -110,8 +109,8 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={speichern} disabled={updateSettings.isPending}>Änderungen speichern</Button>
-            <Button variant="secondary" onClick={() => setBearbeiten(false)}>Abbrechen</Button>
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" onClick={speichern} loading={updateSettings.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} />
           </div>
         </div>
       )}

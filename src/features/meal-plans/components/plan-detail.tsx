@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Card, StatusBadge, Button, Tag, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Card, StatusBadge, Button, ACTION_ICONS, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useToast } from "@/components/ui/toast";
@@ -12,7 +12,7 @@ import { MarkAsTemplateDialog } from "./mark-as-template-dialog";
 import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
 import { MENUELINIEN } from "../types";
 import type { Rezept } from "@/features/recipes/types";
-import { AlertTriangle, BookmarkPlus, Eye, Send, X } from "lucide-react";
+import { AlertTriangle, Megaphone, Undo2 } from "lucide-react";
 import {
   useSpeiseplaene,
   useUpdateSpeiseplanTag,
@@ -57,13 +57,14 @@ function TagRezeptHinzufuegen({
 
   if (!offen) {
     return (
-      <button
-        type="button"
+      <Button
+        icon={ACTION_ICONS.create}
+        label="Gericht hinzufügen"
+        variant="secondary"
+        size="sm"
         onClick={() => setOffen(true)}
-        className="mt-1 cursor-pointer rounded-lg border border-dashed border-line-strong py-1.5 text-xs font-medium text-muted hover:border-basil hover:text-basil no-print"
-      >
-        + Gericht hinzufügen
-      </button>
+        className="mt-1 no-print"
+      />
     );
   }
 
@@ -110,9 +111,7 @@ function TagRezeptHinzufuegen({
           })
         )}
       </select>
-      <button type="button" onClick={() => setOffen(false)} className="cursor-pointer text-left text-xs text-muted hover:text-ink hover:underline">
-        Abbrechen
-      </button>
+      <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" size="sm" onClick={() => setOffen(false)} />
     </div>
   );
 }
@@ -177,7 +176,7 @@ export function PlanDetail({ id }: { id: string }) {
           <EmptyState
             title="Speiseplan nicht gefunden"
             text="Dieser Wochenplan existiert nicht (mehr)."
-            action={<Button href="/admin/meal-plans">Zurück zur Übersicht</Button>}
+            action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/meal-plans" />}
           />
         )}
       </Card>
@@ -197,12 +196,12 @@ export function PlanDetail({ id }: { id: string }) {
         subtitle={plan.einrichtungIds.length === 0 ? "Vorlage — keiner Einrichtung zugeordnet" : `Veröffentlicht für ${plan.einrichtungIds.length} Einrichtung${plan.einrichtungIds.length > 1 ? "en" : ""}`}
         actions={
           <>
-            <Button variant="secondary" href="/portal/meal-plans"><Eye size={15} aria-hidden /> Vorschau als Einrichtung</Button>
-            <Button variant="secondary" onClick={() => setVorlagenDialogOffen(true)}><BookmarkPlus size={15} aria-hidden /> Als Vorlage markieren</Button>
-            {plan.status === "DRAFT" && <Button onClick={() => submitReview.mutate(plan.id)}><Send size={15} aria-hidden /> Zur Prüfung senden</Button>}
-            {plan.status === "REVIEW" && <Button onClick={() => publish.mutate(plan.id)}><Send size={15} aria-hidden /> Veröffentlichen</Button>}
-            {plan.status === "REVIEW" && <Button variant="secondary" onClick={() => setAblehnenDialogOffen(true)}>Ablehnen</Button>}
-            {plan.status === "PUBLISHED" && <Button variant="secondary" onClick={() => unpublish.mutate(plan.id)}>Veröffentlichung zurückziehen</Button>}
+            <Button icon={ACTION_ICONS.view} label="Vorschau als Einrichtung" variant="secondary" href="/portal/meal-plans" />
+            <Button icon={ACTION_ICONS.template} label="Als Vorlage markieren" variant="secondary" onClick={() => setVorlagenDialogOffen(true)} />
+            {plan.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung senden" onClick={() => submitReview.mutate(plan.id)} />}
+            {plan.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" onClick={() => publish.mutate(plan.id)} />}
+            {plan.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="secondary" onClick={() => setAblehnenDialogOffen(true)} />}
+            {plan.status === "PUBLISHED" && <Button icon={Undo2} label="Veröffentlichung zurückziehen" variant="secondary" onClick={() => unpublish.mutate(plan.id)} />}
           </>
         }
       />
@@ -216,14 +215,13 @@ export function PlanDetail({ id }: { id: string }) {
               <span key={eid} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs text-ink">
                 {name}
                 {kannEntfernen && (
-                  <button
-                    type="button"
+                  <Button
+                    icon={ACTION_ICONS.delete}
+                    label={`${name} von diesem Plan entfernen`}
+                    variant="danger"
+                    size="sm"
                     onClick={() => removeFacility.mutate({ id: plan.id, einrichtungId: eid }, { onError: () => toast.error("Einrichtung konnte nicht entfernt werden.") })}
-                    aria-label={`${name} von diesem Plan entfernen`}
-                    className="cursor-pointer text-muted hover:text-danger"
-                  >
-                    <X size={12} aria-hidden />
-                  </button>
+                  />
                 )}
               </span>
             );
@@ -288,8 +286,12 @@ export function PlanDetail({ id }: { id: string }) {
                           }
                           aside={
                             bearbeitbar && (
-                              <button
-                                type="button"
+                              <Button
+                                icon={ACTION_ICONS.delete}
+                                label={`${r.name} entfernen`}
+                                variant="danger"
+                                size="sm"
+                                className="no-print"
                                 onClick={() =>
                                   tag.id &&
                                   updateTag.mutate({
@@ -299,11 +301,7 @@ export function PlanDetail({ id }: { id: string }) {
                                     hinweis: tag.hinweis,
                                   })
                                 }
-                                aria-label={`${r.name} entfernen`}
-                                className="cursor-pointer text-muted hover:text-danger no-print"
-                              >
-                                <X size={14} aria-hidden />
-                              </button>
+                              />
                             )
                           }
                         />
@@ -331,6 +329,7 @@ export function PlanDetail({ id }: { id: string }) {
         label="Grund der Ablehnung"
         placeholder="z. B. Menülinie Alternativ fehlt an zwei Tagen"
         confirmLabel="Ablehnen"
+        confirmIcon={ACTION_ICONS.reject}
         onCancel={() => setAblehnenDialogOffen(false)}
         onConfirm={planAblehnen}
       />

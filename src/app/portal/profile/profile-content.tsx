@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
-import { PageHeader, Card, CardHeader, Table, Td, Button, StatusBadge, Tag, EmptyState, LoadingState } from "@/components/ui";
+import { PageHeader, Card, CardHeader, Table, Td, Button, ACTION_ICONS, StatusBadge, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { TextField } from "@/components/ui/form-fields";
-import { Pencil } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useEinrichtung, useUpdatePortalEinrichtung } from "@/lib/services/facilities";
 import { useUsers } from "@/lib/services/users";
@@ -40,8 +39,8 @@ function EinrichtungsdatenFormular({ e, onClose }: { e: NonNullable<ReturnType<t
       </div>
       {updateEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
       <div className="flex justify-end gap-2 no-print">
-        <Button variant="secondary" onClick={onClose}>Abbrechen</Button>
-        <Button type="submit" disabled={updateEinrichtung.isPending}>{updateEinrichtung.isPending ? "Wird gespeichert …" : "Speichern"}</Button>
+        <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" />
+        <Button type="submit" loading={updateEinrichtung.isPending} icon={ACTION_ICONS.save} label="Speichern" />
       </div>
     </form>
   );
@@ -70,9 +69,7 @@ export function ProfileContent() {
             title="Einrichtungsdaten"
             hint={bearbeiten ? "Kontaktdaten Ihrer Einrichtung" : "Kontaktdaten können Sie hier selbst pflegen"}
             actions={!bearbeiten && (
-              <button type="button" onClick={() => setBearbeiten(true)} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline no-print">
-                <Pencil size={13} aria-hidden /> Bearbeiten
-              </button>
+              <Button size="sm" variant="ghost" onClick={() => setBearbeiten(true)} icon={ACTION_ICONS.edit} label="Bearbeiten" className="no-print" />
             )}
           />
           {bearbeiten ? (

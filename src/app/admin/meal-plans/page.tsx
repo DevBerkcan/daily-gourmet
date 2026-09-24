@@ -1,5 +1,4 @@
-import { PageHeader, Card, Button } from "@/components/ui";
-import { Plus } from "lucide-react";
+import { PageHeader, Card, Button, ACTION_ICONS } from "@/components/ui";
 import { WochenplanTabelle } from "@/features/meal-plans/components/wochenplan-tabelle";
 
 export const metadata = { title: "Speisepläne" };
@@ -10,7 +9,7 @@ export default function MealPlansPage() {
       <PageHeader
         title="Speisepläne"
         subtitle="Wochenpläne je Kalenderwoche. Nach Veröffentlichung werden die Rezeptdaten als Snapshot eingefroren."
-        actions={<Button href="/admin/meal-plans/new"><Plus size={16} aria-hidden /> Wochenplan erstellen</Button>}
+        actions={<Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label="Wochenplan erstellen" />}
       />
       <Card>
         <WochenplanTabelle />

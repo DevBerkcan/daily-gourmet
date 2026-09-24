@@ -1,5 +1,4 @@
 import { Children, cloneElement, isValidElement, type ReactNode, type TdHTMLAttributes } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 
@@ -132,19 +131,11 @@ export function StatCard({ label, value, hint, tone = "default" }: { label: stri
   );
 }
 
-/* ---------- Buttons & Inputs (Dummy-Interaktion) ---------- */
+/* ---------- Buttons & Inputs ---------- */
 
-export function Button({ children, variant = "primary", href, onClick, type = "button", disabled }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost" | "danger"; href?: string; onClick?: () => void; type?: "button" | "submit"; disabled?: boolean }) {
-  const styles = {
-    primary: "bg-basil text-white hover:bg-basil-deep",
-    secondary: "border border-line-strong bg-surface text-ink hover:bg-paper",
-    ghost: "text-basil hover:bg-basil-soft",
-    danger: "bg-danger-soft text-danger hover:bg-danger hover:text-white",
-  }[variant];
-  const cls = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:cursor-not-allowed disabled:opacity-50 ${styles}`;
-  if (href) return <Link href={href} className={cls}>{children}</Link>;
-  return <button type={type} onClick={onClick} disabled={disabled} className={cls}>{children}</button>;
-}
+export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./button";
+export { ACTION_ICONS } from "./icons";
+import { Button } from "./button";
 
 export function SearchInput({ placeholder = "Suchen …", value, onChange }: { placeholder?: string; value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   return (
@@ -248,19 +239,9 @@ export function Pagination({
           </select>
         </label>
         <div className="flex items-center gap-1.5">
-          <button
-            type="button" onClick={() => onPageChange(page - 1)} disabled={page <= 1} aria-label={t("pagination.prev")}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronLeft size={15} aria-hidden />
-          </button>
+          <Button icon={ChevronLeft} label={t("pagination.prev")} variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1} />
           <span className="min-w-[5.5rem] text-center text-xs text-muted">{t("pagination.page", { page, totalPages })}</span>
-          <button
-            type="button" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} aria-label={t("pagination.next")}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronRight size={15} aria-hidden />
-          </button>
+          <Button icon={ChevronRight} label={t("pagination.next")} variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} />
         </div>
       </div>
     </div>

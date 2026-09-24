@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, Button } from "@/components/ui";
+import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField, NumberField, SelectField, CheckboxRow, CheckboxGroup } from "@/components/ui/form-fields";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE, ZUSATZSTOFFE_LISTE } from "../data";
 import type { Zutat } from "@/lib/services/ingredients";
@@ -92,8 +92,8 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
       </Card>
 
       <div className="flex justify-end gap-2 no-print">
-        {onAbbrechen && <Button variant="secondary" onClick={onAbbrechen}>Abbrechen</Button>}
-        <Button type="submit" disabled={!kannSpeichern}>{initial ? "Änderungen speichern" : "Zutat anlegen"}</Button>
+        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onAbbrechen} />}
+        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Zutat anlegen"} type="submit" disabled={!kannSpeichern} />
       </div>
     </form>
   );

@@ -1,8 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { PageHeader, Card, Button, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
+import { PageHeader, Card, Button, ACTION_ICONS, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import {
@@ -68,8 +67,8 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
           </p>
         )}
         <div className="flex gap-2 md:col-span-2">
-          <Button type="submit" disabled={createUser.isPending}>{createUser.isPending ? "Wird angelegt …" : "Benutzer anlegen"}</Button>
-          <Button variant="secondary" onClick={onDone}>Abbrechen</Button>
+          <Button type="submit" loading={createUser.isPending} icon={ACTION_ICONS.create} label="Benutzer anlegen" />
+          <Button variant="secondary" onClick={onDone} icon={ACTION_ICONS.cancel} label="Abbrechen" />
         </div>
       </form>
     </Modal>
@@ -108,7 +107,7 @@ export function UsersContent() {
       <PageHeader
         title="Benutzer"
         subtitle="Globale Benutzerübersicht über alle Mandanten."
-        actions={!formularOffen && <Button onClick={() => setFormularOffen(true)}><Plus size={16} aria-hidden /> Benutzer anlegen</Button>}
+        actions={!formularOffen && <Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Benutzer anlegen" />}
       />
       {formularOffen && <CreateUserForm onDone={() => setFormularOffen(false)} />}
       {bearbeiteBenutzer && <EditUserForm user={bearbeiteBenutzer} onDone={() => setBearbeiteBenutzer(null)} />}
@@ -137,43 +136,27 @@ export function UsersContent() {
               <Td className="text-muted">{u.letzteAnmeldung ? new Date(u.letzteAnmeldung).toLocaleString("de-DE") : "—"}</Td>
               <Td className={u.fehlgeschlageneLogins > 0 ? "font-medium text-warn" : "text-muted"}>{u.fehlgeschlageneLogins}</Td>
               <Td className="no-print">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button type="button" onClick={() => setBearbeiteBenutzer(u)} aria-label={`${u.name} bearbeiten`} className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline">
-                    <Pencil size={13} aria-hidden /> Bearbeiten
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResetBenutzer(u)}
-                    aria-label={`Passwort von ${u.name} zurücksetzen`}
-                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
-                  >
-                    <RotateCcw size={13} aria-hidden /> Passwort zurücksetzen
-                  </button>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button size="sm" variant="ghost" icon={ACTION_ICONS.edit} label={`${u.name} bearbeiten`} onClick={() => setBearbeiteBenutzer(u)} />
+                  <Button size="sm" variant="ghost" icon={ACTION_ICONS.password} label={`Passwort von ${u.name} zurücksetzen`} onClick={() => setResetBenutzer(u)} />
                   {u.status === "DEAKTIVIERT" ? (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon={ACTION_ICONS.userActivate}
+                      label={`${u.name} aktivieren`}
                       onClick={() => activateUser.mutate(u.id, { onSuccess: () => toast.success("Benutzer wurde aktiviert."), onError: () => toast.error("Aktivieren fehlgeschlagen.") })}
-                      className="flex cursor-pointer items-center gap-1 text-xs font-medium text-basil hover:underline"
-                    >
-                      Aktivieren
-                    </button>
+                    />
                   ) : (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={ACTION_ICONS.userDeactivate}
+                      label={`${u.name} deaktivieren`}
                       onClick={() => deactivateUser.mutate(u.id, { onSuccess: () => toast.success("Benutzer wurde deaktiviert."), onError: () => toast.error("Deaktivieren fehlgeschlagen.") })}
-                      className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
-                    >
-                      Deaktivieren
-                    </button>
+                    />
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setLoescheBenutzer(u)}
-                    aria-label={`${u.name} endgültig löschen`}
-                    className="flex cursor-pointer items-center gap-1 text-xs font-medium text-danger hover:underline"
-                  >
-                    <Trash2 size={13} aria-hidden /> Löschen
-                  </button>
+                  <Button size="sm" variant="danger" icon={ACTION_ICONS.delete} label={`${u.name} endgültig löschen`} onClick={() => setLoescheBenutzer(u)} />
                 </div>
               </Td>
             </tr>
@@ -195,6 +178,7 @@ export function UsersContent() {
           </>
         }
         confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
         onCancel={() => setLoescheBenutzer(null)}
         onConfirm={loeschenBestaetigt}
       />
@@ -202,7 +186,8 @@ export function UsersContent() {
         open={!!resetBenutzer}
         title="Passwort zurücksetzen"
         message={<>An <strong>{resetBenutzer?.email}</strong> wird ein Link zum Festlegen eines neuen Passworts gesendet. Das aktuelle Passwort bleibt bis dahin gültig.</>}
-        confirmLabel={resetPassword.isPending ? "Wird gesendet …" : "Link senden"}
+        confirmLabel="Link senden"
+        confirmIcon={ACTION_ICONS.send}
         onCancel={() => setResetBenutzer(null)}
         onConfirm={() => {
           if (!resetBenutzer) return;

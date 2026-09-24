@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Loader2, X } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Loader2 } from "lucide-react";
+import { ACTION_ICONS, Button } from "@/components/ui";
 import { apiFetchBlob } from "@/lib/api/client";
 
 type Inhalt = "Vollstaendig" | "NurNaehrwerte" | "OhneNaehrwerte";
@@ -90,9 +90,7 @@ export function EtikettenGeneratorModal({
             <h2 id="etiketten-generator-title" className="font-display text-lg font-semibold text-ink">Etiketten-Generator</h2>
             <p className="mt-0.5 text-sm text-muted">{rezeptName}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Schließen" className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-paper hover:text-ink">
-            <X size={19} aria-hidden />
-          </button>
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
         </header>
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_18rem]">
@@ -150,9 +148,7 @@ export function EtikettenGeneratorModal({
               />
             </label>
 
-            <Button onClick={herunterladen} disabled={!previewUrl || laedt}>
-              <Download size={15} aria-hidden /> PDF herunterladen
-            </Button>
+            <Button icon={ACTION_ICONS.download} label="PDF herunterladen" onClick={herunterladen} disabled={!previewUrl || laedt} />
           </div>
         </div>
       </div>
