@@ -127,8 +127,8 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         </form>
       </Modal>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <div className="flex flex-col gap-6">
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader title="Benutzer des Mandanten" hint="Rollen und Zugänge des Catering-Unternehmens" />
             {bearbeiteBenutzer ? <div className="p-5 pt-0"><EditUserForm user={bearbeiteBenutzer} onDone={() => setBearbeiteBenutzer(null)} /></div> : null}
@@ -170,7 +170,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           </Card>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card><CardHeader title="Supportzugriff" hint="Sichtbar, zeitlich begrenzt und protokolliert" /><SupportAccess tenantId={tenant.id} tenantName={tenant.name} /></Card>
           <TenantFeatureFlagsCard tenantId={tenant.id} />
           <Card>

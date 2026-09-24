@@ -65,7 +65,7 @@ export function DriverDashboard() {
         <StatCard label="Abfahrt" value={`${route.start} Uhr`} tone={allesGeladen ? "ok" : "warn"} hint={allesGeladen ? "Ladung vollständig" : `${ladePositionen.filter((p) => p.geladen).length} von ${ladePositionen.length} Positionen geladen`} />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_340px]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_340px] [&>*]:min-w-0">
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader title="Ladeliste" hint="Jede Position beim Einladen kontrollieren und abhaken." actions={<PackageCheck size={19} className="text-basil" aria-hidden />} />

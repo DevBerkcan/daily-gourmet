@@ -46,7 +46,7 @@ export function DashboardContent() {
         <StatCard label={t("adminDashboard.mealPlanNextWeek")} value={summary?.naechsteWocheSpeiseplanStatus ?? t("adminDashboard.notPlanned")} tone={summary?.naechsteWocheSpeiseplanStatus === "REVIEW" ? "warn" : "default"} />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
         <Card>
           <CardHeader
             title={t("adminDashboard.ordersOfWeek")}

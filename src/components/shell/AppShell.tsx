@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, type LucideIcon } from "lucide-react";
+import { LogOut, Menu, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ACTION_ICONS } from "@/components/ui/icons";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -109,7 +109,9 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         <div className="border-t border-line px-6 py-4">
           <p className="text-sm font-medium text-ink">{userName}</p>
           <p className="text-xs text-muted">{userRole}</p>
-          <Button variant="ghost" size="sm" icon={ACTION_ICONS.logout} label={t("shell.logout")} onClick={handleLogout} className="mt-3" />
+          <button type="button" onClick={handleLogout} className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-muted hover:text-danger">
+            <LogOut size={14} aria-hidden /> {t("shell.logout")}
+          </button>
         </div>
       </aside>
       <div className="hidden lg:block" aria-hidden />
@@ -131,6 +133,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               <button
                 type="button"
                 onClick={() => setProfileOpen((v) => !v)}
+                aria-haspopup="menu"
                 aria-expanded={profileOpen}
                 aria-label={t("shell.profileMenu")}
                 className={`flex size-9 items-center justify-center rounded-full border-2 ${tone.ring} bg-paper text-xs font-semibold text-ink transition-colors hover:bg-basil-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil`}
@@ -138,30 +141,29 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
                 {userName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
               </button>
               {profileOpen && (
-                <div role="dialog" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
+                <div role="menu" aria-label="Profil" className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-line bg-surface shadow-lg">
                   <div className="border-b border-line px-4 py-3">
                     <p className="truncate text-sm font-medium text-ink">{userName}</p>
                     <p className="text-xs text-muted">{userRole}</p>
                   </div>
-                  <div className="flex justify-end px-4 py-2">
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon={ACTION_ICONS.logout}
-                      label={t("shell.logout")}
-                      onClick={() => {
-                        setProfileOpen(false);
-                        handleLogout();
-                      }}
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-sm text-ink-soft hover:bg-danger-soft hover:text-danger"
+                  >
+                    <LogOut size={15} aria-hidden /> {t("shell.logout")}
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-24 md:px-8 md:pt-8">{children}</main>
       </div>
 
       {/* Mobile Drawer */}

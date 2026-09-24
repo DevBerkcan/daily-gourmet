@@ -105,7 +105,7 @@ export function TenantSupportWidget() {
                     />
                   </div>
                 )}
-                <Button icon={ACTION_ICONS.send} label="Anfrage senden" type="submit" loading={wirdGesendet} className="self-end" />
+                <Button icon={ACTION_ICONS.send} label={wirdGesendet ? "Wird gesendet …" : "Anfrage senden"} type="submit" loading={wirdGesendet} showLabel className="self-end" />
               </form>
               <div className="border-t border-line px-5 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Meine letzten Anfragen</p>

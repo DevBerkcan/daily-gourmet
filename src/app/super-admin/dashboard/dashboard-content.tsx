@@ -26,7 +26,7 @@ export function DashboardContent() {
 
       <SupportSummary />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
         <Card>
           <CardHeader title="Mandanten" hint="Alle Catering-Unternehmen der Plattform" />
           <Table head={["Mandant", "Status", "Benutzer", "Einrichtungen"]}>

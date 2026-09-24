@@ -131,7 +131,7 @@ export function RezeptDetail({ id }: { id: string }) {
         {zusatzstoffe.map((z) => <Tag key={z}>{z}</Tag>)}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
         <div className="flex flex-col gap-6">
           <RezeptSkalierung rezept={rezept} />
 

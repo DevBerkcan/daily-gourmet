@@ -160,4 +160,19 @@ body {
     text-align: left;
   }
   .responsive-table td[data-label=""]::before { content: none; }
+  /* Zellen ohne Spaltenlabel sind fast immer die Aktions-Spalte (Icon-Buttons) — rechtsbündig wie
+   * alle anderen Werte der Karte, statt links unter dem Inhalt zu hängen. */
+  .responsive-table td[data-label=""] { justify-content: flex-end; }
+  /* Lange Werte (UUIDs, E-Mails) dürfen umbrechen statt aus der Karte hinauszulaufen. */
+  .responsive-table td > * { min-width: 0; overflow-wrap: break-word; }
+  /* Zellen mit mehreren Teilen (Name + E-Mail, Einrichtung + ID, …) stapeln die Teile rechts
+   * untereinander, statt sie neben dem Label in schmale Spalten zu quetschen. */
+  .responsive-table td[data-label]:not([data-label=""]):has(> :nth-child(2)) {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+    position: relative !important;
+  }
+  .responsive-table td[data-label]:not([data-label=""]):has(> :nth-child(2))::before { position: absolute; left: 0.875rem; top: 0.625rem; max-width: 40%; }
+  .responsive-table td[data-label]:not([data-label=""]):has(> :nth-child(2)) > * { max-width: 58%; }
 }

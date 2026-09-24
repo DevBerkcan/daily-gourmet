@@ -154,8 +154,11 @@ export function useTenantSettings(tenantId: string | undefined): TenantSettings 
     queryKey: ["super-admin-tenant-settings", tenantId],
     queryFn: () => api.get<TenantSettingsDto>(`/super-admin/tenants/${tenantId}/settings`),
     enabled: !!tenantId,
+    // select statt Mapping im Render: liefert eine stabile Referenz, sonst lösen die
+    // useEffect(setForm)-Aufrufer in TenantSettingsCard eine Endlos-Render-Schleife aus.
+    select: toTenantSettings,
   });
-  return query.data ? toTenantSettings(query.data) : undefined;
+  return query.data;
 }
 
 export function useUpdateTenantSettings(tenantId: string) {
@@ -197,20 +200,20 @@ export function useTenantProfile(tenantId: string | undefined): TenantProfile | 
     queryKey: ["super-admin-tenant-profile", tenantId],
     queryFn: () => api.get<TenantProfileDto>(`/super-admin/tenants/${tenantId}/profile`),
     enabled: !!tenantId,
+    // select statt Mapping im Render: stabile Referenz für den useEffect in TenantProfileCard.
+    select: (dto): TenantProfile => ({
+      ustId: dto.vatId ?? undefined,
+      strasse: dto.street ?? undefined,
+      plz: dto.postalCode ?? undefined,
+      ort: dto.city ?? undefined,
+      telefon: dto.phone ?? undefined,
+      email: dto.email ?? undefined,
+      zeitzone: dto.timezone,
+      waehrung: dto.currency,
+      logoUrl: dto.logoUrl ?? undefined,
+    }),
   });
-  if (!query.data) return undefined;
-  const dto = query.data;
-  return {
-    ustId: dto.vatId ?? undefined,
-    strasse: dto.street ?? undefined,
-    plz: dto.postalCode ?? undefined,
-    ort: dto.city ?? undefined,
-    telefon: dto.phone ?? undefined,
-    email: dto.email ?? undefined,
-    zeitzone: dto.timezone,
-    waehrung: dto.currency,
-    logoUrl: dto.logoUrl ?? undefined,
-  };
+  return query.data;
 }
 
 export function useUpdateTenantProfile(tenantId: string) {

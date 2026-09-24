@@ -26,6 +26,9 @@ export type ButtonProps = {
   pressed?: boolean;
   /** Für Auf-/Zuklapp-Toggles (Panels, Widgets): setzt aria-expanded. */
   expanded?: boolean;
+  /** Ausnahme vom Icon-only-Prinzip: zeigt das Label als Text neben dem Icon (klassischer Button).
+   * Nur für Anmelden/Abmelden und das Absenden einer Support-Anfrage vorgesehen. */
+  showLabel?: boolean;
   form?: string;
   className?: string;
 };
@@ -45,18 +48,21 @@ const sizeStyles: Record<ButtonSize, { box: string; icon: number }> = {
 
 export function Button({
   icon: Icon, label, variant = "primary", size = "md", href, external, onClick, type = "button",
-  disabled, loading, pressed, expanded, form, className = "",
+  disabled, loading, pressed, expanded, showLabel, form, className = "",
 }: ButtonProps) {
   const s = sizeStyles[size];
   const pressedStyle = pressed ? "!bg-basil-soft !text-basil ring-1 ring-basil/40" : "";
-  const cls = `inline-flex shrink-0 cursor-pointer items-center justify-center transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:pointer-events-none disabled:opacity-45 ${s.box} ${variantStyles[variant]} ${pressedStyle} ${className}`;
+  const cls = `inline-flex shrink-0 cursor-pointer items-center justify-center transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:pointer-events-none disabled:opacity-45 ${showLabel ? "min-h-10 gap-2 rounded-lg px-4 text-sm font-medium" : s.box} ${variantStyles[variant]} ${pressedStyle} ${className}`;
   const inner = loading ? <Loader2 size={s.icon} className="animate-spin" aria-hidden /> : <Icon size={s.icon} strokeWidth={2} aria-hidden />;
+  const content = showLabel ? <>{inner}<span>{label}</span></> : inner;
+  // Mit sichtbarem Text braucht es weder aria-label noch Tooltip.
+  const a11y = showLabel ? {} : { "aria-label": label, "data-tip": label };
 
   if (href && !disabled) {
     if (external) {
-      return <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" aria-label={label} data-tip={label} className={cls}>{inner}</a>;
+      return <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" {...a11y} className={cls}>{content}</a>;
     }
-    return <Link href={href} aria-label={label} data-tip={label} className={cls}>{inner}</Link>;
+    return <Link href={href} {...a11y} className={cls}>{content}</Link>;
   }
   return (
     <button
@@ -64,14 +70,13 @@ export function Button({
       form={form}
       onClick={onClick}
       disabled={disabled || loading}
-      aria-label={label}
+      {...a11y}
       aria-pressed={pressed}
       aria-expanded={expanded}
       aria-busy={loading || undefined}
-      data-tip={label}
       className={cls}
     >
-      {inner}
+      {content}
     </button>
   );
 }
