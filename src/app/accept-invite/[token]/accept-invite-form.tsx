@@ -65,7 +65,8 @@ export function AcceptInviteForm({ token }: { token: string }) {
     <>
       <h1 className="font-display text-2xl font-semibold text-ink">Passwort festlegen</h1>
       <p className="mt-1 text-sm text-muted">
-        Willkommen bei Daily Gourmet, {invitation.data?.name}. Legen Sie ein Passwort für <strong>{invitation.data?.email}</strong> fest.
+        Willkommen bei Daily Gourmet, {invitation.data?.name}. Legen Sie ein Passwort für Ihren Benutzernamen{" "}
+        <strong>{invitation.data?.username}</strong> fest.
       </p>
       <form className="mt-6 flex flex-col gap-4" onSubmit={submit}>
         <div>
@@ -87,7 +88,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
             {formError ?? (acceptInvitation.error instanceof ApiError ? acceptInvitation.error.message : "Das Passwort konnte nicht gespeichert werden.")}
           </p>
         )}
-        <Button type="submit" icon={ACTION_ICONS.userActivate} label="Konto aktivieren" loading={acceptInvitation.isPending} />
+        <Button type="submit" icon={ACTION_ICONS.userActivate} label="Konto aktivieren" loading={acceptInvitation.isPending} showLabel />
       </form>
     </>
   );

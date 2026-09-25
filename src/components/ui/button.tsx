@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { Loader2, type LucideIcon } from "lucide-react";
 
-/** Einziger Button der App — bewusst nur Icon, kein sichtbarer Text. Das `label` ist Pflicht und
- * landet als aria-label (Screenreader) und als data-tip (Tooltip über TooltipLayer bei Hover und
- * Tastatur-Fokus), damit die Bedeutung trotzdem nie verloren geht. Welches Icon für welche Aktion
- * steht, ist projektweit festgelegt (siehe ACTION_ICONS in ./icons) — neue Aufrufer nehmen das
- * Icon von dort statt ein eigenes zu wählen. Hooks-frei, damit auch Server-Components es nutzen. */
+/** Einziger Button der App. Icon-only (Standard, ohne `showLabel`) ist der kompakte Stil für enge
+ * Kontexte — vor allem die Aktionsspalte einer Tabellenzeile — und bleibt dort bewusst so: Das
+ * `label` ist Pflicht und landet als aria-label (Screenreader) und als data-tip (Tooltip über
+ * TooltipLayer bei Hover und Tastatur-Fokus), damit die Bedeutung trotzdem nie verloren geht.
+ * `showLabel` zeigt das Label zusätzlich als sichtbaren Text neben dem Icon und ist der Normalfall
+ * für Seiten-, Karten- und Toolbar-Buttons (nicht mehr nur Anmelden/Abmelden/Support-Anfrage).
+ * Welches Icon für welche Aktion steht, ist projektweit festgelegt (siehe ACTION_ICONS in ./icons)
+ * — neue Aufrufer nehmen das Icon von dort statt ein eigenes zu wählen. Hooks-frei, damit auch
+ * Server-Components es nutzen. */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
@@ -26,8 +30,9 @@ export type ButtonProps = {
   pressed?: boolean;
   /** Für Auf-/Zuklapp-Toggles (Panels, Widgets): setzt aria-expanded. */
   expanded?: boolean;
-  /** Ausnahme vom Icon-only-Prinzip: zeigt das Label als Text neben dem Icon (klassischer Button).
-   * Nur für Anmelden/Abmelden und das Absenden einer Support-Anfrage vorgesehen. */
+  /** Zeigt das Label als sichtbaren Text neben dem Icon (klassischer Button) statt nur als
+   * aria-label/Tooltip. Normalfall für Seiten-, Karten- und Toolbar-Buttons; in engen Kontexten
+   * wie der Aktionsspalte einer Tabellenzeile bleibt es beim kompakten Icon-only-Standard. */
   showLabel?: boolean;
   form?: string;
   className?: string;

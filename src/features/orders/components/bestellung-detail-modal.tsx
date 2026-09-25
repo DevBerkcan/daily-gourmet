@@ -42,7 +42,7 @@ export function BestellungDetailModal({
               {bestellung.abgesendetAm && ` · Abgesendet ${bestellung.abgesendetAm}`}
             </p>
           </div>
-          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} showLabel />
         </header>
 
         <div className="overflow-y-auto px-6 py-5">

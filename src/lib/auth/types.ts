@@ -14,6 +14,7 @@ export interface CurrentUser {
   facilityId: string | null;
   facilityName: string | null;
   name: string;
+  username: string;
   email: string;
   role: Rolle;
   activeSupportSession: boolean;

@@ -3,6 +3,7 @@ import { api } from "@/lib/api/client";
 
 export interface InvitationDetails {
   name: string;
+  username: string;
   email: string;
 }
 

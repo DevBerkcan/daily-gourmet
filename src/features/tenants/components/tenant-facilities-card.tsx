@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Table, Td, StatusBadge, Button, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
+import { PromptDialog, Modal, InviteLinkDialog } from "@/components/ui/confirm-dialog";
 import { TextField, NumberField, CheckboxGroup } from "@/components/ui/form-fields";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -36,7 +36,7 @@ export function TenantFacilitiesCard({ tenantId }: { tenantId: string }) {
       <CardHeader
         title="Einrichtungen des Mandanten"
         hint="Schulen, Kitas und weitere Abnehmer dieses Mandanten"
-        actions={<Button icon={ACTION_ICONS.create} label="Einrichtung anlegen" variant="secondary" onClick={() => setFormularOffen(true)} />}
+        actions={<Button icon={ACTION_ICONS.create} label="Einrichtung anlegen" variant="secondary" showLabel onClick={() => setFormularOffen(true)} />}
       />
 
       {formularOffen && (
@@ -126,6 +126,7 @@ function EinrichtungFormular({
   const [portionspreis, setPortionspreis] = useState(initial?.portionspreis ?? 5);
   const [wochentage, setWochentage] = useState<string[]>(initial?.aktiveWochentage ?? ["Mo", "Di", "Mi", "Do", "Fr"]);
   const [status, setStatus] = useState<Einrichtung["status"]>(initial?.status ?? "AKTIV");
+  const [inviteResult, setInviteResult] = useState<{ username: string; link: string } | null>(null);
 
   const mutation = initial ? updateEinrichtung : createEinrichtung;
   const kannSpeichern =
@@ -148,12 +149,28 @@ function EinrichtungFormular({
     } else {
       createEinrichtung.mutate(werte, {
         onSuccess: (data) => {
-          onClose();
-          toast.success(data.adminInvited ? `Einrichtung wurde angelegt. Zugangsdaten wurden an ${data.email} gesendet.` : "Einrichtung wurde angelegt.");
+          if (data.adminInvited && data.adminInviteLink) {
+            setInviteResult({ username: data.adminUsername ?? "", link: data.adminInviteLink });
+          } else {
+            onClose();
+            toast.success("Einrichtung wurde angelegt.");
+          }
         },
         onError: (error) => toast.error(error instanceof ApiError && error.status === 409 ? error.message : "Speichern fehlgeschlagen. Bitte erneut versuchen."),
       });
     }
+  }
+
+  if (inviteResult) {
+    return (
+      <InviteLinkDialog
+        open
+        title="Einrichtung wurde angelegt"
+        username={inviteResult.username}
+        link={inviteResult.link}
+        onClose={() => { setInviteResult(null); onClose(); }}
+      />
+    );
   }
 
   return (
@@ -186,8 +203,8 @@ function EinrichtungFormular({
         <CheckboxGroup label="Aktive Liefertage" options={WOCHENTAGE} selected={wochentage} onToggle={(t) => setWochentage((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))} />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2">
-          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onClose} />
-          <Button icon={ACTION_ICONS.save} label="Einrichtung speichern" type="submit" disabled={!kannSpeichern} loading={mutation.isPending} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={onClose} />
+          <Button icon={ACTION_ICONS.save} label="Einrichtung speichern" showLabel type="submit" disabled={!kannSpeichern} loading={mutation.isPending} />
         </div>
       </form>
     </Modal>

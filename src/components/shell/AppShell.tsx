@@ -121,7 +121,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         {/* Topbar */}
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur md:px-8 no-print">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" icon={Menu} label={t("shell.menuOpen")} onClick={() => setOpen(true)} className="lg:hidden" />
+            <Button variant="ghost" icon={Menu} label={t("shell.menuOpen")} showLabel onClick={() => setOpen(true)} className="lg:hidden" />
             <p className="hidden text-sm text-muted sm:block">
               KW {week} · {formatLangdatumDe(HEUTE)}
             </p>
@@ -173,7 +173,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
           <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface shadow-xl">
             <div className="flex items-start justify-between pr-3">
               {brand}
-              <Button variant="ghost" icon={ACTION_ICONS.cancel} label={t("shell.menuClose")} onClick={() => setOpen(false)} className="mt-5" />
+              <Button variant="ghost" icon={ACTION_ICONS.cancel} label={t("shell.menuClose")} showLabel onClick={() => setOpen(false)} className="mt-5" />
             </div>
             <div className="flex-1 overflow-y-auto pb-6">{navList}</div>
           </div>

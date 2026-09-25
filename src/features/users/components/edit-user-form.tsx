@@ -64,8 +64,8 @@ export function EditUserForm({ user, onDone }: { user: GlobalUser; onDone: () =>
           </p>
         )}
         <div className="flex gap-2 md:col-span-2">
-          <Button icon={ACTION_ICONS.save} label="Änderungen speichern" type="submit" loading={updateUser.isPending} />
-          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onDone} />
+          <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel type="submit" loading={updateUser.isPending} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={onDone} />
         </div>
       </form>
     </Modal>

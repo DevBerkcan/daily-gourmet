@@ -24,7 +24,7 @@ export function ZutatDetail({ id }: { id: string }) {
           {ladend ? (
             <LoadingState text="Zutat wird geladen …" />
           ) : (
-            <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/ingredients" />} />
+            <EmptyState title="Zutat nicht gefunden" text="Diese Zutat existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" showLabel href="/admin/ingredients" />} />
           )}
         </Card>
       </>
@@ -68,7 +68,7 @@ export function ZutatDetail({ id }: { id: string }) {
       <PageHeader
         title={zutat.name}
         subtitle={`${zutat.kategorie} · ${zutat.artikelnummer} · ${zutat.lieferant}`}
-        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" onClick={() => setBearbeiten(true)} />}
+        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel onClick={() => setBearbeiten(true)} />}
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-2">

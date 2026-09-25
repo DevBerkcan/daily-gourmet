@@ -3,7 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { PageHeader, Card, Button, ACTION_ICONS, Table, Td, StatusBadge, SearchInput, Tag, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, InviteLinkDialog, Modal } from "@/components/ui/confirm-dialog";
 import {
   useTenants,
   useGlobalUsers,
@@ -24,25 +24,49 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
   const tenants = useTenants();
   const createUser = useCreateUser();
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [rolle, setRolle] = useState("TENANT_ADMIN");
   const [tenantId, setTenantId] = useState("");
+  const [inviteResult, setInviteResult] = useState<{ username: string; link: string } | null>(null);
   const brauchtMandant = rolle !== "SUPER_ADMIN";
 
   function speichern(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     createUser.mutate(
-      { name: name.trim(), email: email.trim(), role: rolle, tenantId: brauchtMandant ? tenantId : undefined },
-      { onSuccess: () => { setName(""); setEmail(""); setRolle("TENANT_ADMIN"); setTenantId(""); onDone(); } }
+      { name: name.trim(), username: username.trim(), email: email.trim(), role: rolle, tenantId: brauchtMandant ? tenantId : undefined },
+      {
+        onSuccess: (data) => {
+          setName(""); setUsername(""); setEmail(""); setRolle("TENANT_ADMIN"); setTenantId("");
+          if (data.inviteLink) setInviteResult({ username: data.username, link: data.inviteLink });
+          else onDone();
+        },
+      }
+    );
+  }
+
+  if (inviteResult) {
+    return (
+      <InviteLinkDialog
+        open
+        title="Benutzer wurde angelegt"
+        username={inviteResult.username}
+        link={inviteResult.link}
+        onClose={() => { setInviteResult(null); onDone(); }}
+      />
     );
   }
 
   return (
-    <Modal open onClose={onDone} title="Neuen Benutzer anlegen" hint="Der Benutzer erhält eine E-Mail mit einem Link, um sein Passwort festzulegen.">
+    <Modal open onClose={onDone} title="Neuen Benutzer anlegen" hint="Nach dem Anlegen erhalten Sie einen Link, um das Passwort für die Person festzulegen.">
       <form onSubmit={speichern} className="grid gap-4 p-5 md:grid-cols-2">
         <label className="text-xs font-medium text-muted">
-          Benutzername
+          Name
           <input value={name} onChange={(e) => setName(e.target.value)} required className={`mt-1.5 ${fieldClass}`} />
+        </label>
+        <label className="text-xs font-medium text-muted">
+          Benutzername (Login)
+          <input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} pattern="[a-z0-9._-]+" title="Nur Kleinbuchstaben, Zahlen, Punkt, Unterstrich oder Bindestrich" className={`mt-1.5 ${fieldClass}`} />
         </label>
         <label className="text-xs font-medium text-muted">
           E-Mail
@@ -67,8 +91,8 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
           </p>
         )}
         <div className="flex gap-2 md:col-span-2">
-          <Button type="submit" loading={createUser.isPending} icon={ACTION_ICONS.create} label="Benutzer anlegen" />
-          <Button variant="secondary" onClick={onDone} icon={ACTION_ICONS.cancel} label="Abbrechen" />
+          <Button type="submit" loading={createUser.isPending} icon={ACTION_ICONS.create} label="Benutzer anlegen" showLabel />
+          <Button variant="secondary" onClick={onDone} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
         </div>
       </form>
     </Modal>
@@ -85,8 +109,9 @@ export function UsersContent() {
   const [bearbeiteBenutzer, setBearbeiteBenutzer] = useState<GlobalUser | null>(null);
   const [loescheBenutzer, setLoescheBenutzer] = useState<GlobalUser | null>(null);
   const [resetBenutzer, setResetBenutzer] = useState<GlobalUser | null>(null);
+  const [resetLinkResult, setResetLinkResult] = useState<{ username: string; link: string } | null>(null);
   const benutzer = useGlobalUsers({ tenantId: tenantId || undefined, role: rolle || undefined });
-  const gefiltert = benutzer.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(suche.toLowerCase()));
+  const gefiltert = benutzer.filter((u) => `${u.name} ${u.username} ${u.email}`.toLowerCase().includes(suche.toLowerCase()));
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
   const deactivateUser = useDeactivateGlobalUser();
   const activateUser = useActivateGlobalUser();
@@ -107,7 +132,7 @@ export function UsersContent() {
       <PageHeader
         title="Benutzer"
         subtitle="Globale Benutzerübersicht über alle Mandanten."
-        actions={!formularOffen && <Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Benutzer anlegen" />}
+        actions={!formularOffen && <Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Benutzer anlegen" showLabel />}
       />
       {formularOffen && <CreateUserForm onDone={() => setFormularOffen(false)} />}
       {bearbeiteBenutzer && <EditUserForm user={bearbeiteBenutzer} onDone={() => setBearbeiteBenutzer(null)} />}
@@ -128,7 +153,7 @@ export function UsersContent() {
             <tr key={u.id} className="hover:bg-paper">
               <Td>
                 <span className="font-medium text-ink">{u.name}</span>
-                <span className="block text-xs text-muted">{u.email}</span>
+                <span className="block text-xs text-muted">@{u.username} · {u.email}</span>
               </Td>
               <Td>{u.tenantName ?? <Tag>Plattform</Tag>}</Td>
               <Td><Tag tone="green">{u.rolle}</Tag></Td>
@@ -192,11 +217,18 @@ export function UsersContent() {
         onConfirm={() => {
           if (!resetBenutzer) return;
           resetPassword.mutate(resetBenutzer.id, {
-            onSuccess: () => toast.success(`Zurücksetzen-Link wurde an ${resetBenutzer.email} gesendet.`),
+            onSuccess: (data) => setResetLinkResult({ username: resetBenutzer.username, link: data.link }),
             onError: () => toast.error("Zurücksetzen fehlgeschlagen. Bitte erneut versuchen."),
           });
           setResetBenutzer(null);
         }}
+      />
+      <InviteLinkDialog
+        open={!!resetLinkResult}
+        title="Neuer Link zum Passwort festlegen"
+        username={resetLinkResult?.username}
+        link={resetLinkResult?.link ?? ""}
+        onClose={() => setResetLinkResult(null)}
       />
     </>
   );

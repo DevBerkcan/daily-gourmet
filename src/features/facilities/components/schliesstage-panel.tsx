@@ -26,7 +26,7 @@ export function SchliesstagePanel() {
       <CardHeader
         title="Schließtage / Abwesenheit"
         hint="Am besten für das ganze Jahr im Voraus eintragen (z. B. Ferien) — dann fragen wir nicht jede Woche einzeln nach."
-        actions={!offen ? <Button icon={ACTION_ICONS.create} label="Zeitraum hinzufügen" variant="secondary" onClick={() => setOffen(true)} /> : undefined}
+        actions={!offen ? <Button icon={ACTION_ICONS.create} label="Zeitraum hinzufügen" showLabel variant="secondary" onClick={() => setOffen(true)} /> : undefined}
       />
 
       {schliesstage.length === 0 && !offen && <p className="px-5 py-4 text-sm text-muted">Noch keine Schließtage eingetragen.</p>}
@@ -67,8 +67,8 @@ export function SchliesstagePanel() {
             <TextField label="Hinweis" value={hinweis} onChange={setHinweis} placeholder="z. B. Sommerferien" />
           </div>
           <div className="col-span-full flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" disabled={!kannSpeichern} loading={hinzufuegen.isPending} />
-            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setOffen(false)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!kannSpeichern} loading={hinzufuegen.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setOffen(false)} />
           </div>
         </form>
       )}

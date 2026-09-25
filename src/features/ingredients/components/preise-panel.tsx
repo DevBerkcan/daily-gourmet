@@ -36,7 +36,7 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
         hint="Der günstigste Preis wird automatisch für Kalkulation und Einkauf verwendet."
         actions={
           !neu && lieferanten.length > 0 ? (
-            <Button icon={ACTION_ICONS.create} label="Preis hinzufügen" variant="secondary" onClick={() => setNeu(leeresFormular(lieferanten[0].id))} />
+            <Button icon={ACTION_ICONS.create} label="Preis hinzufügen" showLabel variant="secondary" onClick={() => setNeu(leeresFormular(lieferanten[0].id))} />
           ) : undefined
         }
       />
@@ -85,8 +85,8 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
           <SelectField label="Einheit" value={neu.einheit} onChange={(v) => setNeu({ ...neu, einheit: v as Einheit })} options={EINHEITEN} />
           <TextField label="Verfügbarkeit / Hinweis" value={neu.verfuegbarkeitshinweis ?? ""} onChange={(v) => setNeu({ ...neu, verfuegbarkeitshinweis: v })} placeholder="z. B. Vorlaufzeit 3 Tage" />
           <div className="col-span-full flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" disabled={!neu.lieferantId} loading={savePrice.isPending} />
-            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setNeu(null)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!neu.lieferantId} loading={savePrice.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setNeu(null)} />
           </div>
         </form>
       )}

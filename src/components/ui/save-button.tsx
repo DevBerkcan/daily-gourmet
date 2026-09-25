@@ -35,6 +35,7 @@ export function SaveButton({
     <Button
       icon={gespeichert ? ACTION_ICONS.confirm : ACTION_ICONS.save}
       label={gespeichert ? savedLabel : label}
+      showLabel
       onClick={handleClick}
       disabled={disabled}
       loading={laeuft}

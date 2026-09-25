@@ -25,7 +25,7 @@ export function OrdersHistory() {
               actions={
                 <div className="flex items-center gap-2">
                   <StatusBadge status={bestellung.status} />
-                  {bestellung.status !== "LOCKED" ? <Button href="/portal/meal-plans" variant="secondary" size="sm" icon={ACTION_ICONS.edit} label="Bearbeiten" /> : null}
+                  {bestellung.status !== "LOCKED" ? <Button href="/portal/meal-plans" variant="secondary" size="sm" icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel /> : null}
                 </div>
               }
             />

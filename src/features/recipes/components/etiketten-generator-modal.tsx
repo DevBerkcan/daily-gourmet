@@ -90,7 +90,7 @@ export function EtikettenGeneratorModal({
             <h2 id="etiketten-generator-title" className="font-display text-lg font-semibold text-ink">Etiketten-Generator</h2>
             <p className="mt-0.5 text-sm text-muted">{rezeptName}</p>
           </div>
-          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" showLabel onClick={onClose} />
         </header>
 
         <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_18rem]">
@@ -148,7 +148,7 @@ export function EtikettenGeneratorModal({
               />
             </label>
 
-            <Button icon={ACTION_ICONS.download} label="PDF herunterladen" onClick={herunterladen} disabled={!previewUrl || laedt} />
+            <Button icon={ACTION_ICONS.download} label="PDF herunterladen" showLabel onClick={herunterladen} disabled={!previewUrl || laedt} />
           </div>
         </div>
       </div>

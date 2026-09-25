@@ -80,7 +80,7 @@ export function NeuerProduktionsplan() {
       </Card>
 
       <div className="mt-6 flex justify-end gap-2 no-print">
-        <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/production" />
+        <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/production" showLabel />
         <Button
           icon={ACTION_ICONS.create}
           label="Produktionsplan anlegen"
@@ -88,6 +88,7 @@ export function NeuerProduktionsplan() {
           onClick={() => {
             createPlan.mutate({ datum, standortId }, { onSuccess: (plan) => router.push(`/admin/production/${plan.id}`) });
           }}
+          showLabel
         />
       </div>
     </>

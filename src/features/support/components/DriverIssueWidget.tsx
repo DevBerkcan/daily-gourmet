@@ -33,14 +33,14 @@ export function DriverIssueWidget() {
               <p id="fahrer-frage-title" className="font-display text-lg font-semibold">Frage oder Problem melden</p>
               <p className="text-xs text-white/70">Geht direkt an Ihren Admin</p>
             </div>
-            <Button icon={ACTION_ICONS.cancel} label="Fenster schließen" variant="ghost" className="!text-white hover:!bg-white/10" onClick={() => { setOffen(false); setGesendet(false); }} />
+            <Button icon={ACTION_ICONS.cancel} label="Fenster schließen" variant="ghost" showLabel className="!text-white hover:!bg-white/10" onClick={() => { setOffen(false); setGesendet(false); }} />
           </header>
           {gesendet ? (
             <div className="p-5 text-center">
               <CheckCircle2 size={35} className="mx-auto text-ok" aria-hidden />
               <p className="mt-3 font-semibold text-ink">Nachricht wurde gesendet</p>
               <p className="mt-1 text-sm text-muted">Ihr Admin wurde benachrichtigt.</p>
-              <div className="mt-4"><Button icon={ACTION_ICONS.cancel} label="Schließen" onClick={() => { setGesendet(false); setOffen(false); }} /></div>
+              <div className="mt-4"><Button icon={ACTION_ICONS.cancel} label="Schließen" showLabel onClick={() => { setGesendet(false); setOffen(false); }} /></div>
             </div>
           ) : (
             <form onSubmit={senden} className="flex flex-col gap-4 p-5">
@@ -54,7 +54,7 @@ export function DriverIssueWidget() {
                   className={`${fieldClass} py-2`}
                 />
               </label>
-              <Button icon={ACTION_ICONS.send} label="Nachricht senden" type="submit" loading={reportIssue.isPending} className="self-end" />
+              <Button icon={ACTION_ICONS.send} label="Nachricht senden" showLabel type="submit" loading={reportIssue.isPending} className="self-end" />
             </form>
           )}
         </section>
@@ -65,6 +65,7 @@ export function DriverIssueWidget() {
           expanded={offen}
           label={offen ? "Schließen" : "Frage oder Problem melden"}
           size="lg"
+          showLabel
           className="!rounded-full shadow-lg"
           onClick={() => setOffen((wert) => !wert)}
         />

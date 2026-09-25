@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: CurrentUser | null;
   /** True while the initial /auth/me check (on page load, from a stored token) is in flight. */
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<CurrentUser>;
+  login: (username: string, password: string) => Promise<CurrentUser>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -73,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [loadCurrentUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await api.post<LoginResponse>("/auth/login", { email, password });
+  const login = useCallback(async (username: string, password: string) => {
+    const result = await api.post<LoginResponse>("/auth/login", { username, password });
     setToken(result.token);
     setUser(result.user);
     return result.user;

@@ -96,7 +96,7 @@ export function RezeptFormular({
       </Card>
 
       <Card>
-        <CardHeader title="Zutaten" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Zutat hinzufügen" variant="ghost" size="sm" onClick={addZutatRow} /></div>} />
+        <CardHeader title="Zutaten" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Zutat hinzufügen" variant="ghost" size="sm" showLabel onClick={addZutatRow} /></div>} />
         <div className="flex flex-col gap-2 px-5 py-4">
           {r.zutaten.length === 0 && <p className="text-sm text-muted">Noch keine Zutaten hinzugefügt.</p>}
           {r.zutaten.map((rz, i) => {
@@ -126,7 +126,7 @@ export function RezeptFormular({
                   className="min-h-10 w-24 rounded-lg border border-line bg-surface px-3 text-sm text-right"
                 />
                 <span className="min-h-10 flex items-center px-1 text-sm text-muted">{zutat?.basiseinheit ?? rz.einheit}</span>
-                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" className="mb-1 no-print" onClick={() => removeZutatRow(i)} />
+                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" showLabel className="mb-1 no-print" onClick={() => removeZutatRow(i)} />
               </div>
             );
           })}
@@ -134,7 +134,7 @@ export function RezeptFormular({
       </Card>
 
       <Card>
-        <CardHeader title="Zubereitungsschritte" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Schritt hinzufügen" variant="ghost" size="sm" onClick={addSchritt} /></div>} />
+        <CardHeader title="Zubereitungsschritte" actions={<div className="no-print"><Button icon={ACTION_ICONS.create} label="Schritt hinzufügen" variant="ghost" size="sm" showLabel onClick={addSchritt} /></div>} />
         <div className="flex flex-col gap-2 px-5 py-4">
           {r.zubereitungsschritte.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export function RezeptFormular({
                 onChange={(e) => updateSchritt(i, e.target.value)}
                 className="min-h-10 flex-1 rounded-lg border border-line bg-surface px-3 text-sm"
               />
-              <Button icon={ACTION_ICONS.delete} label="Schritt entfernen" variant="danger" size="sm" className="no-print" onClick={() => removeSchritt(i)} />
+              <Button icon={ACTION_ICONS.delete} label="Schritt entfernen" variant="danger" size="sm" showLabel className="no-print" onClick={() => removeSchritt(i)} />
             </div>
           ))}
         </div>
@@ -171,8 +171,8 @@ export function RezeptFormular({
       </Card>
 
       <div className="flex justify-end gap-2 no-print">
-        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onAbbrechen} />}
-        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Rezept anlegen"} type="submit" disabled={!kannSpeichern} />
+        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={onAbbrechen} />}
+        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Rezept anlegen"} showLabel type="submit" disabled={!kannSpeichern} />
       </div>
     </form>
   );

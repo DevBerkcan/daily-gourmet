@@ -71,11 +71,11 @@ export function DriverManager() {
                 </div>
                 {!bearbeitetGerade ? (
                   <div className="flex gap-2">
-                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={profil ? "Bearbeiten" : "Profil anlegen"} variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
+                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={profil ? "Bearbeiten" : "Profil anlegen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
                     {person.status === "DEAKTIVIERT" ? (
-                      <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" variant="secondary" onClick={() => activateUser.mutate(person.id)} />
+                      <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" showLabel variant="secondary" onClick={() => activateUser.mutate(person.id)} />
                     ) : (
-                      <Button icon={ACTION_ICONS.userDeactivate} label="Deaktivieren" variant="danger" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }} />
+                      <Button icon={ACTION_ICONS.userDeactivate} label="Deaktivieren" showLabel variant="danger" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }} />
                     )}
                   </div>
                 ) : null}
@@ -86,8 +86,8 @@ export function DriverManager() {
                   <input value={fahrzeug} onChange={(event) => setFahrzeug(event.target.value)} placeholder="Fahrzeug, z. B. Sprinter 3.5t" required className={fieldClass} />
                   <input value={kennzeichen} onChange={(event) => setKennzeichen(event.target.value)} placeholder="Kennzeichen" required className={fieldClass} />
                   <div className="flex gap-2 sm:col-span-3">
-                    <Button icon={ACTION_ICONS.save} label="Speichern" type="submit" />
-                    <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiteUserId(null)} />
+                    <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" />
+                    <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeiteUserId(null)} />
                   </div>
                 </form>
               ) : null}

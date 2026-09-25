@@ -19,9 +19,9 @@ export function SupportAccess({ tenantId }: { tenantId: string; tenantName: stri
       </p>
       <div className="mt-4">
         {sitzung ? (
-          <Button icon={ShieldOff} label="Zugriff beenden" variant="secondary" onClick={() => endeSitzung.mutate(sitzung.id)} />
+          <Button icon={ShieldOff} label="Zugriff beenden" variant="secondary" showLabel onClick={() => endeSitzung.mutate(sitzung.id)} />
         ) : (
-          <Button icon={LifeBuoy} label="Supportzugriff starten" variant="secondary" onClick={() => starteSitzung.mutate(tenantId)} />
+          <Button icon={LifeBuoy} label="Supportzugriff starten" variant="secondary" showLabel onClick={() => starteSitzung.mutate(tenantId)} />
         )}
       </div>
     </div>

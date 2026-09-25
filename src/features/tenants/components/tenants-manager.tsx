@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { ACTION_ICONS, Button, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { InviteLinkDialog } from "@/components/ui/confirm-dialog";
 import { useTenants, useCreateTenant } from "@/lib/services/super-admin";
 import type { TenantStatus } from "@/lib/services/super-admin";
 import { usePagination } from "@/lib/use-pagination";
@@ -19,6 +20,7 @@ export function TenantsManager() {
   const [name, setName] = useState("");
   const [kontakt, setKontakt] = useState("");
   const [email, setEmail] = useState("");
+  const [inviteResult, setInviteResult] = useState<string | null>(null);
 
   const gefiltert = tenants.filter(
     (tenant) => (status === "ALLE" || tenant.status === status) && `${tenant.name} ${tenant.ansprechpartner}`.toLowerCase().includes(suche.toLowerCase())
@@ -29,7 +31,12 @@ export function TenantsManager() {
     event.preventDefault();
     createTenant.mutate(
       { name: name.trim(), ansprechpartner: kontakt.trim(), email: email.trim() },
-      { onSuccess: () => { setName(""); setKontakt(""); setEmail(""); setOffen(false); } }
+      {
+        onSuccess: (data) => {
+          setName(""); setKontakt(""); setEmail(""); setOffen(false);
+          if (data.ownerInviteLink) setInviteResult(data.ownerInviteLink);
+        },
+      }
     );
   }
 
@@ -52,14 +59,14 @@ export function TenantsManager() {
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className={`mt-1.5 ${fieldClass}`} />
             </label>
             <div className="flex gap-2 sm:col-span-2 md:col-span-3">
-              <Button icon={ACTION_ICONS.create} label="Mandant anlegen" type="submit" />
-              <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setOffen(false)} />
+              <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel type="submit" />
+              <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setOffen(false)} />
             </div>
           </form>
         </Card>
       ) : (
         <div className="mb-6 flex justify-end">
-          <Button icon={ACTION_ICONS.create} label="Mandant anlegen" onClick={() => setOffen(true)} />
+          <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel onClick={() => setOffen(true)} />
         </div>
       )}
       <Card>
@@ -96,6 +103,12 @@ export function TenantsManager() {
           onPageChange={setPage} onPageSizeChange={setPageSize} pageSizeOptions={pageSizeOptions}
         />
       </Card>
+      <InviteLinkDialog
+        open={!!inviteResult}
+        title="Mandant wurde angelegt"
+        link={inviteResult ?? ""}
+        onClose={() => setInviteResult(null)}
+      />
     </>
   );
 }

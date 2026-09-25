@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="mt-2 text-sm text-muted">
               Die Seite ist in einen unerwarteten Zustand geraten. Ein Neuladen behebt das in der Regel.
             </p>
-            <Button icon={ACTION_ICONS.refresh} label="Seite neu laden" onClick={() => window.location.reload()} className="mt-5" />
+            <Button icon={ACTION_ICONS.refresh} label="Seite neu laden" showLabel onClick={() => window.location.reload()} className="mt-5" />
           </div>
         </div>
       );

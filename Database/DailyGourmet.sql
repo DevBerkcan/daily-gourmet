@@ -2402,3 +2402,69 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260925210034_AddUsernameToUser'
+)
+BEGIN
+    DROP INDEX [IX_Users_Email] ON [Users];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260925210034_AddUsernameToUser'
+)
+BEGIN
+    ALTER TABLE [Users] ADD [Username] nvarchar(64) NOT NULL DEFAULT N'';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260925210034_AddUsernameToUser'
+)
+BEGIN
+    ;WITH normalized AS (
+        SELECT
+            Id,
+            REPLACE(REPLACE(
+                LOWER(
+                    CASE WHEN CHARINDEX('@', Email) > 1
+                        THEN LEFT(Email, CHARINDEX('@', Email) - 1)
+                        ELSE Email
+                    END
+                ),
+            ' ', ''), '+', '') AS BaseName
+        FROM Users
+    ),
+    numbered AS (
+        SELECT Id, CASE WHEN BaseName = '' THEN 'user' ELSE BaseName END AS BaseName,
+            ROW_NUMBER() OVER (PARTITION BY CASE WHEN BaseName = '' THEN 'user' ELSE BaseName END ORDER BY Id) AS rn
+        FROM normalized
+    )
+    UPDATE u
+    SET u.Username = CASE WHEN n.rn = 1 THEN n.BaseName ELSE n.BaseName + CAST(n.rn AS nvarchar(10)) END
+    FROM Users u
+    JOIN numbered n ON n.Id = u.Id;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260925210034_AddUsernameToUser'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_Users_Username] ON [Users] ([Username]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20260925210034_AddUsernameToUser'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20260925210034_AddUsernameToUser', N'10.0.11');
+END;
+
+COMMIT;
+GO
+

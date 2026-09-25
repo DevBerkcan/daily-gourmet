@@ -86,7 +86,7 @@ export function ProduktionstagDetail({ id }: { id: string }) {
         <EmptyState
           title="Produktionsplan nicht gefunden"
           text="Dieser Produktionsplan existiert nicht (mehr)."
-          action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/production" />}
+          action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/production" showLabel />}
         />
       </Card>
     );
@@ -122,9 +122,9 @@ export function ProduktionstagDetail({ id }: { id: string }) {
         subtitle={pp.standortName}
         actions={
           <>
-            <Button icon={ACTION_ICONS.refresh} label="Bestellmengen aktualisieren" variant="secondary" onClick={() => refreshPlan.mutate(pp.id)} />
-            <Button icon={ACTION_ICONS.download} label="Export" variant="secondary" onClick={csvExport} />
-            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
+            <Button icon={ACTION_ICONS.refresh} label="Bestellmengen aktualisieren" variant="secondary" onClick={() => refreshPlan.mutate(pp.id)} showLabel />
+            <Button icon={ACTION_ICONS.download} label="Export" variant="secondary" onClick={csvExport} showLabel />
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} showLabel />
           </>
         }
       />

@@ -29,8 +29,8 @@ export function DashboardContent() {
         subtitle={t("adminDashboard.subtitle", { week })}
         actions={
           <>
-            <Button variant="secondary" href="/admin/production" icon={Factory} label={t("adminDashboard.productionToday")} />
-            <Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label={t("adminDashboard.newMealPlan")} />
+            <Button variant="secondary" href="/admin/production" icon={Factory} label={t("adminDashboard.productionToday")} showLabel />
+            <Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label={t("adminDashboard.newMealPlan")} showLabel />
           </>
         }
       />

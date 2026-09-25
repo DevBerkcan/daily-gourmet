@@ -60,8 +60,8 @@ export const translations = {
     "common.deadline": "Frist",
 
     "login.title": "Anmelden",
-    "login.subtitle": "Melden Sie sich mit Ihrer geschäftlichen E-Mail-Adresse an.",
-    "login.email": "E-Mail-Adresse",
+    "login.subtitle": "Melden Sie sich mit Ihrem Benutzernamen an.",
+    "login.email": "Benutzername",
     "login.password": "Passwort",
     "login.forgotPassword": "Passwort vergessen?",
     "login.submit": "Anmelden",
@@ -142,8 +142,8 @@ export const translations = {
     "common.deadline": "Deadline",
 
     "login.title": "Sign in",
-    "login.subtitle": "Sign in with your business email address.",
-    "login.email": "Email address",
+    "login.subtitle": "Sign in with your username.",
+    "login.email": "Username",
     "login.password": "Password",
     "login.forgotPassword": "Forgot your password?",
     "login.submit": "Sign in",

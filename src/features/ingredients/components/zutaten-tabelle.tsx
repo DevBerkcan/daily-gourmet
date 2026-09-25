@@ -81,7 +81,7 @@ export function ZutatenTabelle() {
           <option>Alle Quellen</option>
           {NAEHRWERTQUELLEN.map((q) => <option key={q} value={q}>{QUELLE_KURZ[q] ?? q}</option>)}
         </select>
-        <Button icon={ACTION_ICONS.download} label="CSV-Export" variant="secondary" onClick={csvExport} className="ml-auto" />
+        <Button icon={ACTION_ICONS.download} label="CSV-Export" showLabel variant="secondary" onClick={csvExport} className="ml-auto" />
       </div>
       {ladend ? <LoadingState text="Zutaten werden geladen …" /> : (
       <>

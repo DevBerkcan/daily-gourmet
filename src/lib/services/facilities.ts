@@ -49,6 +49,8 @@ export interface FacilityDto {
   notes: string | null;
   routeNumber: string | null;
   adminInvited: boolean;
+  adminUsername: string | null;
+  adminInviteLink: string | null;
 }
 
 export interface CreateEinrichtungInput {

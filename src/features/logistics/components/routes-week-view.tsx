@@ -50,13 +50,13 @@ export function RoutesWeekView({ onEditRoute }: { onEditRoute: (route: LieferRou
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
         <div className="flex flex-wrap items-center gap-2">
-          <Button icon={ChevronLeft} label="Vorherige Woche" variant="secondary" onClick={() => setMontag((m) => addDays(m, -7))} />
+          <Button icon={ChevronLeft} label="Vorherige Woche" showLabel variant="secondary" onClick={() => setMontag((m) => addDays(m, -7))} />
           <h2 className="font-display text-base font-semibold text-ink">KW {info.week}/{info.year}</h2>
           <span className="text-xs text-muted">{montag.toLocaleDateString("de-DE")} – {sonntag.toLocaleDateString("de-DE")}</span>
-          <Button icon={ChevronRight} label="Nächste Woche" variant="secondary" onClick={() => setMontag((m) => addDays(m, 7))} />
-          <Button icon={CalendarCheck} label="Heute" variant="secondary" onClick={() => setMontag(heuteMontag)} />
+          <Button icon={ChevronRight} label="Nächste Woche" showLabel variant="secondary" onClick={() => setMontag((m) => addDays(m, 7))} />
+          <Button icon={CalendarCheck} label="Heute" showLabel variant="secondary" onClick={() => setMontag(heuteMontag)} />
         </div>
-        <Button icon={ACTION_ICONS.template} label="Als Vorlage für nächste Woche" variant="secondary" loading={duplizieren.isPending} onClick={wocheDuplizieren} />
+        <Button icon={ACTION_ICONS.template} label="Als Vorlage für nächste Woche" showLabel variant="secondary" loading={duplizieren.isPending} onClick={wocheDuplizieren} />
       </div>
       <div className="grid divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-7">
         {tage.map((tag, i) => {

@@ -92,8 +92,8 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
       </Card>
 
       <div className="flex justify-end gap-2 no-print">
-        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onAbbrechen} />}
-        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Zutat anlegen"} type="submit" disabled={!kannSpeichern} />
+        {onAbbrechen && <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={onAbbrechen} />}
+        <Button icon={initial ? ACTION_ICONS.save : ACTION_ICONS.create} label={initial ? "Änderungen speichern" : "Zutat anlegen"} showLabel type="submit" disabled={!kannSpeichern} />
       </div>
     </form>
   );

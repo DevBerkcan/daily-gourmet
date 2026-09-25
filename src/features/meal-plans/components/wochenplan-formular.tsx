@@ -210,8 +210,8 @@ export function WochenplanFormular() {
         </Card>
 
         <div className="flex justify-end gap-2 no-print">
-          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/meal-plans" />
-          <Button icon={ACTION_ICONS.create} label="Wochenplan anlegen" type="submit" disabled={!kannAbsenden} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" href="/admin/meal-plans" showLabel />
+          <Button icon={ACTION_ICONS.create} label="Wochenplan anlegen" type="submit" disabled={!kannAbsenden} showLabel />
         </div>
       </form>
     </>

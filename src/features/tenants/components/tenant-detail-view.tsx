@@ -61,7 +61,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
       <Card className="p-8 text-center">
         <h1 className="font-display text-2xl font-semibold text-ink">Mandant nicht gefunden</h1>
         <p className="mt-2 text-sm text-muted">Dieser Mandant existiert nicht (mehr).</p>
-        <div className="mt-5 flex justify-center"><Button icon={ACTION_ICONS.back} label="Zur Mandantenübersicht" href="/super-admin/tenants" /></div>
+        <div className="mt-5 flex justify-center"><Button icon={ACTION_ICONS.back} label="Zur Mandantenübersicht" showLabel href="/super-admin/tenants" /></div>
       </Card>
     );
   }
@@ -101,11 +101,11 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
         subtitle={`Angelegt am ${new Date(tenant.erstelltAm).toLocaleDateString("de-DE")} · Tenant Owner: ${tenant.ansprechpartner} (${tenant.email})`}
         actions={
           <>
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={editierenStarten} />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={editierenStarten} />
             {tenant.status === "AKTIV" ? (
-              <Button icon={ACTION_ICONS.reject} label="Mandant sperren" variant="danger" onClick={() => setSperrenDialog(true)} />
+              <Button icon={ACTION_ICONS.reject} label="Mandant sperren" variant="danger" showLabel onClick={() => setSperrenDialog(true)} />
             ) : (
-              <Button icon={ACTION_ICONS.activate} label="Reaktivieren" onClick={() => setReaktivierenDialog(true)} />
+              <Button icon={ACTION_ICONS.activate} label="Reaktivieren" showLabel onClick={() => setReaktivierenDialog(true)} />
             )}
           </>
         }
@@ -123,7 +123,7 @@ export function TenantDetailView({ tenantId }: { tenantId: string }) {
           <label className="text-xs font-medium text-muted">Unternehmen<input required value={name} onChange={(event) => setName(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
           <label className="text-xs font-medium text-muted">Tenant Owner<input required value={ansprechpartner} onChange={(event) => setAnsprechpartner(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
           <label className="text-xs font-medium text-muted">E-Mail<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={`mt-1.5 ${fieldClass}`} /></label>
-          <div className="flex gap-2 md:col-span-3"><Button icon={ACTION_ICONS.save} label="Änderungen speichern" type="submit" /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} /></div>
+          <div className="flex gap-2 md:col-span-3"><Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel type="submit" /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setBearbeiten(false)} /></div>
         </form>
       </Modal>
 

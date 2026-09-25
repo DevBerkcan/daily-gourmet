@@ -73,7 +73,7 @@ export function PreislisteImportPanel() {
         <div className="w-64">
           <TextField label="Neuer Lieferant" value={neuerName} onChange={setNeuerName} placeholder="Name" />
         </div>
-        <Button icon={ACTION_ICONS.create} label="Hinzufügen" type="submit" variant="secondary" disabled={!neuerName.trim()} loading={createSupplier.isPending} />
+        <Button icon={ACTION_ICONS.create} label="Hinzufügen" showLabel type="submit" variant="secondary" disabled={!neuerName.trim()} loading={createSupplier.isPending} />
       </form>
     </Card>
   );

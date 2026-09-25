@@ -9,7 +9,7 @@ export default function MealPlansPage() {
       <PageHeader
         title="Speisepläne"
         subtitle="Wochenpläne je Kalenderwoche. Nach Veröffentlichung werden die Rezeptdaten als Snapshot eingefroren."
-        actions={<Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label="Wochenplan erstellen" />}
+        actions={<Button href="/admin/meal-plans/new" icon={ACTION_ICONS.create} label="Wochenplan erstellen" showLabel />}
       />
       <Card>
         <WochenplanTabelle />

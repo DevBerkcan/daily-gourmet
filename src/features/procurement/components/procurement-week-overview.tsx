@@ -57,8 +57,8 @@ export function ProcurementWeekOverview() {
                 {offen ? (
                   <div className="border-t border-line bg-paper/50 px-5 py-5">
                     <div className="mb-4 flex items-center gap-1.5">
-                      <Button icon={UtensilsCrossed} label="Rezepte" variant="ghost" size="sm" pressed={ansicht === "rezepte"} onClick={() => setAnsicht("rezepte")} />
-                      <Button icon={PackageSearch} label="Zutaten-Detail" variant="ghost" size="sm" pressed={ansicht === "zutaten"} onClick={() => setAnsicht("zutaten")} />
+                      <Button icon={UtensilsCrossed} label="Rezepte" variant="ghost" size="sm" pressed={ansicht === "rezepte"} onClick={() => setAnsicht("rezepte")} showLabel />
+                      <Button icon={PackageSearch} label="Zutaten-Detail" variant="ghost" size="sm" pressed={ansicht === "zutaten"} onClick={() => setAnsicht("zutaten")} showLabel />
                     </div>
                     {ansicht === "rezepte" ? (
                       rezepte.length === 0 ? (

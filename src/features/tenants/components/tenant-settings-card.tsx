@@ -43,9 +43,9 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
         hint="Bestellfristen, Freigaben und Standardwerte — nur durch Daily Gourmet editierbar"
         actions={
           bearbeiten ? (
-            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" showLabel onClick={() => setBearbeiten(false)} />
           ) : (
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={starten} disabled={!settings} />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!settings} />
           )
         }
       />
@@ -109,8 +109,8 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" onClick={speichern} loading={updateSettings.isPending} />
-            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel onClick={speichern} loading={updateSettings.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setBearbeiten(false)} />
           </div>
         </div>
       )}

@@ -39,8 +39,8 @@ function EinrichtungsdatenFormular({ e, onClose }: { e: NonNullable<ReturnType<t
       </div>
       {updateEinrichtung.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
       <div className="flex justify-end gap-2 no-print">
-        <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" />
-        <Button type="submit" loading={updateEinrichtung.isPending} icon={ACTION_ICONS.save} label="Speichern" />
+        <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
+        <Button type="submit" loading={updateEinrichtung.isPending} icon={ACTION_ICONS.save} label="Speichern" showLabel />
       </div>
     </form>
   );
@@ -69,7 +69,7 @@ export function ProfileContent() {
             title="Einrichtungsdaten"
             hint={bearbeiten ? "Kontaktdaten Ihrer Einrichtung" : "Kontaktdaten können Sie hier selbst pflegen"}
             actions={!bearbeiten && (
-              <Button size="sm" variant="ghost" onClick={() => setBearbeiten(true)} icon={ACTION_ICONS.edit} label="Bearbeiten" className="no-print" />
+              <Button size="sm" variant="ghost" onClick={() => setBearbeiten(true)} icon={ACTION_ICONS.edit} label="Bearbeiten" className="no-print" showLabel />
             )}
           />
           {bearbeiten ? (

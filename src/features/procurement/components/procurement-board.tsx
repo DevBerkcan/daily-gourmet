@@ -89,9 +89,9 @@ export function ProcurementBoard() {
           actions={<><StatusBadge status={aktuelle.status} />{aktuelle.lieferantName && <Tag>{aktuelle.lieferantName}</Tag>}</>}
         />
         <div className="flex flex-wrap justify-end gap-2 border-b border-line px-5 py-3 no-print">
-          <Button icon={ACTION_ICONS.download} label="CSV-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "csv", `einkauf-kw-${aktuelle.kalenderwoche}.csv`)} />
-          <Button icon={FileText} label="PDF-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "pdf", `einkauf-kw-${aktuelle.kalenderwoche}.pdf`)} />
-          <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
+          <Button icon={ACTION_ICONS.download} label="CSV-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "csv", `einkauf-kw-${aktuelle.kalenderwoche}.csv`)} showLabel />
+          <Button icon={FileText} label="PDF-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "pdf", `einkauf-kw-${aktuelle.kalenderwoche}.pdf`)} showLabel />
+          <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} showLabel />
         </div>
         <Table head={["Zutat", "Gesamtbedarf", "Bestellmenge", "Preis", "Lieferant"]}>
           {aktuelle.positionen.map((position) => {
@@ -131,6 +131,7 @@ export function ProcurementBoard() {
               icon={STATUS_AKTION_ICON[aktuelle.status]}
               label={STATUS_AKTION_LABEL[aktuelle.status]}
               onClick={() => updateStatus.mutate({ id: aktuelle.id, status: naechsterStatus })}
+              showLabel
             />
           ) : (
             <span className="inline-flex items-center gap-2 text-sm font-medium text-ok"><CheckCircle2 size={17} aria-hidden />Abgeschlossen</span>

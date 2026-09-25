@@ -76,8 +76,8 @@ export function MarkAsTemplateDialog({
           </div>
         </fieldset>
         <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
-          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onCancel} />
-          <Button icon={ACTION_ICONS.template} label="Vorlage anlegen" onClick={() => slot && onConfirm(slot)} disabled={!slot || submitting} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onCancel} showLabel />
+          <Button icon={ACTION_ICONS.template} label="Vorlage anlegen" onClick={() => slot && onConfirm(slot)} disabled={!slot || submitting} showLabel />
         </div>
       </div>
     </div>

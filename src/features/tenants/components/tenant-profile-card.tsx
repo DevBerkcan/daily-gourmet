@@ -43,9 +43,9 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
         hint="Stammdaten und Branding — nur durch Daily Gourmet editierbar"
         actions={
           bearbeiten ? (
-            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" showLabel onClick={() => setBearbeiten(false)} />
           ) : (
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={starten} disabled={!profile} />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!profile} />
           )
         }
       />
@@ -77,8 +77,8 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
           </div>
           <ImageField label="Logo" value={form.logoUrl} onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))} hint="PNG oder SVG, max. 1 MB" />
           <div className="flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" onClick={speichern} loading={updateProfile.isPending} />
-            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel onClick={speichern} loading={updateProfile.isPending} />
+            <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setBearbeiten(false)} />
           </div>
         </div>
       )}

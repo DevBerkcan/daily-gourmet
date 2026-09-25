@@ -9,7 +9,7 @@ export default function RecipesPage() {
       <PageHeader
         title="Rezepte"
         subtitle="Allergene werden automatisch aus den Zutaten ermittelt. Veröffentlichte Speisepläne behalten die damals gültige Rezeptversion (Snapshot)."
-        actions={<Button href="/admin/recipes/new" icon={ACTION_ICONS.create} label="Rezept erstellen" />}
+        actions={<Button href="/admin/recipes/new" icon={ACTION_ICONS.create} label="Rezept erstellen" showLabel />}
       />
       <Card>
         <RezepteTabelle />

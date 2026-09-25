@@ -42,7 +42,7 @@ export function RezeptDetail({ id }: { id: string }) {
         {ladend ? (
           <LoadingState text="Rezept wird geladen …" />
         ) : (
-          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/recipes" />} />
+          <EmptyState title="Rezept nicht gefunden" text="Dieses Rezept existiert nicht (mehr)." action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" showLabel href="/admin/recipes" />} />
         )}
       </Card>
     );
@@ -92,13 +92,14 @@ export function RezeptDetail({ id }: { id: string }) {
         subtitle={`${rezept.rezeptnummer ? rezept.rezeptnummer + " · " : ""}${rezept.kategorie} · Standard: ${rezept.standardPortionen} Portionen · ${rezept.zubereitungszeitMin} Min. · ${rezept.schwierigkeit} · Version ${rezept.version}`}
         actions={
           <>
-            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
-            <Button icon={Sigma} label="Nährwerte ansehen" variant="secondary" onClick={() => setNaehrwerteAnsehen(true)} />
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" showLabel onClick={() => window.print()} />
+            <Button icon={Sigma} label="Nährwerte ansehen" variant="secondary" showLabel onClick={() => setNaehrwerteAnsehen(true)} />
             <EtikettButton rezeptId={rezept.id} rezeptName={rezept.name} portionsgewichtG={rezept.portionsgewichtG} />
             <Button
               icon={ACTION_ICONS.copy}
               label="Duplizieren"
               variant="secondary"
+              showLabel
               onClick={() => {
                 duplicateRezept.mutate(rezept.id, {
                   onSuccess: (kopie) => { router.push(`/admin/recipes/${kopie.id}`); toast.success("Rezept wurde dupliziert."); },
@@ -106,7 +107,7 @@ export function RezeptDetail({ id }: { id: string }) {
                 });
               }}
             />
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" onClick={() => setBearbeiten(true)} />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel onClick={() => setBearbeiten(true)} />
           </>
         }
       />
@@ -168,8 +169,8 @@ export function RezeptDetail({ id }: { id: string }) {
                 actions={
                   rezept.portionsgewichtG ? (
                     <div className="flex items-center gap-1.5 no-print">
-                      <Button icon={Utensils} label="je Portion" variant="ghost" size="sm" pressed={naehrwertModus === "portion"} onClick={() => setNaehrwertModus("portion")} />
-                      <Button icon={Scale} label="je 100 g" variant="ghost" size="sm" pressed={naehrwertModus === "100g"} onClick={() => setNaehrwertModus("100g")} />
+                      <Button icon={Utensils} label="je Portion" variant="ghost" size="sm" showLabel pressed={naehrwertModus === "portion"} onClick={() => setNaehrwertModus("portion")} />
+                      <Button icon={Scale} label="je 100 g" variant="ghost" size="sm" showLabel pressed={naehrwertModus === "100g"} onClick={() => setNaehrwertModus("100g")} />
                     </div>
                   ) : undefined
                 }

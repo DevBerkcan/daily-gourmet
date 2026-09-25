@@ -64,6 +64,7 @@ function TagRezeptHinzufuegen({
         size="sm"
         onClick={() => setOffen(true)}
         className="mt-1 no-print"
+        showLabel
       />
     );
   }
@@ -111,7 +112,7 @@ function TagRezeptHinzufuegen({
           })
         )}
       </select>
-      <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" size="sm" onClick={() => setOffen(false)} />
+      <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" size="sm" onClick={() => setOffen(false)} showLabel />
     </div>
   );
 }
@@ -176,7 +177,7 @@ export function PlanDetail({ id }: { id: string }) {
           <EmptyState
             title="Speiseplan nicht gefunden"
             text="Dieser Wochenplan existiert nicht (mehr)."
-            action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/meal-plans" />}
+            action={<Button icon={ACTION_ICONS.back} label="Zurück zur Übersicht" href="/admin/meal-plans" showLabel />}
           />
         )}
       </Card>
@@ -196,12 +197,12 @@ export function PlanDetail({ id }: { id: string }) {
         subtitle={plan.einrichtungIds.length === 0 ? "Vorlage — keiner Einrichtung zugeordnet" : `Veröffentlicht für ${plan.einrichtungIds.length} Einrichtung${plan.einrichtungIds.length > 1 ? "en" : ""}`}
         actions={
           <>
-            <Button icon={ACTION_ICONS.view} label="Vorschau als Einrichtung" variant="secondary" href="/portal/meal-plans" />
-            <Button icon={ACTION_ICONS.template} label="Als Vorlage markieren" variant="secondary" onClick={() => setVorlagenDialogOffen(true)} />
-            {plan.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung senden" onClick={() => submitReview.mutate(plan.id)} />}
-            {plan.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" onClick={() => publish.mutate(plan.id)} />}
-            {plan.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="secondary" onClick={() => setAblehnenDialogOffen(true)} />}
-            {plan.status === "PUBLISHED" && <Button icon={Undo2} label="Veröffentlichung zurückziehen" variant="secondary" onClick={() => unpublish.mutate(plan.id)} />}
+            <Button icon={ACTION_ICONS.view} label="Vorschau als Einrichtung" variant="secondary" href="/portal/meal-plans" showLabel />
+            <Button icon={ACTION_ICONS.template} label="Als Vorlage markieren" variant="secondary" onClick={() => setVorlagenDialogOffen(true)} showLabel />
+            {plan.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung senden" onClick={() => submitReview.mutate(plan.id)} showLabel />}
+            {plan.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" onClick={() => publish.mutate(plan.id)} showLabel />}
+            {plan.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="secondary" onClick={() => setAblehnenDialogOffen(true)} showLabel />}
+            {plan.status === "PUBLISHED" && <Button icon={Undo2} label="Veröffentlichung zurückziehen" variant="secondary" onClick={() => unpublish.mutate(plan.id)} showLabel />}
           </>
         }
       />
@@ -221,6 +222,7 @@ export function PlanDetail({ id }: { id: string }) {
                     variant="danger"
                     size="sm"
                     onClick={() => removeFacility.mutate({ id: plan.id, einrichtungId: eid }, { onError: () => toast.error("Einrichtung konnte nicht entfernt werden.") })}
+                    showLabel
                   />
                 )}
               </span>
@@ -292,6 +294,7 @@ export function PlanDetail({ id }: { id: string }) {
                                 variant="danger"
                                 size="sm"
                                 className="no-print"
+                                showLabel
                                 onClick={() =>
                                   tag.id &&
                                   updateTag.mutate({

@@ -21,6 +21,7 @@ export function LanguageToggle() {
       size="sm"
       icon={Languages}
       label={`${t("shell.language")} (${locale === "de" ? "DE" : "EN"})`}
+      showLabel
       onClick={() => setLocale(locale === "de" ? "en" : "de")}
     />
   );

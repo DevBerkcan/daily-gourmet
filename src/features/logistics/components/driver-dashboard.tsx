@@ -25,7 +25,7 @@ function VerfuegbareRouten() {
               <p className="font-semibold text-ink">{r.name}</p>
               <p className="mt-0.5 text-sm text-muted">{r.stopps.length} Stopps · Abfahrt {r.start} Uhr</p>
             </div>
-            <Button icon={ACTION_ICONS.confirm} label="Route übernehmen" onClick={() => uebernehmen.mutate(r.id, { onError: () => toast.error("Route konnte nicht übernommen werden. Bitte erneut versuchen.") })} loading={uebernehmen.isPending} />
+            <Button icon={ACTION_ICONS.confirm} label="Route übernehmen" showLabel onClick={() => uebernehmen.mutate(r.id, { onError: () => toast.error("Route konnte nicht übernommen werden. Bitte erneut versuchen.") })} loading={uebernehmen.isPending} />
           </div>
         ))}
       </div>
@@ -111,9 +111,9 @@ export function DriverDashboard() {
           {!handoffVollstaendig && route.status === "GEPLANT" ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Abnahme von der Küche fehlt</strong><span className="text-muted">Bitte alle drei Komponenten bestätigen, bevor die Tour startet.</span></p></div> : null}
           {!allesGeladen ? <div className="flex gap-3 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-sm"><AlertTriangle size={19} className="shrink-0 text-warn" aria-hidden /><p><strong className="block text-ink">Ladung noch unvollständig</strong><span className="text-muted">Tourstart wird freigegeben, sobald alle Positionen kontrolliert wurden.</span></p></div> : null}
           <div className="flex flex-wrap items-center gap-2">
-            {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button icon={ACTION_ICONS.start} label="Tour starten" disabled={!allesGeladen || !handoffVollstaendig} loading={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" }, { onError: () => toast.error("Tour konnte nicht gestartet werden. Bitte erneut versuchen.") })} /> : null}
-            <Button icon={ACTION_ICONS.open} label="Routenansicht öffnen" href={`/driver/routes/${route.id}`} variant="secondary" />
-            <Button icon={ACTION_ICONS.call} label="Disposition anrufen" href={`tel:${person?.telefon.replace(/\s/g, "")}`} external variant="secondary" />
+            {route.status !== "UNTERWEGS" && route.status !== "ABGESCHLOSSEN" ? <Button icon={ACTION_ICONS.start} label="Tour starten" showLabel disabled={!allesGeladen || !handoffVollstaendig} loading={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "UNTERWEGS" }, { onError: () => toast.error("Tour konnte nicht gestartet werden. Bitte erneut versuchen.") })} /> : null}
+            <Button icon={ACTION_ICONS.open} label="Routenansicht öffnen" showLabel href={`/driver/routes/${route.id}`} variant="secondary" />
+            <Button icon={ACTION_ICONS.call} label="Disposition anrufen" showLabel href={`tel:${person?.telefon.replace(/\s/g, "")}`} external variant="secondary" />
           </div>
         </div>
       </div>

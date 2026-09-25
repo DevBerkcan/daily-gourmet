@@ -33,6 +33,7 @@ interface TenantDto {
   createdAt: string;
   userCount: number;
   facilityCount: number;
+  ownerInviteLink?: string | null;
 }
 
 function toTenant(dto: TenantDto): Tenant {
@@ -242,6 +243,7 @@ export interface GlobalUser {
   facilityId: string | null;
   facilityName: string | null;
   name: string;
+  username: string;
   email: string;
   rolle: string;
   status: string;
@@ -256,11 +258,13 @@ interface UserDto {
   facilityId: string | null;
   facilityName: string | null;
   name: string;
+  username: string;
   email: string;
   role: string;
   status: string;
   lastLoginAt: string | null;
   failedLoginCount: number;
+  inviteLink?: string | null;
 }
 
 const toGlobalUser = (dto: UserDto): GlobalUser => ({
@@ -270,6 +274,7 @@ const toGlobalUser = (dto: UserDto): GlobalUser => ({
   facilityId: dto.facilityId,
   facilityName: dto.facilityName,
   name: dto.name,
+  username: dto.username,
   email: dto.email,
   rolle: dto.role,
   status: dto.status,
@@ -288,8 +293,8 @@ export function useGlobalUsers(filters?: { tenantId?: string; role?: string; sta
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; email: string; role: string; tenantId?: string }) =>
-      api.post<UserDto>("/super-admin/users", { name: input.name, email: input.email, role: input.role, tenantId: input.tenantId || undefined }),
+    mutationFn: (input: { name: string; username: string; email: string; role: string; tenantId?: string }) =>
+      api.post<UserDto>("/super-admin/users", { name: input.name, username: input.username, email: input.email, role: input.role, tenantId: input.tenantId || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["super-admin-users"] });
       queryClient.invalidateQueries({ queryKey: ["super-admin-tenants"] });
@@ -331,10 +336,11 @@ export function useDeleteGlobalUser() {
   });
 }
 
-/** Admin-triggered "Passwort zurücksetzen" — sendet erneut eine "Passwort festlegen"-Mail, auch für
- * bereits aktive Benutzer (siehe SuperAdminHandler.TriggerPasswordResetAsync). */
+/** Admin-triggered "Passwort zurücksetzen" — generiert einen neuen "Passwort festlegen"-Link (der
+ * Admin kopiert ihn und schickt ihn manuell), versucht zusätzlich best-effort eine E-Mail zu senden
+ * (siehe SuperAdminHandler.TriggerPasswordResetAsync). */
 export function useResetGlobalUserPassword() {
-  return useMutation({ mutationFn: (id: string) => api.post(`/super-admin/users/${id}/password-reset`) });
+  return useMutation({ mutationFn: (id: string) => api.post<{ link: string }>(`/super-admin/users/${id}/password-reset`) });
 }
 
 export function useTenantUsers(tenantId: string): GlobalUser[] {

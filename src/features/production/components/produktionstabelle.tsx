@@ -46,7 +46,7 @@ export function Produktionstabelle() {
             {standorte.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
           <div className="ml-auto">
-            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} />
+            <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} showLabel />
           </div>
         </div>
       </Card>

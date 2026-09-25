@@ -66,7 +66,7 @@ export function OrdersBoard() {
             <option value="ALLE">Alle Kalenderwochen</option>
             {verfuegbareWochen.map((w) => <option key={w} value={w}>KW {w}</option>)}
           </select>
-          <Button icon={ACTION_ICONS.download} label="CSV exportieren" variant="secondary" onClick={csvExportieren} />
+          <Button icon={ACTION_ICONS.download} label="CSV exportieren" variant="secondary" onClick={csvExportieren} showLabel />
         </div>
         <Table head={["Bestellung & Einrichtung", "Woche", "Portionen", "Status", "Abgesendet", "Frist", "Aktion"]}>
           {pageItems.map((bestellung) => {
@@ -82,7 +82,7 @@ export function OrdersBoard() {
         />
       </Card>
 
-      {korrekturId ?<Card className="mt-6 border-warn/40"><CardHeader title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert." actions={<AlertTriangle size={19} className="text-warn" aria-hidden />} /><div className="p-5"><label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label><div className="mt-4 flex gap-2"><Button icon={ACTION_ICONS.approve} label="Korrektur freigeben" disabled={!begruendung.trim()} onClick={() => { overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }} /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }} /></div></div></Card> : null}
+      {korrekturId ?<Card className="mt-6 border-warn/40"><CardHeader title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert." actions={<AlertTriangle size={19} className="text-warn" aria-hidden />} /><div className="p-5"><label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label><div className="mt-4 flex gap-2"><Button icon={ACTION_ICONS.approve} label="Korrektur freigeben" disabled={!begruendung.trim()} onClick={() => { overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }} showLabel /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }} showLabel /></div></div></Card> : null}
 
       {detailBestellung ? (
         <BestellungDetailModal

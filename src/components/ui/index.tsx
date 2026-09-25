@@ -239,9 +239,9 @@ export function Pagination({
           </select>
         </label>
         <div className="flex items-center gap-1.5">
-          <Button icon={ChevronLeft} label={t("pagination.prev")} variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1} />
+          <Button icon={ChevronLeft} label={t("pagination.prev")} variant="secondary" size="sm" showLabel onClick={() => onPageChange(page - 1)} disabled={page <= 1} />
           <span className="min-w-[5.5rem] text-center text-xs text-muted">{t("pagination.page", { page, totalPages })}</span>
-          <Button icon={ChevronRight} label={t("pagination.next")} variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} />
+          <Button icon={ChevronRight} label={t("pagination.next")} variant="secondary" size="sm" showLabel onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} />
         </div>
       </div>
     </div>

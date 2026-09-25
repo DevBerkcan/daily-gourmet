@@ -80,7 +80,7 @@ export function NaehrwerteModal({ rezept, onClose }: { rezept: Rezept; onClose: 
             <h2 id="naehrwerte-modal-title" className="font-display text-lg font-semibold text-ink">Nährwerte ansehen</h2>
             <p className="mt-0.5 text-sm text-muted">Rezept: {rezept.name}</p>
           </div>
-          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" onClick={onClose} />
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" showLabel onClick={onClose} />
         </header>
 
         <div className="overflow-y-auto px-6 py-5">

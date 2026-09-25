@@ -129,7 +129,7 @@ export function ImageField({ label, value, onChange, hint }: { label: string; va
             className="text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink hover:file:bg-paper"
           />
           {value && (
-            <Button icon={ACTION_ICONS.delete} label="Foto entfernen" variant="danger" size="sm" onClick={() => onChange(undefined)} />
+            <Button icon={ACTION_ICONS.delete} label="Foto entfernen" variant="danger" size="sm" showLabel onClick={() => onChange(undefined)} />
           )}
         </div>
       </div>

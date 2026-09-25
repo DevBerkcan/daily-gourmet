@@ -56,14 +56,14 @@ export function TenantSupportWidget() {
               <p id="support-title" className="font-display text-lg font-semibold">Support kontaktieren</p>
               <p className="text-xs text-white/70">Direkt an den Super Admin</p>
             </div>
-            <Button icon={ACTION_ICONS.cancel} label="Supportfenster schließen" variant="ghost" className="!text-white hover:!bg-white/10" onClick={() => { setOffen(false); setGesendet(null); }} />
+            <Button icon={ACTION_ICONS.cancel} label="Supportfenster schließen" variant="ghost" showLabel className="!text-white hover:!bg-white/10" onClick={() => { setOffen(false); setGesendet(null); }} />
           </header>
           {gesendet ? (
             <div className="p-5 text-center">
               <CheckCircle2 size={35} className="mx-auto text-ok" aria-hidden />
               <p className="mt-3 font-semibold text-ink">Anfrage wurde gesendet</p>
               <p className="mt-1 text-sm text-muted">Ticket {gesendet} ist jetzt beim Super Admin sichtbar.{anhangHochgeladen && " Ihr Anhang wurde mitgesendet."}</p>
-              <div className="mt-4"><Button icon={ACTION_ICONS.cancel} label="Schließen" onClick={() => { setGesendet(null); setAnhangHochgeladen(false); setOffen(false); }} /></div>
+              <div className="mt-4"><Button icon={ACTION_ICONS.cancel} label="Schließen" showLabel onClick={() => { setGesendet(null); setAnhangHochgeladen(false); setOffen(false); }} /></div>
             </div>
           ) : (
             <>
@@ -94,7 +94,7 @@ export function TenantSupportWidget() {
                 </label>
                 {anhaengeAktiv && (
                   <div className="flex items-center gap-2 self-start">
-                    <Button icon={Paperclip} label={datei ? datei.name : "Screenshot anhängen"} variant="secondary" onClick={() => dateiRef.current?.click()} />
+                    <Button icon={Paperclip} label={datei ? datei.name : "Screenshot anhängen"} variant="secondary" showLabel onClick={() => dateiRef.current?.click()} />
                     {datei && <span className="truncate text-xs text-muted">{datei.name}</span>}
                     <input
                       ref={dateiRef}
@@ -129,7 +129,7 @@ export function TenantSupportWidget() {
         </section>
       ) : null}
       <div className="flex justify-end"><Button icon={offen ? ACTION_ICONS.cancel : LifeBuoy}
-          expanded={offen} label={offen ? "Support schließen" : "Hilfe & Support öffnen"} size="lg" className="!rounded-full shadow-lg" onClick={() => setOffen((wert) => !wert)} /></div>
+          expanded={offen} label={offen ? "Support schließen" : "Hilfe & Support öffnen"} size="lg" showLabel className="!rounded-full shadow-lg" onClick={() => setOffen((wert) => !wert)} /></div>
     </div>
   );
 }

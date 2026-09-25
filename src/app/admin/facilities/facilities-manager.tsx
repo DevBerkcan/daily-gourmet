@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { PageHeader, Card, Table, Td, StatusBadge, Button, ACTION_ICONS, SearchInput, Pagination } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { PromptDialog, Modal } from "@/components/ui/confirm-dialog";
+import { PromptDialog, Modal, InviteLinkDialog } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api/client";
 import { TextField, NumberField, CheckboxGroup, TimeField, TextareaField } from "@/components/ui/form-fields";
 import { useStandorte } from "@/lib/services/locations";
@@ -46,7 +46,7 @@ export function FacilitiesManager() {
       <PageHeader
         title="Einrichtungen"
         subtitle="Schulen, Kitas und weitere Abnehmer, die über das Kundenportal bestellen."
-        actions={<Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Einrichtung anlegen" />}
+        actions={<Button onClick={() => setFormularOffen(true)} icon={ACTION_ICONS.create} label="Einrichtung anlegen" showLabel />}
       />
 
       {formularOffen && <EinrichtungFormular standorte={standorte} onClose={() => setFormularOffen(false)} />}
@@ -156,6 +156,7 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
   const [lieferfensterEnde, setLieferfensterEnde] = useState(initial?.lieferfensterEnde ?? "");
   const [lieferdauerMinuten, setLieferdauerMinuten] = useState<number | "">(initial?.lieferdauerMinuten ?? "");
   const [lieferBesonderheiten, setLieferBesonderheiten] = useState(initial?.lieferBesonderheiten ?? "");
+  const [inviteResult, setInviteResult] = useState<{ username: string; link: string } | null>(null);
 
   const mutation = initial ? updateEinrichtung : createEinrichtung;
   const kannSpeichern =
@@ -196,17 +197,29 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
     } else {
       createEinrichtung.mutate(werte, {
         onSuccess: (data) => {
-          onClose();
-          toast.success(
-            data.adminInvited
-              ? `Einrichtung wurde angelegt. Zugangsdaten wurden an ${data.email} gesendet.`
-              : "Einrichtung wurde angelegt."
-          );
+          if (data.adminInvited && data.adminInviteLink) {
+            setInviteResult({ username: data.adminUsername ?? "", link: data.adminInviteLink });
+          } else {
+            onClose();
+            toast.success("Einrichtung wurde angelegt.");
+          }
         },
         onError: (error) =>
           toast.error(error instanceof ApiError && error.status === 409 ? error.message : "Speichern fehlgeschlagen. Bitte erneut versuchen."),
       });
     }
+  }
+
+  if (inviteResult) {
+    return (
+      <InviteLinkDialog
+        open
+        title="Einrichtung wurde angelegt"
+        username={inviteResult.username}
+        link={inviteResult.link}
+        onClose={() => { setInviteResult(null); onClose(); }}
+      />
+    );
   }
 
   return (
@@ -257,8 +270,8 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
         />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex justify-end gap-2 no-print">
-          <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" />
-          <Button type="submit" disabled={!kannSpeichern} loading={mutation.isPending} icon={ACTION_ICONS.save} label="Einrichtung speichern" />
+          <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
+          <Button type="submit" disabled={!kannSpeichern} loading={mutation.isPending} icon={ACTION_ICONS.save} label="Einrichtung speichern" showLabel />
         </div>
       </form>
     </Modal>

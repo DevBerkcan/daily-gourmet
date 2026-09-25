@@ -18,7 +18,7 @@ export function DashboardContent() {
       <PageHeader
         title={`Willkommen, ${user?.facilityName ?? user?.name ?? ""}`}
         subtitle="Ihr Überblick über Speisepläne und Bestellungen bei Daily Gourmet."
-        actions={<Button href="/portal/meal-plans" icon={ACTION_ICONS.open} label="Speiseplan öffnen" />}
+        actions={<Button href="/portal/meal-plans" icon={ACTION_ICONS.open} label="Speiseplan öffnen" showLabel />}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

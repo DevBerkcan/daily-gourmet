@@ -64,7 +64,7 @@ function RouteFormular({
         <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Datum<input type="date" value={datum} onChange={(event) => setDatum(event.target.value)} required className={fieldClass} /></label>
         <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Abfahrt<input type="time" value={start} onChange={(event) => setStart(event.target.value)} required className={fieldClass} /></label>
         <fieldset className="md:col-span-2"><legend className="mb-2 text-xs font-medium text-muted">Kunden auswählen · Reihenfolge entspricht der Auswahl</legend><p className="mb-3 rounded-lg bg-info-soft px-3 py-2 text-xs text-info">Die bestellten Speisen und Portionen des gewählten Tages werden automatisch als Ladepositionen übernommen.</p><div className="grid gap-2 sm:grid-cols-2">{einrichtungen.filter((einrichtung) => einrichtung.status === "AKTIV").map((einrichtung) => <label key={einrichtung.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm ${einrichtungIds.includes(einrichtung.id) ? "border-basil bg-basil-soft" : "border-line bg-surface"}`}><input type="checkbox" checked={einrichtungIds.includes(einrichtung.id)} onChange={() => toggleEinrichtung(einrichtung.id)} className="mt-0.5 size-4 accent-basil" /><span><strong className="block text-ink">{einrichtung.name}</strong><span className="text-xs text-muted">{einrichtung.anschrift}</span></span></label>)}</div></fieldset>
-        <div className="flex gap-2 md:col-span-2"><Button icon={ACTION_ICONS.save} label="Route speichern" type="submit" disabled={!name.trim() || einrichtungIds.length === 0} loading={mutation.isPending} /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={onClose} /></div>
+        <div className="flex gap-2 md:col-span-2"><Button icon={ACTION_ICONS.save} label="Route speichern" showLabel type="submit" disabled={!name.trim() || einrichtungIds.length === 0} loading={mutation.isPending} /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={onClose} /></div>
       </form>
     </Modal>
   );
@@ -108,8 +108,8 @@ function SonderauftragDialog({
           </select>
         </label>
         <div className="flex justify-end gap-2">
-          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" type="button" variant="secondary" onClick={onClose} />
-          <Button icon={ACTION_ICONS.create} label="Hinzufügen" type="submit" disabled={!einrichtungId} loading={wirdGespeichert} />
+          <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel type="button" variant="secondary" onClick={onClose} />
+          <Button icon={ACTION_ICONS.create} label="Hinzufügen" showLabel type="submit" disabled={!einrichtungId} loading={wirdGespeichert} />
         </div>
       </form>
     </Modal>
@@ -158,24 +158,24 @@ export function RouteManager() {
 
       <div className="my-6 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1">
-          <Button icon={List} label="Liste" variant="ghost" size="sm" pressed={ansicht === "liste"} onClick={() => setAnsicht("liste")} />
-          <Button icon={CalendarDays} label="Woche" variant="ghost" size="sm" pressed={ansicht === "woche"} onClick={() => setAnsicht("woche")} />
+          <Button icon={List} label="Liste" showLabel variant="ghost" size="sm" pressed={ansicht === "liste"} onClick={() => setAnsicht("liste")} />
+          <Button icon={CalendarDays} label="Woche" showLabel variant="ghost" size="sm" pressed={ansicht === "woche"} onClick={() => setAnsicht("woche")} />
         </div>
-        <Button icon={ACTION_ICONS.create} label="Neue Route definieren" onClick={() => setFormularOffen(true)} />
+        <Button icon={ACTION_ICONS.create} label="Neue Route definieren" showLabel onClick={() => setFormularOffen(true)} />
       </div>
 
       {uebersprungeneEinrichtungen.length > 0 ? (
         <p className="mb-6 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
           Route gespeichert. Nicht aufgenommen, da an diesem Datum geschlossen: {uebersprungeneEinrichtungen.join(", ")}.
-          <Button icon={ACTION_ICONS.hide} label="Ausblenden" variant="ghost" size="sm" onClick={() => setUebersprungeneEinrichtungen([])} className="ml-auto" />
+          <Button icon={ACTION_ICONS.hide} label="Ausblenden" showLabel variant="ghost" size="sm" onClick={() => setUebersprungeneEinrichtungen([])} className="ml-auto" />
         </p>
       ) : null}
       {zeitfensterWarnungen.length > 0 ? (
         <p className="mb-6 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />
           Geplante Ankunft außerhalb des Lieferfensters: {zeitfensterWarnungen.join("; ")}.
-          <Button icon={ACTION_ICONS.hide} label="Ausblenden" variant="ghost" size="sm" onClick={() => setZeitfensterWarnungen([])} className="ml-auto" />
+          <Button icon={ACTION_ICONS.hide} label="Ausblenden" showLabel variant="ghost" size="sm" onClick={() => setZeitfensterWarnungen([])} className="ml-auto" />
         </p>
       ) : null}
 
@@ -198,7 +198,7 @@ export function RouteManager() {
                 {route.status !== "GEPLANT" && <span className="text-xs font-medium text-muted">{zugestellt}/{route.stopps.length} zugestellt</span>}
                 {probleme > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger"><AlertTriangle size={12} aria-hidden />{probleme} {probleme === 1 ? "Problem" : "Probleme"}</span>}
               </div><h2 className="mt-2 font-display text-xl font-semibold text-ink">{route.name}</h2><div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted"><span className="inline-flex items-center gap-1.5"><UserRound size={15} aria-hidden />{route.fahrerName ?? "Nicht vergeben"}</span><span className="inline-flex items-center gap-1.5"><Truck size={15} aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</span><span className="inline-flex items-center gap-1.5"><Clock3 size={15} aria-hidden />{route.start}{route.rueckkehr ? `–${route.rueckkehr}` : ""} Uhr</span></div></div>
-              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div><div className="flex items-center gap-2">{route.status === "GEPLANT" ? <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" onClick={() => setBearbeiteRoute(route)} /> : null}{route.status !== "ABGESCHLOSSEN" ? <Button icon={UserPlus} label="Sonderauftrag" variant="secondary" onClick={() => setSonderauftragRoute(route)} /> : null}<Button icon={ACTION_ICONS.delete} label="Löschen" variant="danger" onClick={() => setLoescheRoute(route)} /><Button icon={istOffen ? ACTION_ICONS.hide : ACTION_ICONS.view} label={istOffen ? "Schließen" : "Tour anzeigen"} variant="secondary" pressed={istOffen} onClick={() => setDetails(istOffen ? null : route.id)} /></div></div>
+              <div className="flex items-center gap-5"><div className="text-right"><p className="font-display text-2xl font-semibold text-basil">{portionenJeRoute(route)}</p><p className="text-xs text-muted">Portionen · {route.stopps.length} Stopps</p></div><div className="flex items-center gap-2">{route.status === "GEPLANT" ? <Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel variant="secondary" onClick={() => setBearbeiteRoute(route)} /> : null}{route.status !== "ABGESCHLOSSEN" ? <Button icon={UserPlus} label="Sonderauftrag" showLabel variant="secondary" onClick={() => setSonderauftragRoute(route)} /> : null}<Button icon={ACTION_ICONS.delete} label="Löschen" showLabel variant="danger" onClick={() => setLoescheRoute(route)} /><Button icon={istOffen ? ACTION_ICONS.hide : ACTION_ICONS.view} label={istOffen ? "Schließen" : "Tour anzeigen"} showLabel variant="secondary" pressed={istOffen} onClick={() => setDetails(istOffen ? null : route.id)} /></div></div>
             </div>
             {istOffen ? <div className="border-t border-line bg-paper/50 px-5 py-5"><div className="relative ml-3 border-l-2 border-basil-soft pl-6">{route.stopps.map((stopp) => {
               const einrichtung = einrichtungen.find((e) => e.id === stopp.einrichtungId);

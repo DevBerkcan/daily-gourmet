@@ -60,6 +60,7 @@ function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezep
             label="Anpassung absenden"
             disabled={!hinweis.trim()}
             loading={anpassen.isPending}
+            showLabel
             onClick={() =>
               anpassen.mutate(
                 {
@@ -201,8 +202,8 @@ function WochenTage({
     <>
       {!readOnly && (
         <div className="mb-4 flex justify-end gap-2 no-print">
-          <Button variant="secondary" onClick={() => speichern(false)} icon={ACTION_ICONS.save} label="Als Entwurf speichern" />
-          <Button disabled={gesamt === 0} onClick={absendenAnklicken} icon={ACTION_ICONS.send} label="Absenden" />
+          <Button variant="secondary" onClick={() => speichern(false)} icon={ACTION_ICONS.save} label="Als Entwurf speichern" showLabel />
+          <Button disabled={gesamt === 0} onClick={absendenAnklicken} icon={ACTION_ICONS.send} label="Absenden" showLabel />
         </div>
       )}
 

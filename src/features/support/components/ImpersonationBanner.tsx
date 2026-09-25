@@ -54,7 +54,7 @@ export function ImpersonationBanner() {
           </p>
         </div>
       </div>
-      <Button icon={ShieldOff} label="Beenden" variant="secondary" onClick={beenden} loading={endeSitzung.isPending} />
+      <Button icon={ShieldOff} label="Beenden" variant="secondary" showLabel onClick={beenden} loading={endeSitzung.isPending} />
     </div>
   );
 }
