@@ -4,13 +4,13 @@ import { type FormEvent, useState } from "react";
 import { Truck } from "lucide-react";
 import { Button, Card, CardHeader, ACTION_ICONS } from "@/components/ui";
 import { useActivateUser, useDeactivateUser, useUsers } from "@/lib/services/users";
-import { useCreateFahrer, useFahrer, useUpdateFahrer } from "@/lib/services/logistics";
+import { fahrerProfilVollstaendig, useCreateFahrer, useFahrer, useUpdateFahrer } from "@/lib/services/logistics";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
 
-/** Benutzer mit Rolle DRIVER haben kein automatisches Fahrerprofil (Telefon/Fahrzeug/Kennzeichen) —
- * ohne dieses Profil schlägt die Anmeldung des Fahrers mit "Kein Fahrerprofil" fehl. Diese Karte
- * schließt genau diese Lücke zwischen Benutzeranlage (Super Admin) und Routenplanung. */
+/** Jeder Benutzer mit Rolle DRIVER bekommt beim Anlegen automatisch ein leeres Fahrerprofil (siehe
+ * DriverProfileHelper im Backend). Hier werden nur noch Telefon, Fahrzeug und Kennzeichen ergänzt;
+ * "Profil anlegen" bleibt als Fallback für den Fall, dass doch einmal keines existiert. */
 export function DriverManager() {
   const nutzer = useUsers();
   const fahrer = useFahrer();
@@ -49,7 +49,7 @@ export function DriverManager() {
     <Card className="mb-6">
       <CardHeader
         title="Fahrerprofile"
-        hint="Telefon, Fahrzeug und Kennzeichen für Benutzer mit der Rolle Fahrer hinterlegen — ohne Profil kann sich der Fahrer nicht anmelden."
+        hint="Profile werden automatisch angelegt — hier Telefon, Fahrzeug und Kennzeichen ergänzen."
         actions={<Truck size={19} className="text-basil" aria-hidden />}
       />
       <div className="flex flex-col gap-3 p-5">
@@ -66,12 +66,13 @@ export function DriverManager() {
                   </p>
                   <p className="break-words text-xs text-muted">
                     {person.email}
-                    {profil ? ` · ${profil.telefon} · ${profil.fahrzeug} · ${profil.kennzeichen}` : " · Kein Profil hinterlegt"}
+                    {fahrerProfilVollstaendig(profil) ? ` · ${profil!.telefon} · ${profil!.fahrzeug} · ${profil!.kennzeichen}` : null}
                   </p>
+                  {!fahrerProfilVollstaendig(profil) ? <p className="mt-1 text-xs font-medium text-warn">Telefon, Fahrzeug oder Kennzeichen fehlen noch</p> : null}
                 </div>
                 {!bearbeitetGerade ? (
                   <div className="flex flex-wrap gap-2">
-                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={profil ? "Bearbeiten" : "Profil anlegen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
+                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={!profil ? "Profil anlegen" : fahrerProfilVollstaendig(profil) ? "Bearbeiten" : "Daten ergänzen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
                     {person.status === "DEAKTIVIERT" ? (
                       <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" showLabel variant="secondary" onClick={() => activateUser.mutate(person.id)} />
                     ) : (

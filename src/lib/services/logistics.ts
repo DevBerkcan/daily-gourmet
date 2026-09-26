@@ -175,6 +175,13 @@ function toLieferRoute(dto: DeliveryRouteDto): LieferRoute {
 export const portionenJeRoute = (route: LieferRoute) => route.stopps.reduce((summe, stopp) => summe + stopp.positionen.reduce((teil, position) => teil + position.portionen, 0), 0);
 export const behaelterPositionenJeRoute = (route: LieferRoute) => route.stopps.reduce((summe, stopp) => summe + stopp.positionen.length, 0);
 
+/** Fahrerprofile werden beim Anlegen eines DRIVER-Benutzers automatisch leer angelegt (siehe
+ * DriverProfileHelper im Backend) — bis Telefon/Fahrzeug/Kennzeichen ergänzt sind, zeigt die UI
+ * einen Hinweis statt leerer " · "-Trenner. */
+export const fahrerProfilVollstaendig = (f?: Pick<Fahrer, "telefon" | "fahrzeug" | "kennzeichen"> | null) => !!(f?.telefon && f.fahrzeug && f.kennzeichen);
+export const fahrzeugLabel = (f?: Pick<Fahrer, "fahrzeug" | "kennzeichen"> | null) =>
+  [f?.fahrzeug, f?.kennzeichen].filter(Boolean).join(" · ") || "Fahrzeug nicht hinterlegt";
+
 export function useFahrer(): Fahrer[] {
   const query = useQuery({
     queryKey: ["drivers"],

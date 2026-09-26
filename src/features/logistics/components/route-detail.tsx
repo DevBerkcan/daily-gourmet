@@ -10,6 +10,7 @@ import { ConfirmDialog, PromptDialog } from "@/components/ui/confirm-dialog";
 import {
   useLieferRoute, useLieferRouten, useFahrer, useUpdateStoppStatus, useAdvanceRouteStatus,
   useRouteAbgeben, useStoppUebertragen, portionenJeRoute,
+  fahrzeugLabel,
 } from "@/lib/services/logistics";
 
 const SUBTITLE = "Stopps der Reihe nach anfahren und jede Zustellung bestätigen.";
@@ -43,7 +44,7 @@ export function DriverRouteDetail({ id }: { id: string }) {
   const [routeAbgebenBestaetigen, setRouteAbgebenBestaetigen] = useState(false);
   const [transferStoppId, setTransferStoppId] = useState<string | null>(null);
   const [zielRouteId, setZielRouteId] = useState("");
-  const ladend = useIsFetching({ queryKey: ["route", id] }) > 0;
+  const ladend = useIsFetching({ queryKey: ["route", id] }) > 0 && !route;
 
   if (!route) {
     return (
@@ -78,7 +79,7 @@ export function DriverRouteDetail({ id }: { id: string }) {
         <StatCard label="Geplante Rückkehr" value={route.rueckkehr ? `${route.rueckkehr} Uhr` : "—"} hint={route.kilometer != null ? `${route.kilometer} km Gesamtroute` : undefined} />
       </div>
 
-      <Card className="my-6"><div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"><div className="min-w-0"><p className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink"><Truck size={17} className="shrink-0 text-basil" aria-hidden />{person?.fahrzeug} · {person?.kennzeichen}</p><p className="mt-1 text-xs text-muted">Abfahrt {route.start} Uhr · Fahrer {person?.name}</p></div><div className="flex flex-wrap gap-2"><Button icon={ACTION_ICONS.call} label="Disposition anrufen" showLabel href={`tel:${person?.telefon.replace(/\s/g, "")}`} external variant="secondary" />{route.status === "GEPLANT" ? <Button icon={Undo2} label="Route abgeben" showLabel variant="secondary" disabled={routeAbgeben.isPending} onClick={() => setRouteAbgebenBestaetigen(true)} /> : null}{alleZugestellt && route.status !== "ABGESCHLOSSEN" ? <Button icon={CheckCircle2} label="Tour abschließen" showLabel loading={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "ABGESCHLOSSEN" }, { onError: () => toast.error("Tour konnte nicht abgeschlossen werden. Bitte erneut versuchen.") })} /> : null}</div></div></Card>
+      <Card className="my-6"><div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4"><div className="min-w-0"><p className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink"><Truck size={17} className="shrink-0 text-basil" aria-hidden />{fahrzeugLabel(person)}</p><p className="mt-1 text-xs text-muted">Abfahrt {route.start} Uhr · Fahrer {person?.name}</p></div><div className="flex flex-wrap gap-2"><Button icon={ACTION_ICONS.call} label="Disposition anrufen" showLabel href={`tel:${person?.telefon.replace(/\s/g, "")}`} external variant="secondary" />{route.status === "GEPLANT" ? <Button icon={Undo2} label="Route abgeben" showLabel variant="secondary" disabled={routeAbgeben.isPending} onClick={() => setRouteAbgebenBestaetigen(true)} /> : null}{alleZugestellt && route.status !== "ABGESCHLOSSEN" ? <Button icon={CheckCircle2} label="Tour abschließen" showLabel loading={advanceRouteStatus.isPending} onClick={() => advanceRouteStatus.mutate({ route, ziel: "ABGESCHLOSSEN" }, { onError: () => toast.error("Tour konnte nicht abgeschlossen werden. Bitte erneut versuchen.") })} /> : null}</div></div></Card>
 
       <div className="flex flex-col gap-5">
         {route.stopps.map((stopp) => {

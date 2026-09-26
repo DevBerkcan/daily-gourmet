@@ -86,7 +86,7 @@ export function DriverDashboard() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card><CardHeader title="Fahrzeug & Tour" /><dl className="divide-y divide-line text-sm"><div className="flex justify-between gap-3 px-5 py-3"><dt className="shrink-0 text-muted">Route</dt><dd className="min-w-0 break-words text-right font-semibold text-ink">{route.name}</dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Fahrzeug</dt><dd className="text-right font-semibold text-ink">{person?.fahrzeug}<br /><span className="text-xs text-muted">{person?.kennzeichen}</span></dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Rückkehr</dt><dd className="font-semibold text-ink">{route.rueckkehr ? `ca. ${route.rueckkehr} Uhr` : "—"}</dd></div></dl></Card>
+          <Card><CardHeader title="Fahrzeug & Tour" /><dl className="divide-y divide-line text-sm"><div className="flex justify-between gap-3 px-5 py-3"><dt className="shrink-0 text-muted">Route</dt><dd className="min-w-0 break-words text-right font-semibold text-ink">{route.name}</dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Fahrzeug</dt><dd className="min-w-0 break-words text-right font-semibold text-ink">{person?.fahrzeug || "Nicht hinterlegt"}{person?.kennzeichen ? <><br /><span className="text-xs text-muted">{person.kennzeichen}</span></> : null}</dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Rückkehr</dt><dd className="font-semibold text-ink">{route.rueckkehr ? `ca. ${route.rueckkehr} Uhr` : "—"}</dd></div></dl></Card>
 
           {route.status === "GEPLANT" && (
             <Card>
