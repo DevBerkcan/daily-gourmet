@@ -105,6 +105,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Sicherheitsnetz gegen horizontales Scrollen: ein einzelnes zu breites Element (z. B. eine nicht
+umbrechende Button-Zeile) darf nie die ganze Seite seitlich scrollbar machen — das würde auch
+fixed-positionierte Elemente wie Modals auf mobilen Browsern verschieben, weil deren Layout-Viewport
+dann breiter als der sichtbare Viewport wird. `overflow-x: clip` statt `hidden`, damit `position:
+sticky`-Elemente (z. B. Tabellenköpfe) weiterhin funktionieren. */
+html, body {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
 /* Druckansichten (Küche & Einkauf) */
 @media print {
   .no-print { display: none !important; }

@@ -40,11 +40,11 @@ export function Modal({
         className={`relative flex max-h-[90vh] w-full ${widthClassName} flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-3.5">
-          <div>
+          <div className="min-w-0">
             <h2 id="modal-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
             {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
           </div>
-          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" size="sm" showLabel onClick={onClose} />
+          <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" size="sm" className="shrink-0" onClick={onClose} />
         </div>
         <div className="overflow-y-auto">{children}</div>
       </div>

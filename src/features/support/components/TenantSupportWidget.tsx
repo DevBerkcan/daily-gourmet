@@ -129,7 +129,7 @@ export function TenantSupportWidget() {
         </section>
       ) : null}
       <div className="flex justify-end"><Button icon={offen ? ACTION_ICONS.cancel : LifeBuoy}
-          expanded={offen} label={offen ? "Support schließen" : "Hilfe & Support öffnen"} size="lg" showLabel className="!rounded-full shadow-lg" onClick={() => setOffen((wert) => !wert)} /></div>
+          expanded={offen} label={offen ? "Support schließen" : "Hilfe & Support öffnen"} size="lg" className="!rounded-full shadow-lg" onClick={() => setOffen((wert) => !wert)} /></div>
     </div>
   );
 }

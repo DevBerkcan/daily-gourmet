@@ -110,12 +110,12 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 
 export function CardHeader({ title, hint, actions }: { title: string; hint?: string; actions?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-      <div>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+      <div className="min-w-0">
         <h2 className="text-sm font-semibold text-ink">{title}</h2>
         {hint && <p className="text-xs text-muted">{hint}</p>}
       </div>
-      {actions}
+      {actions && <div className="flex flex-wrap items-center gap-2 no-print">{actions}</div>}
     </div>
   );
 }
@@ -239,9 +239,9 @@ export function Pagination({
           </select>
         </label>
         <div className="flex items-center gap-1.5">
-          <Button icon={ChevronLeft} label={t("pagination.prev")} variant="secondary" size="sm" showLabel onClick={() => onPageChange(page - 1)} disabled={page <= 1} />
+          <Button icon={ChevronLeft} label={t("pagination.prev")} variant="secondary" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1} />
           <span className="min-w-[5.5rem] text-center text-xs text-muted">{t("pagination.page", { page, totalPages })}</span>
-          <Button icon={ChevronRight} label={t("pagination.next")} variant="secondary" size="sm" showLabel onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} />
+          <Button icon={ChevronRight} label={t("pagination.next")} variant="secondary" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} />
         </div>
       </div>
     </div>

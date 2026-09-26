@@ -5,8 +5,13 @@ import { Loader2, type LucideIcon } from "lucide-react";
  * Kontexte — vor allem die Aktionsspalte einer Tabellenzeile — und bleibt dort bewusst so: Das
  * `label` ist Pflicht und landet als aria-label (Screenreader) und als data-tip (Tooltip über
  * TooltipLayer bei Hover und Tastatur-Fokus), damit die Bedeutung trotzdem nie verloren geht.
- * `showLabel` zeigt das Label zusätzlich als sichtbaren Text neben dem Icon und ist der Normalfall
- * für Seiten-, Karten- und Toolbar-Buttons (nicht mehr nur Anmelden/Abmelden/Support-Anfrage).
+ * `showLabel` zeigt das Label zusätzlich als sichtbaren Text neben dem Icon, aber NUR ab dem
+ * `lg`-Breakpoint (≥1024px) — auf Handy und Tablet bleibt es beim kompakten Icon-only-Stil, sonst
+ * sprengen mehrere nebeneinanderstehende Buttons (z. B. eine Aktionsleiste) die Bildschirmbreite
+ * und erzwingen horizontales Scrollen. Der Text ist unterhalb von `lg` trotzdem für Screenreader
+ * vorhanden (`sr-only`, nicht `hidden`), verschwindet also nur visuell, nie aus der a11y-Ausgabe.
+ * Für Buttons, die auch am Desktop immer Icon-only bleiben sollen (z. B. Pagination-Pfeile,
+ * Theme-Toggle, Support-Fenster-Toggle), `showLabel` einfach weglassen.
  * Welches Icon für welche Aktion steht, ist projektweit festgelegt (siehe ACTION_ICONS in ./icons)
  * — neue Aufrufer nehmen das Icon von dort statt ein eigenes zu wählen. Hooks-frei, damit auch
  * Server-Components es nutzen. */
@@ -30,9 +35,10 @@ export type ButtonProps = {
   pressed?: boolean;
   /** Für Auf-/Zuklapp-Toggles (Panels, Widgets): setzt aria-expanded. */
   expanded?: boolean;
-  /** Zeigt das Label als sichtbaren Text neben dem Icon (klassischer Button) statt nur als
-   * aria-label/Tooltip. Normalfall für Seiten-, Karten- und Toolbar-Buttons; in engen Kontexten
-   * wie der Aktionsspalte einer Tabellenzeile bleibt es beim kompakten Icon-only-Standard. */
+  /** Zeigt das Label ab `lg` (Desktop) zusätzlich als sichtbaren Text neben dem Icon; auf Handy/
+   * Tablet bleibt es Icon-only. Normalfall für Seiten-, Karten- und Toolbar-Buttons; in engen
+   * Kontexten wie der Aktionsspalte einer Tabellenzeile bleibt es beim kompakten Icon-only-Standard
+   * auf allen Bildschirmgrößen (also `showLabel` einfach weglassen). */
   showLabel?: boolean;
   form?: string;
   className?: string;
@@ -57,10 +63,16 @@ export function Button({
 }: ButtonProps) {
   const s = sizeStyles[size];
   const pressedStyle = pressed ? "!bg-basil-soft !text-basil ring-1 ring-basil/40" : "";
-  const cls = `inline-flex shrink-0 cursor-pointer items-center justify-center transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:pointer-events-none disabled:opacity-45 ${showLabel ? "min-h-10 gap-2 rounded-lg px-4 text-sm font-medium" : s.box} ${variantStyles[variant]} ${pressedStyle} ${className}`;
+  // Icon-only-Box (s.box) ist die Basis auf jeder Bildschirmgröße; erst ab `lg` wächst sie bei
+  // showLabel zu einer Pille mit sichtbarem Text auf. Ohne showLabel bleibt s.box unverändert.
+  const showLabelCls = showLabel ? "lg:h-auto lg:w-auto lg:min-h-10 lg:gap-2 lg:rounded-lg lg:px-4 lg:text-sm lg:font-medium" : "";
+  const cls = `inline-flex shrink-0 cursor-pointer items-center justify-center transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-basil disabled:pointer-events-none disabled:opacity-45 ${s.box} ${showLabelCls} ${variantStyles[variant]} ${pressedStyle} ${className}`;
   const inner = loading ? <Loader2 size={s.icon} className="animate-spin" aria-hidden /> : <Icon size={s.icon} strokeWidth={2} aria-hidden />;
-  const content = showLabel ? <>{inner}<span>{label}</span></> : inner;
-  // Mit sichtbarem Text braucht es weder aria-label noch Tooltip.
+  // sr-only statt hidden: der Text bleibt unterhalb von `lg` für Screenreader vorhanden, auch wenn
+  // er visuell verschwindet (anders als `hidden`, das ihn auch aus dem a11y-Baum entfernen würde).
+  const content = showLabel ? <>{inner}<span className="sr-only lg:not-sr-only">{label}</span></> : inner;
+  // Der sr-only-Text liefert schon einen zugänglichen Namen, kein zusätzliches aria-label nötig;
+  // ein Tooltip wäre bei sichtbarem Text (ab `lg`) redundant, daher nur beim reinen Icon-Stil.
   const a11y = showLabel ? {} : { "aria-label": label, "data-tip": label };
 
   if (href && !disabled) {

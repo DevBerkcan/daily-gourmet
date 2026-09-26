@@ -65,7 +65,6 @@ export function DriverIssueWidget() {
           expanded={offen}
           label={offen ? "Schließen" : "Frage oder Problem melden"}
           size="lg"
-          showLabel
           className="!rounded-full shadow-lg"
           onClick={() => setOffen((wert) => !wert)}
         />

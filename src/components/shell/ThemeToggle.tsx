@@ -51,7 +51,6 @@ export function ThemeToggle() {
       size="sm"
       icon={isDark ? Sun : Moon}
       label={isDark ? t("shell.theme.toLight") : t("shell.theme.toDark")}
-      showLabel
       onClick={toggle}
     />
   );
