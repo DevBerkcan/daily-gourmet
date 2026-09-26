@@ -90,7 +90,7 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
             {createUser.error instanceof ApiError ? createUser.error.message : "Der Benutzer konnte nicht angelegt werden."}
           </p>
         )}
-        <div className="flex gap-2 md:col-span-2">
+        <div className="flex flex-wrap gap-2 md:col-span-2">
           <Button type="submit" loading={createUser.isPending} icon={ACTION_ICONS.create} label="Benutzer anlegen" showLabel />
           <Button variant="secondary" onClick={onDone} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
         </div>
@@ -153,7 +153,7 @@ export function UsersContent() {
             <tr key={u.id} className="hover:bg-paper">
               <Td>
                 <span className="font-medium text-ink">{u.name}</span>
-                <span className="block text-xs text-muted">@{u.username} · {u.email}</span>
+                <span className="block break-all text-xs text-muted">@{u.username} · {u.email}</span>
               </Td>
               <Td>{u.tenantName ?? <Tag>Plattform</Tag>}</Td>
               <Td><Tag tone="green">{u.rolle}</Tag></Td>
@@ -198,7 +198,7 @@ export function UsersContent() {
         tone="warn"
         message={
           <>
-            <strong>{loescheBenutzer?.name}</strong> ({loescheBenutzer?.email}) wird unwiderruflich gelöscht — anders als „Deaktivieren“ kann das nicht rückgängig gemacht werden.
+            <strong>{loescheBenutzer?.name}</strong> (<span className="break-all">{loescheBenutzer?.email}</span>) wird unwiderruflich gelöscht — anders als „Deaktivieren“ kann das nicht rückgängig gemacht werden.
             Ist der Benutzer noch mit anderen Datensätzen verknüpft (z. B. Rezepten, Bestellungen, Support-Tickets), schlägt das Löschen fehl; deaktivieren Sie ihn dann stattdessen.
           </>
         }
@@ -210,7 +210,7 @@ export function UsersContent() {
       <ConfirmDialog
         open={!!resetBenutzer}
         title="Passwort zurücksetzen"
-        message={<>An <strong>{resetBenutzer?.email}</strong> wird ein Link zum Festlegen eines neuen Passworts gesendet. Das aktuelle Passwort bleibt bis dahin gültig.</>}
+        message={<>An <strong className="break-all">{resetBenutzer?.email}</strong> wird ein Link zum Festlegen eines neuen Passworts gesendet. Das aktuelle Passwort bleibt bis dahin gültig.</>}
         confirmLabel="Link senden"
         confirmIcon={ACTION_ICONS.send}
         onCancel={() => setResetBenutzer(null)}

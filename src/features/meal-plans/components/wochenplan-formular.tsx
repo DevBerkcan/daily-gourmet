@@ -17,9 +17,9 @@ function CheckboxRow({ checked, onChange, label, sub, status, disabled }: { chec
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-paper"
       }`}
     >
-      <span className="flex items-center gap-2.5">
-        <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} className="size-4 accent-basil" />
-        <span>
+      <span className="flex min-w-0 items-center gap-2.5">
+        <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} className="size-4 shrink-0 accent-basil" />
+        <span className="min-w-0 break-words">
           <span className="font-medium text-ink">{label}</span>
           {sub && <span className="block text-xs text-muted">{sub}</span>}
         </span>
@@ -119,7 +119,7 @@ export function WochenplanFormular() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>
           <CardHeader title="Ausgangspunkt" />
-          <div className="flex gap-4 px-5 py-4">
+          <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row">
             <CheckboxRow checked={modus === "leer"} onChange={() => setModus("leer")} label="Leerer Plan" sub="Gerichte im nächsten Schritt je Tag hinzufügen" />
             <CheckboxRow checked={modus === "vorlage"} onChange={() => setModus("vorlage")} label="Aus Vorlage erstellen" sub="Übernimmt Tage, Gerichte und Menülinien einer der 8 Vorlagen" />
           </div>

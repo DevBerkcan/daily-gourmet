@@ -66,7 +66,7 @@ export function UmsatzUebersicht() {
               <div className="h-6 flex-1 overflow-hidden rounded bg-paper">
                 <div className="h-full rounded-r bg-basil" style={{ width: `${Math.max(2, (b.umsatz / maxUmsatz) * 100)}%` }} />
               </div>
-              <span className="w-24 shrink-0 text-right text-sm font-medium text-ink">{EUR(b.umsatz)}</span>
+              <span className="min-w-24 shrink-0 whitespace-nowrap text-right text-sm font-medium text-ink">{EUR(b.umsatz)}</span>
             </div>
           ))}
         </div>

@@ -38,7 +38,7 @@ export function DayColumn({
         </div>
         <div className="flex items-center gap-1.5">
           {isToday && <Tag tone="green">Heute</Tag>}
-          {locked && <Lock size={14} className="text-muted" aria-label={lockedLabel ?? "Gesperrt"} />}
+          {locked && <Lock size={14} className="shrink-0 text-muted" aria-label={lockedLabel ?? "Gesperrt"} />}
         </div>
       </div>
       <div className={`flex flex-1 flex-col gap-2.5 px-3.5 py-3 ${locked ? "opacity-70" : ""}`}>
@@ -75,7 +75,7 @@ export function MealTile({ rezept, tags, aside, footer }: { rezept: Rezept; tags
       )}
       <div className="flex flex-col gap-1.5 px-3 py-2.5">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-medium leading-snug text-ink">{rezept.name}</p>
+          <p className="min-w-0 break-words text-sm font-medium leading-snug text-ink">{rezept.name}</p>
           {aside}
         </div>
         {tags && <div className="flex flex-wrap gap-1">{tags}</div>}

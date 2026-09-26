@@ -79,7 +79,7 @@ export function TenantsManager() {
               className="min-h-10 w-full rounded-lg border border-line pl-9 pr-3 text-sm"
             />
           </label>
-          <select value={status} onChange={(event) => setStatus(event.target.value as "ALLE" | TenantStatus)} aria-label="Nach Status filtern" className={fieldClass}>
+          <select value={status} onChange={(event) => setStatus(event.target.value as "ALLE" | TenantStatus)} aria-label="Nach Status filtern" className={`${fieldClass} sm:w-auto`}>
             <option value="ALLE">Alle Status</option>
             <option value="AKTIV">Aktiv</option>
             <option value="GESPERRT">Gesperrt</option>

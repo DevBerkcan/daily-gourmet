@@ -64,7 +64,7 @@ export function Produktionstabelle() {
                 </Link>
                 <p className="text-xs text-muted">{pp.standortName}</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <p className="text-sm text-muted">Gesamt: <span className="font-display text-lg font-semibold text-ink">{gesamt}</span> Portionen</p>
                 {speiseplan && speiseplan.status !== "DRAFT" && (
                   <ProduktionsplanDruckButton mealPlanId={speiseplan.id} datum={pp.datum} wochentag={wochentag} />

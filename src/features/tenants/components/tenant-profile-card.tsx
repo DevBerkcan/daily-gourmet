@@ -56,7 +56,7 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
           <div><dt className="text-xs text-muted">USt-IdNr.</dt><dd className="font-medium text-ink">{profile.ustId || "—"}</dd></div>
           <div><dt className="text-xs text-muted">Telefon</dt><dd className="font-medium text-ink">{profile.telefon || "—"}</dd></div>
           <div className="sm:col-span-2"><dt className="text-xs text-muted">Anschrift</dt><dd className="font-medium text-ink">{profile.strasse ? `${profile.strasse}, ${profile.plz} ${profile.ort}` : "—"}</dd></div>
-          <div><dt className="text-xs text-muted">E-Mail (Rechnung)</dt><dd className="font-medium text-ink">{profile.email || "—"}</dd></div>
+          <div><dt className="text-xs text-muted">E-Mail (Rechnung)</dt><dd className="break-all font-medium text-ink">{profile.email || "—"}</dd></div>
           <div><dt className="text-xs text-muted">Zeitzone / Währung</dt><dd className="font-medium text-ink">{profile.zeitzone} · {profile.waehrung}</dd></div>
         </dl>
       ) : (

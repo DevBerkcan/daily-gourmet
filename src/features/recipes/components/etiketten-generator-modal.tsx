@@ -86,14 +86,14 @@ export function EtikettenGeneratorModal({
         className="relative flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-6 py-4">
-          <div>
+          <div className="min-w-0">
             <h2 id="etiketten-generator-title" className="font-display text-lg font-semibold text-ink">Etiketten-Generator</h2>
-            <p className="mt-0.5 text-sm text-muted">{rezeptName}</p>
+            <p className="mt-0.5 break-words text-sm text-muted">{rezeptName}</p>
           </div>
           <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" showLabel onClick={onClose} />
         </header>
 
-        <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_18rem]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto md:grid-cols-[1fr_18rem] md:overflow-hidden">
           <div className="flex items-center justify-center overflow-auto bg-paper p-6">
             {fehler ? (
               <p className="text-sm text-danger">{fehler}</p>

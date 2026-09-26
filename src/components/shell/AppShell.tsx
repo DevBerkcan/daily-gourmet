@@ -82,7 +82,7 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
               active ? "bg-basil-soft text-basil" : "text-ink-soft hover:bg-paper hover:text-ink"
             }`}
           >
-            <item.icon size={17} strokeWidth={2} aria-hidden />
+            <item.icon size={17} strokeWidth={2} className="shrink-0" aria-hidden />
             {t(item.labelKey)}
           </Link>
         );
@@ -107,8 +107,8 @@ export function AppShell({ areaLabel, areaTone, nav, userName, userRole, childre
         {brand}
         <div className="flex-1 overflow-y-auto pb-4">{navList}</div>
         <div className="border-t border-line px-6 py-4">
-          <p className="text-sm font-medium text-ink">{userName}</p>
-          <p className="text-xs text-muted">{userRole}</p>
+          <p className="break-words text-sm font-medium text-ink">{userName}</p>
+          <p className="break-words text-xs text-muted">{userRole}</p>
           <button type="button" onClick={handleLogout} className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-medium text-muted hover:text-danger">
             <LogOut size={14} aria-hidden /> {t("shell.logout")}
           </button>

@@ -63,7 +63,7 @@ export function TooltipLayer() {
     <div
       role="tooltip"
       style={{ left: x, top: tip.y }}
-      className={`pointer-events-none fixed z-[100] max-w-[180px] -translate-x-1/2 rounded-md bg-ink px-2 py-1 text-center text-xs font-medium text-surface shadow-lg no-print ${tip.below ? "" : "-translate-y-full"}`}
+      className={`pointer-events-none fixed z-[100] w-max max-w-[180px] -translate-x-1/2 rounded-md bg-ink px-2 py-1 text-center text-xs font-medium text-surface shadow-lg no-print ${tip.below ? "" : "-translate-y-full"}`}
     >
       {tip.text}
     </div>,

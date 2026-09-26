@@ -58,8 +58,8 @@ export function DashboardContent() {
               <ul className="divide-y divide-line text-sm">
                 {dashboard.topTenantsByOrdersThisWeek.map((t) => (
                   <li key={t.tenantName} className="flex items-center justify-between gap-3 px-5 py-3">
-                    <span className="text-ink">{t.tenantName}</span>
-                    <span className="font-medium text-ink">{t.orderCount}</span>
+                    <span className="min-w-0 break-words text-ink">{t.tenantName}</span>
+                    <span className="shrink-0 font-medium text-ink">{t.orderCount}</span>
                   </li>
                 ))}
               </ul>
@@ -91,8 +91,8 @@ export function DashboardContent() {
             <ul className="divide-y divide-line text-sm">
               {flagAdoption.map((f) => (
                 <li key={f.key} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <span className="text-ink">{f.name}</span>
-                  <span className="text-muted">{f.enabledTenantCount}/{f.totalTenantCount}</span>
+                  <span className="min-w-0 break-words text-ink">{f.name}</span>
+                  <span className="shrink-0 text-muted">{f.enabledTenantCount}/{f.totalTenantCount}</span>
                 </li>
               ))}
             </ul>

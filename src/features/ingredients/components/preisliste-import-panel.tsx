@@ -53,7 +53,7 @@ export function PreislisteImportPanel() {
     <Card className="mt-6">
       <CardHeader
         title="Lieferanten & Preislisten"
-        hint="Spalten: SupplierArtikelnummer;Artikelnummer;Preis;Einheit — Artikelnummer muss mit der Zutat übereinstimmen"
+        hint="Spalten: SupplierArtikelnummer; Artikelnummer; Preis; Einheit —Artikelnummer muss mit der Zutat übereinstimmen"
       />
       {lieferanten.length === 0 ? (
         <p className="px-5 py-4 text-sm text-muted">Noch keine Lieferanten angelegt.</p>
@@ -70,7 +70,7 @@ export function PreislisteImportPanel() {
         }}
         className="flex items-end gap-3 border-t border-line px-5 py-4"
       >
-        <div className="w-64">
+        <div className="min-w-0 flex-1 sm:w-64 sm:flex-none">
           <TextField label="Neuer Lieferant" value={neuerName} onChange={setNeuerName} placeholder="Name" />
         </div>
         <Button icon={ACTION_ICONS.create} label="Hinzufügen" showLabel type="submit" variant="secondary" disabled={!neuerName.trim()} loading={createSupplier.isPending} />

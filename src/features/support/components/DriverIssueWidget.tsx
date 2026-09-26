@@ -27,9 +27,9 @@ export function DriverIssueWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-50 no-print">
       {offen ? (
-        <section role="dialog" aria-modal="true" aria-labelledby="fahrer-frage-title" className="mb-3 w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-card border border-line bg-surface shadow-2xl">
-          <header className="flex items-center justify-between bg-basil-deep px-5 py-4 text-white">
-            <div>
+        <section role="dialog" aria-modal="true" aria-labelledby="fahrer-frage-title" className="mb-3 max-h-[calc(100vh-6rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-card border border-line bg-surface shadow-2xl">
+          <header className="flex items-center justify-between gap-3 bg-basil-deep px-5 py-4 text-white">
+            <div className="min-w-0">
               <p id="fahrer-frage-title" className="font-display text-lg font-semibold">Frage oder Problem melden</p>
               <p className="text-xs text-white/70">Geht direkt an Ihren Admin</p>
             </div>

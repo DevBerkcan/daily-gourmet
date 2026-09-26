@@ -82,7 +82,7 @@ export function ZutatDetail({ id }: { id: string }) {
         {zutat.zusatzstoffe.map((z) => <Tag key={z}>{z}</Tag>)}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader title="Einheiten & Standardpreis" hint="Fällt zurück, solange kein Lieferantenpreis hinterlegt ist" />
           <Table head={["Feld", "Wert"]}>

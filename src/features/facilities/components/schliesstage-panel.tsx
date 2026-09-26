@@ -57,11 +57,11 @@ export function SchliesstagePanel() {
         >
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Von</span>
-            <input type="date" value={von} onChange={(e) => setVon(e.target.value)} required className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm" />
+            <input type="date" value={von} onChange={(e) => setVon(e.target.value)} required className="min-h-10 w-full min-w-0 rounded-lg border border-line bg-surface px-3 text-sm" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Bis</span>
-            <input type="date" value={bis} onChange={(e) => setBis(e.target.value)} required className="min-h-10 rounded-lg border border-line bg-surface px-3 text-sm" />
+            <input type="date" value={bis} onChange={(e) => setBis(e.target.value)} required className="min-h-10 w-full min-w-0 rounded-lg border border-line bg-surface px-3 text-sm" />
           </label>
           <div className="sm:col-span-2">
             <TextField label="Hinweis" value={hinweis} onChange={setHinweis} placeholder="z. B. Sommerferien" />

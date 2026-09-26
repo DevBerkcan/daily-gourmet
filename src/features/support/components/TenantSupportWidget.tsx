@@ -51,8 +51,8 @@ export function TenantSupportWidget() {
     <div className="fixed bottom-5 right-5 z-50 no-print">
       {offen ? (
         <section role="dialog" aria-modal="true" aria-labelledby="support-title" className="mb-3 max-h-[calc(100vh-6rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-card border border-line bg-surface shadow-2xl">
-          <header className="sticky top-0 z-10 flex items-center justify-between bg-basil-deep px-5 py-4 text-white">
-            <div>
+          <header className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-basil-deep px-5 py-4 text-white">
+            <div className="min-w-0">
               <p id="support-title" className="font-display text-lg font-semibold">Support kontaktieren</p>
               <p className="text-xs text-white/70">Direkt an den Super Admin</p>
             </div>
@@ -68,7 +68,7 @@ export function TenantSupportWidget() {
           ) : (
             <>
               <form onSubmit={senden} className="flex flex-col gap-4 p-5">
-                <div className="rounded-lg bg-info-soft px-3 py-2 text-xs text-info">Aktuelle Seite wird automatisch mitgesendet: {pathname}</div>
+                <div className="break-all rounded-lg bg-info-soft px-3 py-2 text-xs text-info">Aktuelle Seite wird automatisch mitgesendet: {pathname}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Art
                     <select value={kategorie} onChange={(event) => setKategorie(event.target.value as SupportKategorie)} className={fieldClass}>
@@ -93,9 +93,9 @@ export function TenantSupportWidget() {
                   <textarea value={nachricht} onChange={(event) => setNachricht(event.target.value)} required rows={4} placeholder="Beschreiben Sie die Frage oder den Fehler möglichst genau." className={`${fieldClass} py-2`} />
                 </label>
                 {anhaengeAktiv && (
-                  <div className="flex items-center gap-2 self-start">
-                    <Button icon={Paperclip} label={datei ? datei.name : "Screenshot anhängen"} variant="secondary" showLabel onClick={() => dateiRef.current?.click()} />
-                    {datei && <span className="truncate text-xs text-muted">{datei.name}</span>}
+                  <div className="flex min-w-0 max-w-full items-center gap-2 self-start">
+                    <Button icon={Paperclip} label={datei ? "Screenshot ändern" : "Screenshot anhängen"} variant="secondary" showLabel onClick={() => dateiRef.current?.click()} />
+                    {datei && <span className="min-w-0 truncate text-xs text-muted">{datei.name}</span>}
                     <input
                       ref={dateiRef}
                       type="file"
@@ -115,10 +115,10 @@ export function TenantSupportWidget() {
                     return (
                       <div key={ticket.id} className="rounded-lg bg-paper px-3 py-2.5">
                         <div className="flex justify-between gap-2">
-                          <p className="text-sm font-semibold text-ink">{ticket.titel}</p>
-                          <span className="text-[11px] text-muted">{ticket.status.replace("_", " ")}</span>
+                          <p className="min-w-0 break-words text-sm font-semibold text-ink">{ticket.titel}</p>
+                          <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">{ticket.status.replace("_", " ")}</span>
                         </div>
-                        {letzteAntwort ? <p className="mt-1 text-xs text-basil">Antwort von {letzteAntwort.autor}: {letzteAntwort.text}</p> : <p className="mt-1 text-xs text-muted">Noch keine Antwort</p>}
+                        {letzteAntwort ? <p className="mt-1 break-words text-xs text-basil">Antwort von {letzteAntwort.autor}: {letzteAntwort.text}</p> : <p className="mt-1 text-xs text-muted">Noch keine Antwort</p>}
                       </div>
                     );
                   })}

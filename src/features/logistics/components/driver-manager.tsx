@@ -59,18 +59,18 @@ export function DriverManager() {
           return (
             <div key={person.id} className="rounded-lg border border-line p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="font-medium text-ink">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-ink">
                     {person.name}
                     {person.status === "DEAKTIVIERT" ? <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-medium text-danger align-middle">Deaktiviert</span> : null}
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="break-words text-xs text-muted">
                     {person.email}
                     {profil ? ` · ${profil.telefon} · ${profil.fahrzeug} · ${profil.kennzeichen}` : " · Kein Profil hinterlegt"}
                   </p>
                 </div>
                 {!bearbeitetGerade ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={profil ? "Bearbeiten" : "Profil anlegen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
                     {person.status === "DEAKTIVIERT" ? (
                       <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" showLabel variant="secondary" onClick={() => activateUser.mutate(person.id)} />
@@ -85,7 +85,7 @@ export function DriverManager() {
                   <input value={telefon} onChange={(event) => setTelefon(event.target.value)} placeholder="Telefon" required className={fieldClass} />
                   <input value={fahrzeug} onChange={(event) => setFahrzeug(event.target.value)} placeholder="Fahrzeug, z. B. Sprinter 3.5t" required className={fieldClass} />
                   <input value={kennzeichen} onChange={(event) => setKennzeichen(event.target.value)} placeholder="Kennzeichen" required className={fieldClass} />
-                  <div className="flex gap-2 sm:col-span-3">
+                  <div className="flex flex-wrap gap-2 sm:col-span-3">
                     <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" />
                     <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeiteUserId(null)} />
                   </div>

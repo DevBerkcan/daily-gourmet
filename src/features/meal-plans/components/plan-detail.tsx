@@ -222,7 +222,6 @@ export function PlanDetail({ id }: { id: string }) {
                     variant="danger"
                     size="sm"
                     onClick={() => removeFacility.mutate({ id: plan.id, einrichtungId: eid }, { onError: () => toast.error("Einrichtung konnte nicht entfernt werden.") })}
-                    showLabel
                   />
                 )}
               </span>
@@ -294,7 +293,6 @@ export function PlanDetail({ id }: { id: string }) {
                                 variant="danger"
                                 size="sm"
                                 className="no-print"
-                                showLabel
                                 onClick={() =>
                                   tag.id &&
                                   updateTag.mutate({

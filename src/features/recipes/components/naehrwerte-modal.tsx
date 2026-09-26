@@ -76,9 +76,9 @@ export function NaehrwerteModal({ rezept, onClose }: { rezept: Rezept; onClose: 
         className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-6 py-4">
-          <div>
+          <div className="min-w-0">
             <h2 id="naehrwerte-modal-title" className="font-display text-lg font-semibold text-ink">Nährwerte ansehen</h2>
-            <p className="mt-0.5 text-sm text-muted">Rezept: {rezept.name}</p>
+            <p className="mt-0.5 break-words text-sm text-muted">Rezept: {rezept.name}</p>
           </div>
           <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" showLabel onClick={onClose} />
         </header>
@@ -153,7 +153,7 @@ export function NaehrwerteModal({ rezept, onClose }: { rezept: Rezept; onClose: 
                 <div>
                   <h3 className="mb-3 text-sm font-semibold text-ink">Makro Nährstoff-Zusammensetzung</h3>
                   {macroAnteile.length > 0 ? (
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-6">
                       <div
                         className="size-36 shrink-0 rounded-full"
                         style={{ background: `conic-gradient(${gradientTeile.join(", ")})` }}

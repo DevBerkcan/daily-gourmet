@@ -30,7 +30,7 @@ export function WochenplanTabelle() {
         {pageItems.map((p) => (
         <tr key={p.id} className="hover:bg-paper">
           <Td>
-            <Link href={`/admin/meal-plans/${p.id}`} className="font-medium text-basil hover:underline">KW {p.kalenderwoche} / {p.jahr}</Link>
+            <Link href={`/admin/meal-plans/${p.id}`} className="whitespace-nowrap font-medium text-basil hover:underline">KW {p.kalenderwoche} / {p.jahr}</Link>
           </Td>
           <Td><StatusBadge status={p.status} /></Td>
           <Td className="text-muted">{p.standortIds.map((s) => standorte.find((st) => st.id === s)?.name).join(", ")}</Td>

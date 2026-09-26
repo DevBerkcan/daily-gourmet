@@ -41,7 +41,7 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-3.5">
           <div className="min-w-0">
-            <h2 id="modal-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
+            <h2 id="modal-title" className="break-words font-display text-lg font-semibold text-ink">{title}</h2>
             {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
           </div>
           <Button icon={ACTION_ICONS.cancel} label="Schließen" variant="ghost" size="sm" className="shrink-0" onClick={onClose} />
@@ -94,10 +94,10 @@ export function ConfirmDialog({
       >
         <div className="flex items-start gap-3 px-5 pt-5">
           {tone === "warn" && <AlertTriangle size={20} className="mt-0.5 shrink-0 text-warn" aria-hidden />}
-          <h2 id="confirm-dialog-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
+          <h2 id="confirm-dialog-title" className="min-w-0 break-words font-display text-lg font-semibold text-ink">{title}</h2>
         </div>
-        <div className="max-h-[50vh] overflow-y-auto px-5 py-4 text-sm text-ink-soft">{message}</div>
-        <div className="flex justify-end gap-2 border-t border-line bg-paper px-5 py-4">
+        <div className="max-h-[50vh] overflow-y-auto break-words px-5 py-4 text-sm text-ink-soft">{message}</div>
+        <div className="flex flex-wrap justify-end gap-2 border-t border-line bg-paper px-5 py-4">
           <Button icon={ACTION_ICONS.cancel} label={cancelLabel} variant="secondary" showLabel onClick={onCancel} />
           <Button icon={confirmIcon} label={confirmLabel} variant={confirmIcon === ACTION_ICONS.delete ? "danger" : "primary"} showLabel onClick={onConfirm} />
         </div>
@@ -157,12 +157,12 @@ export function InviteLinkDialog({
           <h2 id="invite-link-dialog-title" className="font-display text-lg font-semibold text-ink">{title}</h2>
           <p className="mt-1 text-xs text-muted">
             Diesen Link manuell an die Person senden (z. B. per Chat) — damit kann sie ihr Passwort festlegen.
-            {username && <> Login-Benutzername: <strong className="text-ink">{username}</strong></>}
+            {username && <> Login-Benutzername: <strong className="break-all text-ink">{username}</strong></>}
           </p>
         </div>
         <div className="flex flex-col gap-3 px-5 py-4">
           <div className="flex items-center gap-2">
-            <input readOnly value={link} onFocus={(e) => e.target.select()} className="min-h-10 w-full rounded-lg border border-line bg-paper px-3 text-sm text-ink" />
+            <input readOnly value={link} onFocus={(e) => e.target.select()} className="min-h-10 w-full min-w-0 rounded-lg border border-line bg-paper px-3 text-sm text-ink" />
             <Button icon={Copy} label={kopiert ? "Kopiert!" : "Kopieren"} showLabel variant="secondary" onClick={kopieren} />
           </div>
         </div>

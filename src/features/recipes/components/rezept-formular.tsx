@@ -103,7 +103,7 @@ export function RezeptFormular({
             const zutat = zutaten.find((z) => z.id === rz.zutatId);
             return (
               <div key={i} className="flex items-end gap-2">
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <select
                     aria-label="Zutat"
                     value={rz.zutatId}
@@ -123,10 +123,10 @@ export function RezeptFormular({
                   step="any"
                   value={rz.menge}
                   onChange={(e) => updateZutatRow(i, { menge: Number(e.target.value) || 0 })}
-                  className="min-h-10 w-24 rounded-lg border border-line bg-surface px-3 text-sm text-right"
+                  className="min-h-10 w-20 shrink-0 rounded-lg border border-line bg-surface px-3 text-sm text-right sm:w-24"
                 />
-                <span className="min-h-10 flex items-center px-1 text-sm text-muted">{zutat?.basiseinheit ?? rz.einheit}</span>
-                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" showLabel className="mb-1 no-print" onClick={() => removeZutatRow(i)} />
+                <span className="min-h-10 flex shrink-0 items-center whitespace-nowrap px-1 text-sm text-muted">{zutat?.basiseinheit ?? rz.einheit}</span>
+                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" showLabel className="mb-1 lg:mb-0 no-print" onClick={() => removeZutatRow(i)} />
               </div>
             );
           })}
@@ -138,13 +138,13 @@ export function RezeptFormular({
         <div className="flex flex-col gap-2 px-5 py-4">
           {r.zubereitungsschritte.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="font-display text-sm font-semibold text-basil">{i + 1}</span>
+              <span className="shrink-0 font-display text-sm font-semibold text-basil">{i + 1}</span>
               <input
                 type="text"
                 aria-label={`Schritt ${i + 1}`}
                 value={s}
                 onChange={(e) => updateSchritt(i, e.target.value)}
-                className="min-h-10 flex-1 rounded-lg border border-line bg-surface px-3 text-sm"
+                className="min-h-10 min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 text-sm"
               />
               <Button icon={ACTION_ICONS.delete} label="Schritt entfernen" variant="danger" size="sm" showLabel className="no-print" onClick={() => removeSchritt(i)} />
             </div>

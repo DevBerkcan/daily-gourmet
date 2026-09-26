@@ -79,8 +79,8 @@ export function SelectField({ label, value, onChange, options, required, hint }:
 export function CheckboxRow({ checked, onChange, label, sub }: { checked: boolean; onChange: () => void; label: string; sub?: string }) {
   return (
     <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm hover:bg-paper">
-      <input type="checkbox" checked={checked} onChange={onChange} className="size-4 accent-basil" />
-      <span>
+      <input type="checkbox" checked={checked} onChange={onChange} className="size-4 shrink-0 accent-basil" />
+      <span className="min-w-0">
         <span className="font-medium text-ink">{label}</span>
         {sub && <span className="block text-xs text-muted">{sub}</span>}
       </span>
@@ -117,8 +117,8 @@ export function ImageField({ label, value, onChange, hint }: { label: string; va
   return (
     <Field label={label} hint={hint}>
       <div className="flex items-center gap-3">
-        {value && <img src={value} alt="" className="size-16 rounded-lg border border-line object-cover" />}
-        <div className="flex flex-col gap-1.5">
+        {value && <img src={value} alt="" className="size-16 shrink-0 rounded-lg border border-line object-cover" />}
+        <div className="flex min-w-0 flex-col gap-1.5">
           <input
             type="file"
             accept="image/*"
@@ -126,7 +126,7 @@ export function ImageField({ label, value, onChange, hint }: { label: string; va
               const file = e.target.files?.[0];
               onChange(file ? URL.createObjectURL(file) : undefined);
             }}
-            className="text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink hover:file:bg-paper"
+            className="w-full min-w-0 text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink hover:file:bg-paper"
           />
           {value && (
             <Button icon={ACTION_ICONS.delete} label="Foto entfernen" variant="danger" size="sm" showLabel onClick={() => onChange(undefined)} />

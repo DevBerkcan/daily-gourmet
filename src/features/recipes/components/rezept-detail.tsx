@@ -141,8 +141,8 @@ export function RezeptDetail({ id }: { id: string }) {
             <ol className="flex flex-col gap-0 divide-y divide-line">
               {rezept.zubereitungsschritte.map((s, i) => (
                 <li key={s + i} className="flex gap-4 px-5 py-3.5 text-sm">
-                  <span className="font-display font-semibold text-basil">{i + 1}</span>
-                  <span className="text-ink">{s}</span>
+                  <span className="shrink-0 font-display font-semibold text-basil">{i + 1}</span>
+                  <span className="min-w-0 break-words text-ink">{s}</span>
                 </li>
               ))}
             </ol>

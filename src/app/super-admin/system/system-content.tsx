@@ -32,15 +32,15 @@ export function SystemContent() {
   return (
     <>
       <PageHeader title="System" subtitle="Zustand und Konfiguration der Plattformdienste." />
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
         {groups.map((g) => (
           <Card key={g.title}>
             <CardHeader title={g.title} hint={g.hint} />
             <ul className="divide-y divide-line text-sm">
               {g.rows.map(([k, v, tone]) => (
                 <li key={k} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <span className="text-ink">{k}</span>
-                  <span className={`text-right text-xs font-medium ${tone === "ok" ? "text-ok" : tone === "warn" ? "text-warn" : "text-muted"}`}>{v}</span>
+                  <span className="shrink-0 text-ink">{k}</span>
+                  <span className={`min-w-0 break-all text-right text-xs font-medium ${tone === "ok" ? "text-ok" : tone === "warn" ? "text-warn" : "text-muted"}`}>{v}</span>
                 </li>
               ))}
             </ul>

@@ -63,7 +63,7 @@ export function RoutesWeekView({ onEditRoute }: { onEditRoute: (route: LieferRou
           const tagIso = toIso(tag);
           const routenDesTages = routen.filter((r) => r.datum === tagIso);
           return (
-            <div key={tagIso} className="flex min-h-32 flex-col gap-2 p-3">
+            <div key={tagIso} className="flex min-h-32 min-w-0 flex-col gap-2 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                 {WOCHENTAGE_LABEL[i]}<span className="ml-1 font-normal normal-case">{tag.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</span>
               </p>
@@ -77,8 +77,8 @@ export function RoutesWeekView({ onEditRoute }: { onEditRoute: (route: LieferRou
                     onClick={() => onEditRoute(route)}
                     className="cursor-pointer rounded-lg border border-line bg-paper px-2.5 py-2 text-left text-xs hover:border-basil hover:bg-basil-soft"
                   >
-                    <span className="flex items-center justify-between gap-1"><strong className="text-ink">{route.name}</strong><StatusBadge status={route.status} /></span>
-                    <span className="mt-1 block text-muted">{route.fahrerName ?? "Nicht vergeben"} · {portionenJeRoute(route)} Portionen</span>
+                    <span className="flex flex-wrap items-center justify-between gap-1"><strong className="min-w-0 break-words text-ink">{route.name}</strong><StatusBadge status={route.status} /></span>
+                    <span className="mt-1 block break-words text-muted">{route.fahrerName ?? "Nicht vergeben"} · {portionenJeRoute(route)} Portionen</span>
                   </button>
                 ))
               )}

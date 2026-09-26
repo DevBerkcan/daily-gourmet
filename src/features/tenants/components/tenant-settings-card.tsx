@@ -9,8 +9,8 @@ const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-
 function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-      <span>{label}</span>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 accent-basil" />
+      <span className="min-w-0 break-words">{label}</span>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 shrink-0 accent-basil" />
     </label>
   );
 }

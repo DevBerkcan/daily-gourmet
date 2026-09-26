@@ -36,23 +36,23 @@ function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezep
       <div className="flex flex-col gap-2">
         {heutigePositionen.map((p) => (
           <div key={p.id} className="flex items-center gap-3 text-sm">
-            <span className="flex-1 text-muted">{rezepte.find((r) => r.id === p.rezeptId)?.name ?? p.rezeptId}</span>
-            <span className="text-xs text-muted">bisher {p.portionen}</span>
+            <span className="min-w-0 flex-1 break-words text-muted">{rezepte.find((r) => r.id === p.rezeptId)?.name ?? p.rezeptId}</span>
+            <span className="shrink-0 text-xs text-muted">bisher {p.portionen}</span>
             <input
               type="number"
               min={0}
               max={p.portionen}
               value={werte[p.id!] ?? p.portionen}
               onChange={(e) => setWerte((w) => ({ ...w, [p.id!]: Math.min(p.portionen, Math.max(0, Number(e.target.value) || 0)) }))}
-              className="min-h-9 w-20 rounded-lg border border-line bg-surface px-2.5 text-right text-sm"
+              className="min-h-9 w-20 shrink-0 rounded-lg border border-line bg-surface px-2.5 text-right text-sm"
               aria-label={`Neue Portionenzahl für ${rezepte.find((r) => r.id === p.rezeptId)?.name ?? p.rezeptId}`}
             />
           </div>
         ))}
       </div>
       {geaendert && (
-        <div className="mt-3 flex items-end gap-2">
-          <div className="flex-1">
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <div className="min-w-48 flex-1">
             <TextField label="Begründung" value={hinweis} onChange={setHinweis} placeholder="Grund für die Reduzierung" />
           </div>
           <Button
@@ -201,7 +201,7 @@ function WochenTage({
   return (
     <>
       {!readOnly && (
-        <div className="mb-4 flex justify-end gap-2 no-print">
+        <div className="mb-4 flex flex-wrap justify-end gap-2 no-print">
           <Button variant="secondary" onClick={() => speichern(false)} icon={ACTION_ICONS.save} label="Als Entwurf speichern" showLabel />
           <Button disabled={gesamt === 0} onClick={absendenAnklicken} icon={ACTION_ICONS.send} label="Absenden" showLabel />
         </div>
@@ -293,7 +293,7 @@ function WochenTage({
                             </>
                           }
                           footer={
-                            <label className="mt-2.5 flex items-center justify-between gap-2 text-xs text-muted">
+                            <label className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                               Portionen
                               <input
                                 type="number"
@@ -301,7 +301,7 @@ function WochenTage({
                                 disabled={gesperrt}
                                 value={mengen[key] ?? 0}
                                 onChange={(e) => setMenge(key, Number(e.target.value) || 0)}
-                                className="min-h-9 w-20 rounded-lg border border-line bg-surface px-2.5 text-right text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil disabled:cursor-not-allowed disabled:bg-line"
+                                className="min-h-9 w-20 shrink-0 rounded-lg border border-line bg-surface px-2.5 text-right text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil disabled:cursor-not-allowed disabled:bg-line"
                                 aria-label={`Portionen für ${r.name} am ${tag.wochentag}`}
                               />
                             </label>

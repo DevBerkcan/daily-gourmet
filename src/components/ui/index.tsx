@@ -54,7 +54,7 @@ const badgeLabels: Record<string, string> = {
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeStyles[status] ?? "bg-line text-ink-soft"}`}>
+    <span className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeStyles[status] ?? "bg-line text-ink-soft"}`}>
       {badgeLabels[status] ?? status}
     </span>
   );
@@ -87,7 +87,7 @@ export function Tag({ children, tone = "neutral" }: { children: ReactNode; tone?
     green: "bg-basil-soft text-basil",
     amber: "bg-saffron-soft text-warn",
   };
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex max-w-full items-center break-words rounded-full px-2 py-0.5 text-xs ${tones[tone]}`}>{children}</span>;
 }
 
 /* ---------- Layout-Bausteine ---------- */
@@ -95,8 +95,8 @@ export function Tag({ children, tone = "neutral" }: { children: ReactNode; tone?
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="break-words font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">{title}</h1>
         {subtitle && <p className="mt-1 max-w-2xl text-sm text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2 no-print">{actions}</div>}
@@ -112,7 +112,7 @@ export function CardHeader({ title, hint, actions }: { title: string; hint?: str
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
       <div className="min-w-0">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        <h2 className="break-words text-sm font-semibold text-ink">{title}</h2>
         {hint && <p className="text-xs text-muted">{hint}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2 no-print">{actions}</div>}
@@ -123,9 +123,9 @@ export function CardHeader({ title, hint, actions }: { title: string; hint?: str
 export function StatCard({ label, value, hint, tone = "default" }: { label: string; value: string; hint?: string; tone?: "default" | "warn" | "ok" | "danger" }) {
   const valueTone = { default: "text-ink", warn: "text-warn", ok: "text-ok", danger: "text-danger" }[tone];
   return (
-    <Card className="px-5 py-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-      <p className={`mt-1.5 font-display text-2xl font-semibold ${valueTone}`}>{value}</p>
+    <Card className="min-w-0 px-5 py-4">
+      <p className="break-words text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className={`mt-1.5 break-words font-display text-2xl font-semibold ${valueTone}`}>{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </Card>
   );

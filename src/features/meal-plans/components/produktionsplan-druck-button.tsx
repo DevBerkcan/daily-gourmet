@@ -32,7 +32,7 @@ export function ProduktionsplanDruckButton({ mealPlanId, datum, wochentag }: { m
       size="sm"
       onClick={herunterladen}
       loading={laedt}
-      className="mt-1 no-print"
+      className="no-print"
       showLabel
     />
   );

@@ -69,7 +69,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <div className="mb-1.5 flex items-center justify-between">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <label htmlFor="password" className="text-sm font-medium text-ink">{t("login.password")}</label>
             <span className="cursor-pointer text-xs font-medium text-basil hover:underline">{t("login.forgotPassword")}</span>
           </div>
@@ -97,8 +97,8 @@ export function LoginForm() {
               onClick={() => void handleLogin(account.username, DEV_PASSWORD)}
               className="group flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-left transition-colors hover:border-basil hover:bg-basil-soft disabled:opacity-60"
             >
-              <account.icon size={18} className="text-basil" aria-hidden />
-              <span>
+              <account.icon size={18} className="shrink-0 text-basil" aria-hidden />
+              <span className="min-w-0">
                 <span className="block text-sm font-medium text-ink">{account.label}</span>
                 <span className="block text-xs text-muted">{account.hint}</span>
               </span>

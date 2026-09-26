@@ -269,7 +269,7 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
           placeholder="z. B. steile Treppe, kein Rollwagen möglich, Temperaturkontrolle"
         />
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
-        <div className="flex justify-end gap-2 no-print">
+        <div className="flex flex-wrap justify-end gap-2 no-print">
           <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
           <Button type="submit" disabled={!kannSpeichern} loading={mutation.isPending} icon={ACTION_ICONS.save} label="Einrichtung speichern" showLabel />
         </div>

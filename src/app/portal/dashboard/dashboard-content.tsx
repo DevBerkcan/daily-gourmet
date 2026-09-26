@@ -27,7 +27,7 @@ export function DashboardContent() {
         <StatCard label="Bestellstatus aktuelle Woche" value={summary?.bestellstatusAktuelleWoche ?? "—"} tone="ok" />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader title="Ihre Bestellungen" actions={<Link href="/portal/orders" className="text-xs font-medium text-basil hover:underline">Alle ansehen</Link>} />
           <Table head={["Woche", "Status", "Abgesendet"]}>

@@ -20,8 +20,8 @@ function VerfuegbareRouten() {
       <CardHeader title="Offene Routen" hint="Für heute noch nicht vergeben — jetzt übernehmen." actions={<Route size={19} className="text-basil" aria-hidden />} />
       <div className="divide-y divide-line">
         {verfuegbar.map((r) => (
-          <div key={r.id} className="flex items-center justify-between gap-4 px-5 py-4">
-            <div>
+          <div key={r.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+            <div className="min-w-0">
               <p className="font-semibold text-ink">{r.name}</p>
               <p className="mt-0.5 text-sm text-muted">{r.stopps.length} Stopps · Abfahrt {r.start} Uhr</p>
             </div>
@@ -80,13 +80,13 @@ export function DriverDashboard() {
           <Card>
             <CardHeader title="Stoppreihenfolge" hint="Geplante Ankunft und Lieferzeitfenster" actions={<Route size={19} className="text-basil" aria-hidden />} />
             <div className="relative ml-8 border-l-2 border-basil-soft py-5 pr-5">
-              {route.stopps.map((stopp) => <div key={stopp.id} className="relative pb-7 pl-7 last:pb-0"><span className="absolute -left-[13px] flex size-6 items-center justify-center rounded-full bg-basil text-xs font-bold text-white">{stopp.reihenfolge}</span><div className="flex flex-wrap justify-between gap-3"><div><p className="font-semibold text-ink">{stopp.einrichtungName}</p><p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted"><MapPin size={14} aria-hidden />{stopp.einrichtungAdresse}</p><p className="mt-1 text-xs text-muted">Kontakt: {stopp.kontakt} · {stopp.telefon}</p></div><div className="text-right"><p className="font-semibold text-basil">{stopp.ankunft} Uhr</p>{stopp.zeitfenster && <p className="text-xs text-muted">Fenster {stopp.zeitfenster}</p>}</div></div>{stopp.hinweis ? <p className="mt-2 rounded-lg bg-saffron-soft px-3 py-2 text-xs font-medium text-warn">{stopp.hinweis}</p> : null}</div>)}
+              {route.stopps.map((stopp) => <div key={stopp.id} className="relative pb-7 pl-7 last:pb-0"><span className="absolute -left-[13px] flex size-6 items-center justify-center rounded-full bg-basil text-xs font-bold text-white">{stopp.reihenfolge}</span><div className="flex flex-wrap justify-between gap-3"><div className="min-w-0"><p className="font-semibold text-ink">{stopp.einrichtungName}</p><p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted"><MapPin size={14} className="shrink-0" aria-hidden />{stopp.einrichtungAdresse}</p><p className="mt-1 text-xs text-muted">Kontakt: {stopp.kontakt} · {stopp.telefon}</p></div><div className="text-right"><p className="font-semibold text-basil">{stopp.ankunft} Uhr</p>{stopp.zeitfenster && <p className="text-xs text-muted">Fenster {stopp.zeitfenster}</p>}</div></div>{stopp.hinweis ? <p className="mt-2 rounded-lg bg-saffron-soft px-3 py-2 text-xs font-medium text-warn">{stopp.hinweis}</p> : null}</div>)}
             </div>
           </Card>
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card><CardHeader title="Fahrzeug & Tour" /><dl className="divide-y divide-line text-sm"><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Route</dt><dd className="font-semibold text-ink">{route.name}</dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Fahrzeug</dt><dd className="text-right font-semibold text-ink">{person?.fahrzeug}<br /><span className="text-xs text-muted">{person?.kennzeichen}</span></dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Rückkehr</dt><dd className="font-semibold text-ink">{route.rueckkehr ? `ca. ${route.rueckkehr} Uhr` : "—"}</dd></div></dl></Card>
+          <Card><CardHeader title="Fahrzeug & Tour" /><dl className="divide-y divide-line text-sm"><div className="flex justify-between gap-3 px-5 py-3"><dt className="shrink-0 text-muted">Route</dt><dd className="min-w-0 break-words text-right font-semibold text-ink">{route.name}</dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Fahrzeug</dt><dd className="text-right font-semibold text-ink">{person?.fahrzeug}<br /><span className="text-xs text-muted">{person?.kennzeichen}</span></dd></div><div className="flex justify-between gap-3 px-5 py-3"><dt className="text-muted">Rückkehr</dt><dd className="font-semibold text-ink">{route.rueckkehr ? `ca. ${route.rueckkehr} Uhr` : "—"}</dd></div></dl></Card>
 
           {route.status === "GEPLANT" && (
             <Card>

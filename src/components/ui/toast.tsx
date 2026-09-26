@@ -55,7 +55,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             ) : (
               <XCircle size={18} className="mt-0.5 shrink-0 text-danger" aria-hidden />
             )}
-            <span className="flex-1">{t.text}</span>
+            <span className="min-w-0 flex-1 break-words">{t.text}</span>
             <Button icon={X} label="Meldung schließen" variant="ghost" size="sm" showLabel className="-my-1.5 -mr-2" onClick={() => dismiss(t.id)} />
           </div>
         ))}

@@ -100,11 +100,11 @@ export function DashboardContent() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 no-print">
         <Link href="/admin/procurement" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
-          <ShoppingBasket size={18} className="text-basil" aria-hidden />
+          <ShoppingBasket size={18} className="shrink-0 text-basil" aria-hidden />
           <span className="text-sm font-medium text-ink">{t("adminDashboard.checkProcurement")}</span>
         </Link>
         <Link href="/admin/production" className="flex items-center gap-3 rounded-card border border-line bg-surface px-5 py-4 transition-colors hover:border-basil hover:bg-basil-soft">
-          <Factory size={18} className="text-basil" aria-hidden />
+          <Factory size={18} className="shrink-0 text-basil" aria-hidden />
           <span className="text-sm font-medium text-ink">{t("adminDashboard.prepareProduction")}</span>
         </Link>
       </div>

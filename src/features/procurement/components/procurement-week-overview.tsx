@@ -46,13 +46,13 @@ export function ProcurementWeekOverview() {
                   type="button"
                   onClick={() => toggleWoche(woche.jahr, woche.kalenderwoche)}
                   aria-expanded={offen}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 px-5 py-4 text-left hover:bg-paper"
+                  className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left hover:bg-paper"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-display text-lg font-semibold text-ink">Kalenderwoche {woche.kalenderwoche} / {woche.jahr}</p>
                     <p className="text-xs text-muted">{woche.bestaetigteBestellungen} bestätigte {woche.bestaetigteBestellungen === 1 ? "Bestellung" : "Bestellungen"} · {woche.portionenGesamt} Portionen gesamt</p>
                   </div>
-                  {offen ? <ChevronUp size={18} aria-hidden /> : <ChevronDown size={18} aria-hidden />}
+                  {offen ? <ChevronUp size={18} className="shrink-0" aria-hidden /> : <ChevronDown size={18} className="shrink-0" aria-hidden />}
                 </button>
                 {offen ? (
                   <div className="border-t border-line bg-paper/50 px-5 py-5">

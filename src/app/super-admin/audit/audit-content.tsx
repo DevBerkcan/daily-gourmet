@@ -31,7 +31,7 @@ export function AuditContent() {
               <Td>{a.tenantName ?? "Plattform"}</Td>
               <Td>{a.benutzer}</Td>
               <Td className="font-medium text-ink">{a.aktion}</Td>
-              <Td className="text-muted">{a.entitaet} · {a.entitaetId}</Td>
+              <Td className="text-muted max-sm:break-all">{a.entitaet} · {a.entitaetId}</Td>
               <Td className="max-w-56 text-muted">{a.begruendung ?? "—"}</Td>
             </tr>
           ))}

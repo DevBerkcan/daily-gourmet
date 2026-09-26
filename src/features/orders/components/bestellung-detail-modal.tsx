@@ -32,8 +32,8 @@ export function BestellungDetailModal({
         className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-6 py-4">
-          <div>
-            <h2 id="bestellung-detail-title" className="font-display text-lg font-semibold text-ink">
+          <div className="min-w-0">
+            <h2 id="bestellung-detail-title" className="break-words font-display text-lg font-semibold text-ink">
               Bestellung {einrichtung?.name ?? bestellung.einrichtungId}
             </h2>
             <p className="mt-0.5 text-sm text-muted">
@@ -50,7 +50,7 @@ export function BestellungDetailModal({
             <StatusBadge status={bestellung.status} />
             <span className="text-muted">Bestellte Portionen gesamt:</span>
             <span className="font-display text-xl font-semibold text-basil">{gesamt}</span>
-            <span className="ml-auto text-xs text-muted">{bestellung.id}</span>
+            <span className="ml-auto min-w-0 break-all text-xs text-muted">{bestellung.id}</span>
           </div>
 
           {nachTag.length === 0 ? (
