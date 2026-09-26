@@ -35,6 +35,9 @@ export function middleware(request: NextRequest) {
     // fetched from the API and rendered via an <iframe src={URL.createObjectURL(blob)}>, which is
     // NOT covered by 'self' since a blob: URL's origin isn't matched by CSP's 'self' keyword.
     "frame-src 'self' blob:",
+    // pdf.js-Worker (PdfCanvasPreview, mobile PDF-Vorschau) — ohne eigene Direktive fiele worker-src
+    // auf script-src zurück, dessen 'strict-dynamic' 'self' ignoriert und den Worker blockieren würde.
+    "worker-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

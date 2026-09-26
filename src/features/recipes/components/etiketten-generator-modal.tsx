@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ACTION_ICONS, Button } from "@/components/ui";
 import { apiFetchBlob } from "@/lib/api/client";
+import { PdfCanvasPreview } from "@/components/ui/pdf-canvas-preview";
 
 type Inhalt = "Vollstaendig" | "NurNaehrwerte" | "OhneNaehrwerte";
 type Orientierung = "Quer" | "Hoch";
@@ -36,6 +37,10 @@ export function EtikettenGeneratorModal({
   const [portionsgroesse, setPortionsgroesse] = useState(portionsgewichtG ?? 0);
   const [mhd, setMhd] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  // Eingebauter PDF-Viewer im <iframe> nur am Desktop — Handy/Tablet-Browser zeigen dort nichts oder
+  // nur eine starre erste Seite, deshalb rendert dort PdfCanvasPreview das PDF selbst.
+  const [nativerViewer] = useState(() => typeof window !== "undefined" && navigator.pdfViewerEnabled && !window.matchMedia("(pointer: coarse)").matches);
   const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
 
@@ -53,6 +58,7 @@ export function EtikettenGeneratorModal({
       apiFetchBlob(`/recipes/${rezeptId}/label?${params.toString()}`)
         .then((blob) => {
           if (verworfen) return;
+          setPreviewBlob(blob);
           const url = URL.createObjectURL(blob);
           setPreviewUrl((vorherige) => {
             if (vorherige) URL.revokeObjectURL(vorherige);
@@ -97,6 +103,8 @@ export function EtikettenGeneratorModal({
           <div className="flex items-center justify-center overflow-auto bg-paper p-6">
             {fehler ? (
               <p className="text-sm text-danger">{fehler}</p>
+            ) : previewBlob && !nativerViewer ? (
+              <PdfCanvasPreview blob={previewBlob} title={`Etikett ${rezeptName}`} className={`self-start ${orientierung === "Quer" ? "" : "max-w-sm"} ${laedt ? "opacity-50" : ""}`} />
             ) : previewUrl ? (
               <iframe src={previewUrl} title={`Etikett ${rezeptName}`} className={`rounded-lg border border-line bg-white shadow-sm ${laedt ? "opacity-50" : ""}`} style={{ width: orientierung === "Quer" ? "100%" : "50%", minHeight: "70vh" }} />
             ) : (
