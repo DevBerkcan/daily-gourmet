@@ -73,10 +73,10 @@ export function RezepteTabelle() {
           { label: "Portionen (Std.)", className: "hidden sm:table-cell" },
           { label: "Nutri-Score", className: "hidden sm:table-cell" },
           { label: "Preis / Portion", className: "hidden md:table-cell" },
-          { label: "Ersteller", className: "hidden lg:table-cell" },
+          { label: "Ersteller", className: "hidden 2xl:table-cell" },
           { label: "Allergene", className: "hidden md:table-cell" },
           { label: "Ernährung", className: "hidden lg:table-cell" },
-          { label: "Version", className: "hidden lg:table-cell" },
+          { label: "Version", className: "hidden 2xl:table-cell" },
           "Status",
           "",
         ]}
@@ -111,14 +111,14 @@ export function RezepteTabelle() {
                   ? <>{r.geschaetzteKostenProPortion.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}{r.manuellerPreisProPortion != null && <span className="block text-[11px] text-muted">manuell</span>}</>
                   : <span className="text-muted">—</span>}
               </Td>
-              <Td className="hidden text-muted lg:table-cell">{r.erstelltVon}</Td>
+              <Td className="hidden text-muted 2xl:table-cell">{r.erstelltVon}</Td>
               <Td className="hidden md:table-cell">
                 {allergene.length > 0
                   ? <span className="flex flex-wrap gap-1">{allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}</span>
                   : <span className="text-muted">—</span>}
               </Td>
               <Td className="hidden lg:table-cell">{r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : <span className="text-muted">—</span>}</Td>
-              <Td className="hidden text-muted lg:table-cell">v{r.version}</Td>
+              <Td className="hidden text-muted 2xl:table-cell">v{r.version}</Td>
               <Td><StatusBadge status={r.aktiv ? "AKTIV" : "ARCHIVIERT"} /></Td>
               <Td className="no-print">
                 <Button icon={ACTION_ICONS.delete} label={`${r.name} löschen`} variant="danger" size="sm" onClick={() => setLoescheRezept(r)} />

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 import { PageHeader, Card, CardHeader, Table, Td, Button, ACTION_ICONS, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ApiError } from "@/lib/api/client";
 import { Scale, Sigma, Utensils } from "lucide-react";
 import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
@@ -16,6 +18,7 @@ import {
   useRezepte,
   useUpdateRezept,
   useDuplicateRezept,
+  useDeleteRezept,
   rezeptAllergeneLive,
   rezeptZusatzstoffeLive,
   rezeptBioAnteilLive,
@@ -33,7 +36,9 @@ export function RezeptDetail({ id }: { id: string }) {
   const ladend = useIsFetching({ queryKey: ["recipes"] }) > 0 && rezepte.length === 0;
   const updateRezept = useUpdateRezept();
   const duplicateRezept = useDuplicateRezept();
+  const deleteRezept = useDeleteRezept();
   const [bearbeiten, setBearbeiten] = useState(false);
+  const [loeschen, setLoeschen] = useState(false);
   const [naehrwertModus, setNaehrwertModus] = useState<"portion" | "100g">("portion");
   const [naehrwerteAnsehen, setNaehrwerteAnsehen] = useState(false);
 
@@ -108,9 +113,32 @@ export function RezeptDetail({ id }: { id: string }) {
                 });
               }}
             />
+            <Button icon={ACTION_ICONS.delete} label="Löschen" variant="danger" showLabel onClick={() => setLoeschen(true)} />
             <Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel onClick={() => setBearbeiten(true)} />
           </>
         }
+      />
+      <ConfirmDialog
+        open={loeschen}
+        title="Rezept löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{rezept.name}</strong> wird unwiderruflich gelöscht. Wird es bereits in einem Wochenplan, einer
+            Bestellung, einer Route oder Produktion verwendet, schlägt das Löschen fehl — archivieren Sie es dann stattdessen
+            (über „Bearbeiten“ → „Aktiv“ abwählen).
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
+        onCancel={() => setLoeschen(false)}
+        onConfirm={() => {
+          setLoeschen(false);
+          deleteRezept.mutate(rezept.id, {
+            onSuccess: () => { toast.success(`„${rezept.name}“ wurde gelöscht.`); router.push("/admin/recipes"); },
+            onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+          });
+        }}
       />
 
       <p className="mb-4 text-xs text-muted">
