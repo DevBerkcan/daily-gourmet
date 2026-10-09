@@ -76,9 +76,8 @@ export function RezepteTabelle() {
           { label: "Ersteller", className: "hidden 2xl:table-cell" },
           { label: "Allergene", className: "hidden md:table-cell" },
           { label: "Ernährung", className: "hidden lg:table-cell" },
-          { label: "Version", className: "hidden 2xl:table-cell" },
           "Status",
-          "",
+          { label: "", className: "sm:sticky sm:right-0 sm:z-10 sm:bg-surface" },
         ]}
       >
         {pageItems.map((r) => {
@@ -114,13 +113,12 @@ export function RezepteTabelle() {
               <Td className="hidden text-muted 2xl:table-cell">{r.erstelltVon}</Td>
               <Td className="hidden md:table-cell">
                 {allergene.length > 0
-                  ? <span className="flex flex-wrap gap-1">{allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}</span>
+                  ? <span className="flex max-w-56 flex-wrap gap-1">{allergene.map((a) => <Tag key={a} tone="amber">{a}</Tag>)}</span>
                   : <span className="text-muted">—</span>}
               </Td>
               <Td className="hidden lg:table-cell">{r.vegan ? <Tag tone="green">vegan</Tag> : r.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : <span className="text-muted">—</span>}</Td>
-              <Td className="hidden text-muted 2xl:table-cell">v{r.version}</Td>
               <Td><StatusBadge status={r.aktiv ? "AKTIV" : "ARCHIVIERT"} /></Td>
-              <Td className="no-print">
+              <Td className="no-print sm:sticky sm:right-0 sm:z-10 sm:bg-surface">
                 <Button icon={ACTION_ICONS.delete} label={`${r.name} löschen`} variant="danger" size="sm" onClick={() => setLoescheRezept(r)} />
               </Td>
             </tr>
