@@ -1,11 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown, ChevronUp, PackageSearch, UtensilsCrossed } from "lucide-react";
 import { Card, CardHeader, Table, Td, Button, EmptyState } from "@/components/ui";
 import { useEinkaufsWochen, useWochenRezeptBedarf, useWochenZutatBedarf } from "@/lib/services/procurement-overview";
 
 const weekKey = (jahr: number, kalenderwoche: number) => `${jahr}-${kalenderwoche}`;
+const euro = (v: number) => v.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+
+function KostenSumme({ label, summe, ohnePreis, einheit }: { label: string; summe: number; ohnePreis: number; einheit: string }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-4 py-3">
+      <div className="min-w-0">
+        <p className="text-sm text-muted">{label}</p>
+        {ohnePreis > 0 && <p className="text-xs text-warn">{ohnePreis} {einheit} ohne Preis — nicht in der Summe enthalten.</p>}
+      </div>
+      <p className="font-display text-2xl font-semibold text-basil">{euro(summe)}</p>
+    </div>
+  );
+}
 
 /** Bedarfs-Rollup über bestätigte Bestellungen: Kalenderwoche → Rezepte (wie viele Einrichtungen/
  * Portionen je Gericht) → auf Klick der Zutaten-Gesamtbedarf für die Lieferantenbestellung. Ergänzt
@@ -64,30 +78,65 @@ export function ProcurementWeekOverview() {
                       rezepte.length === 0 ? (
                         <p className="text-sm text-muted">Keine Rezepte gefunden.</p>
                       ) : (
-                        <Table head={["Rezept", "Portionen gesamt", "Einrichtungen"]}>
-                          {rezepte.map((r) => (
-                            <tr key={r.rezeptId}>
-                              <Td className="font-medium text-ink">{r.rezeptName}</Td>
-                              <Td>{r.portionenGesamt.toLocaleString("de-DE")}</Td>
-                              <Td>{r.einrichtungenAnzahl}</Td>
-                            </tr>
-                          ))}
-                        </Table>
+                        <>
+                          <KostenSumme
+                            label="Voraussichtliche Kosten (Rezeptpreis × Portionen)"
+                            summe={rezepte.reduce((s, r) => s + (r.kostenGesamt ?? 0), 0)}
+                            ohnePreis={rezepte.filter((r) => r.kostenGesamt == null).length}
+                            einheit="Rezepte"
+                          />
+                          <Table head={["Rezept", "Portionen gesamt", "Einrichtungen", "Preis / Portion", "Kosten gesamt"]}>
+                            {rezepte.map((r) => (
+                              <tr key={r.rezeptId}>
+                                <Td>
+                                  <Link href={`/admin/recipes/${r.rezeptId}`} className="font-medium text-basil hover:underline">{r.rezeptName}</Link>
+                                </Td>
+                                <Td>{r.portionenGesamt.toLocaleString("de-DE")}</Td>
+                                <Td>{r.einrichtungenAnzahl}</Td>
+                                <Td className="whitespace-nowrap">
+                                  {r.preisProPortion != null ? <>{euro(r.preisProPortion)}{r.preisManuell && <span className="ml-1.5 text-[11px] text-muted">manuell</span>}</> : <span className="text-muted">kein Preis</span>}
+                                </Td>
+                                <Td className="whitespace-nowrap font-medium text-ink">{r.kostenGesamt != null ? euro(r.kostenGesamt) : <span className="font-normal text-muted">—</span>}</Td>
+                              </tr>
+                            ))}
+                          </Table>
+                        </>
                       )
                     ) : zutaten.length === 0 ? (
                       <p className="text-sm text-muted">Keine Zutaten gefunden.</p>
                     ) : (
-                      <Table head={["Zutat", "Kategorie", "Gesamtmenge", "Lagerort", "Verwendet in"]}>
-                        {zutaten.map((z) => (
-                          <tr key={z.zutatId}>
-                            <Td className="font-medium text-ink">{z.zutatName}</Td>
-                            <Td className="text-muted">{z.kategorie}</Td>
-                            <Td>{z.gesamtmenge.toLocaleString("de-DE")} {z.einheit}</Td>
-                            <Td className="text-muted">{z.lagerort ?? "—"}</Td>
-                            <Td className="text-xs text-muted">{z.verwendetIn.join(", ")}</Td>
-                          </tr>
-                        ))}
-                      </Table>
+                      <>
+                        <KostenSumme
+                          label="Voraussichtlicher Wareneinsatz (Menge × Zutatenpreis)"
+                          summe={zutaten.reduce((s, z) => s + (z.kostenGesamt ?? 0), 0)}
+                          ohnePreis={zutaten.filter((z) => z.kostenGesamt == null).length}
+                          einheit="Zutaten"
+                        />
+                        <Table head={["Zutat", "Kategorie", "Gesamtmenge", "Preis", "Kosten", "Lagerort", "Verwendet in"]}>
+                          {zutaten.map((z) => (
+                            <tr key={`${z.zutatId}-${z.einheit}`}>
+                              <Td>
+                                <Link href={`/admin/ingredients/${z.zutatId}`} className="font-medium text-basil hover:underline">{z.zutatName}</Link>
+                              </Td>
+                              <Td className="text-muted">{z.kategorie}</Td>
+                              <Td className="whitespace-nowrap">{z.gesamtmenge.toLocaleString("de-DE")} {z.einheit}</Td>
+                              <Td className="whitespace-nowrap">
+                                {z.preis != null ? (
+                                  <>
+                                    {euro(z.preis)}<span className="text-muted"> / {z.preisEinheit}</span>
+                                    <span className="block text-[11px] text-muted">{z.lieferantName ?? "Standardpreis"}</span>
+                                  </>
+                                ) : <span className="text-muted">kein Preis</span>}
+                              </Td>
+                              <Td className="whitespace-nowrap font-medium text-ink">
+                                {z.kostenGesamt != null ? euro(z.kostenGesamt) : z.preis != null ? <span className="font-normal text-xs text-muted">Einheit nicht umrechenbar</span> : <span className="font-normal text-muted">—</span>}
+                              </Td>
+                              <Td className="text-muted">{z.lagerort ?? "—"}</Td>
+                              <Td className="text-xs text-muted">{z.verwendetIn.join(", ")}</Td>
+                            </tr>
+                          ))}
+                        </Table>
+                      </>
                     )}
                   </div>
                 ) : null}

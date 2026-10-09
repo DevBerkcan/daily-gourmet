@@ -16,6 +16,11 @@ export interface EinkaufslistenPosition {
   einheit: Einheit;
   gesamtmengeBasis: number;
   einkaufsmenge: number;
+  /** Preis je preisEinheit — Angebot des Listen-Lieferanten, sonst günstigster/Standardpreis. */
+  preis?: number;
+  preisEinheit?: Einheit;
+  /** Was eine Einkaufseinheit (ein Schritt der einkaufsmenge) kostet — für die Live-Summe beim Ändern. */
+  preisJeEinkaufseinheit?: number;
 }
 
 export interface Einkaufsliste {
@@ -42,6 +47,10 @@ interface ProcurementListItemDto {
   unit: string;
   totalQuantityBase: number;
   purchaseQuantity: number;
+  unitPrice: number | null;
+  priceUnit: string | null;
+  pricePerPurchaseUnit: number | null;
+  totalCost: number | null;
 }
 
 interface ProcurementListDto {
@@ -76,6 +85,9 @@ function toEinkaufsliste(dto: ProcurementListDto): Einkaufsliste {
       einheit: unitToFrontend(i.unit),
       gesamtmengeBasis: i.totalQuantityBase,
       einkaufsmenge: i.purchaseQuantity,
+      preis: i.unitPrice ?? undefined,
+      preisEinheit: i.priceUnit ? unitToFrontend(i.priceUnit) : undefined,
+      preisJeEinkaufseinheit: i.pricePerPurchaseUnit ?? undefined,
     })),
   };
 }

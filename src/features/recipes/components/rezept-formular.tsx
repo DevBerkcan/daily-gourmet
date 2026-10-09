@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
-import { TextField, NumberField, TextareaField, SelectField, CheckboxRow, CheckboxGroup, ImageField } from "@/components/ui/form-fields";
+import { TextField, NumberField, OptionalNumberField, TextareaField, SelectField, CheckboxRow, CheckboxGroup, ImageField } from "@/components/ui/form-fields";
 import { REZEPT_KATEGORIEN, ZIELGRUPPEN_LISTE, SCHWIERIGKEITSGRADE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
 import type { Rezept, RezeptZutat, Schwierigkeitsgrad } from "../types";
+
+const formatEuro = (v: number) => v.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
 export type RezeptFormDaten = Omit<Rezept, "id" | "version" | "erstelltVon" | "erstelltAm" | "aktualisiertAm">;
 
@@ -130,6 +132,32 @@ export function RezeptFormular({
               </div>
             );
           })}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Kalkulation" hint="Optional — ohne manuellen Preis wird der Wareneinsatz aus den Zutatenpreisen berechnet." />
+        <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
+          <OptionalNumberField
+            label="Preis je Portion (manuell)"
+            value={r.manuellerPreisProPortion}
+            onChange={(v) => set("manuellerPreisProPortion", v)}
+            min={0}
+            step={0.01}
+            suffix="€"
+            placeholder={initial?.berechneteKostenProPortion != null ? initial.berechneteKostenProPortion.toLocaleString("de-DE") : "nicht gesetzt"}
+            hint={
+              initial?.berechneteKostenProPortion != null
+                ? `Berechnet aus Zutatenpreisen: ${formatEuro(initial.berechneteKostenProPortion)} je Portion. Leer lassen, um diesen Wert zu verwenden.`
+                : "Leer lassen, um den Preis aus den Zutatenpreisen zu berechnen."
+            }
+          />
+          {r.manuellerPreisProPortion != null && (
+            <div className="flex flex-col justify-center text-sm">
+              <span className="text-muted">Wareneinsatz gesamt ({r.standardPortionen} Portionen)</span>
+              <span className="font-display text-lg font-semibold text-basil">{formatEuro(r.manuellerPreisProPortion * r.standardPortionen)}</span>
+            </div>
+          )}
         </div>
       </Card>
 

@@ -183,12 +183,40 @@ export function useAllergensLookup() {
   return query.data ?? [];
 }
 
-export function useSuppliers() {
+export interface Lieferant {
+  id: string;
+  name: string;
+  ansprechpartner?: string;
+  telefon?: string;
+  email?: string;
+  /** Anzahl der Zutatenpreise in der Preisliste dieses Lieferanten. */
+  anzahlPreise: number;
+}
+
+interface SupplierDto {
+  id: string;
+  name: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
+  priceCount: number;
+}
+
+const toLieferant = (dto: SupplierDto): Lieferant => ({
+  id: dto.id,
+  name: dto.name,
+  ansprechpartner: dto.contactPerson ?? undefined,
+  telefon: dto.phone ?? undefined,
+  email: dto.email ?? undefined,
+  anzahlPreise: dto.priceCount,
+});
+
+export function useSuppliers(): Lieferant[] {
   const query = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => api.get<PagedResult<LookupDto>>("/suppliers?pageSize=200"),
+    queryFn: () => api.get<PagedResult<SupplierDto>>("/suppliers?pageSize=200"),
   });
-  return query.data?.items ?? [];
+  return (query.data?.items ?? []).map(toLieferant);
 }
 
 export function useCreateSupplier() {
@@ -196,6 +224,46 @@ export function useCreateSupplier() {
   return useMutation({
     mutationFn: (name: string) => api.post<{ id: string; name: string }>("/suppliers", { name }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
+  });
+}
+
+export function useUpdateSupplier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (l: Omit<Lieferant, "anzahlPreise">) =>
+      api.put<SupplierDto>(`/suppliers/${l.id}`, { name: l.name, contactPerson: l.ansprechpartner || null, phone: l.telefon || null, email: l.email || null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices"] });
+    },
+  });
+}
+
+/** Löscht den Lieferanten samt Preisliste — schlägt mit 409 fehl, solange Einkaufslisten auf ihn
+ * verweisen (siehe SupplierHandler.DeleteAsync); dann bleibt nur useClearSupplierPrices. */
+export function useDeleteSupplier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/suppliers/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices"] });
+    },
+  });
+}
+
+/** Leert die Preisliste eines Lieferanten (alle seine Zutatenpreise), der Lieferant bleibt bestehen. */
+export function useClearSupplierPrices() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<number>(`/suppliers/${id}/prices`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices"] });
+    },
   });
 }
 
@@ -238,6 +306,7 @@ async function toSaveDto(input: Omit<Zutat, "id">, categories: LookupDto[], alle
     vegan: input.vegan,
     bio: input.bio,
     regional: input.regional,
+    active: input.aktiv,
     nutrition: {
       kcal: input.naehrwertePro100.kcal,
       kj: input.naehrwertePro100.kj,
@@ -327,6 +396,7 @@ export function useSaveSupplierPrice(zutatId: string) {
     mutationFn: (input: SaveLieferantenpreisInput) => api.post<IngredientSupplierPriceDto>(`/ingredients/${zutatId}/prices`, toSavePriceDto(input)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["ingredients"] });
     },
   });
@@ -339,6 +409,7 @@ export function useUpdateSupplierPrice(zutatId: string) {
       api.put<IngredientSupplierPriceDto>(`/ingredients/${zutatId}/prices/${preisId}`, toSavePriceDto(input)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["ingredients"] });
     },
   });
@@ -350,6 +421,7 @@ export function useDeleteSupplierPrice(zutatId: string) {
     mutationFn: (preisId: string) => api.delete(`/ingredients/${zutatId}/prices/${preisId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ingredient-prices", zutatId] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["ingredients"] });
     },
   });
@@ -369,6 +441,10 @@ export function useImportSupplierPriceList(lieferantId: string) {
       const result = await apiFetchUpload<{ matched: number; unmatched: { rowNumber: number; reason: string }[] }>(`/suppliers/${lieferantId}/price-import`, file);
       return { gefunden: result.matched, nichtGefunden: result.unmatched.map((u) => ({ zeile: u.rowNumber, grund: u.reason })) };
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["ingredients"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] });
+      queryClient.invalidateQueries({ queryKey: ["ingredient-prices"] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+    },
   });
 }

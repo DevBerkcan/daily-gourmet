@@ -20,6 +20,10 @@ export interface WochenRezeptBedarf {
   rezeptName: string;
   portionenGesamt: number;
   einrichtungenAnzahl: number;
+  /** Rezeptpreis je Portion (manuell gepflegt oder aus Zutatenpreisen berechnet). */
+  preisProPortion?: number;
+  preisManuell: boolean;
+  kostenGesamt?: number;
 }
 
 export interface WochenZutatBedarf {
@@ -30,6 +34,11 @@ export interface WochenZutatBedarf {
   gesamtmenge: number;
   lagerort?: string;
   verwendetIn: string[];
+  /** Preis je preisEinheit — günstigster Lieferant (lieferantName) bzw. Standardpreis. */
+  preis?: number;
+  preisEinheit?: Einheit;
+  lieferantName?: string;
+  kostenGesamt?: number;
 }
 
 interface ProcurementWeekDto {
@@ -44,6 +53,9 @@ interface WeekRecipeRequirementDto {
   recipeName: string;
   totalPortions: number;
   facilityCount: number;
+  costPerPortion: number | null;
+  costIsManual: boolean;
+  totalCost: number | null;
 }
 
 interface IngredientRequirementDto {
@@ -54,6 +66,10 @@ interface IngredientRequirementDto {
   totalQuantity: number;
   storageLocationName: string | null;
   contributingRecipeNames: string[];
+  unitPrice: number | null;
+  priceUnit: string | null;
+  supplierName: string | null;
+  totalCost: number | null;
 }
 
 /** Alle Kalenderwochen mit mindestens einer bestätigten Bestellung, neueste zuerst. */
@@ -72,7 +88,15 @@ export function useWochenRezeptBedarf(jahr?: number, kalenderwoche?: number, sta
     queryFn: () => api.get<WeekRecipeRequirementDto[]>(`/procurement/overview/weeks/${jahr}/${kalenderwoche}/recipes${toQueryString({ locationId: standortId })}`),
     enabled: jahr != null && kalenderwoche != null,
   });
-  return (query.data ?? []).map((r) => ({ rezeptId: r.recipeId, rezeptName: r.recipeName, portionenGesamt: r.totalPortions, einrichtungenAnzahl: r.facilityCount }));
+  return (query.data ?? []).map((r) => ({
+    rezeptId: r.recipeId,
+    rezeptName: r.recipeName,
+    portionenGesamt: r.totalPortions,
+    einrichtungenAnzahl: r.facilityCount,
+    preisProPortion: r.costPerPortion ?? undefined,
+    preisManuell: r.costIsManual,
+    kostenGesamt: r.totalCost ?? undefined,
+  }));
 }
 
 /** Zutaten-Gesamtbedarf einer Kalenderwoche, über alle Rezepte/Tage hinweg aggregiert — die
@@ -91,5 +115,9 @@ export function useWochenZutatBedarf(jahr?: number, kalenderwoche?: number, stan
     gesamtmenge: i.totalQuantity,
     lagerort: i.storageLocationName ?? undefined,
     verwendetIn: i.contributingRecipeNames,
+    preis: i.unitPrice ?? undefined,
+    preisEinheit: i.priceUnit ? unitToFrontend(i.priceUnit) : undefined,
+    lieferantName: i.supplierName ?? undefined,
+    kostenGesamt: i.totalCost ?? undefined,
   }));
 }

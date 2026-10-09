@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
-import { TextField, NumberField, SelectField, CheckboxRow, CheckboxGroup } from "@/components/ui/form-fields";
+import { TextField, NumberField, OptionalNumberField, SelectField, CheckboxRow, CheckboxGroup } from "@/components/ui/form-fields";
 import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE, ZUSATZSTOFFE_LISTE } from "../data";
-import type { Zutat } from "@/lib/services/ingredients";
+import { useSuppliers, type Zutat } from "@/lib/services/ingredients";
 import type { Einheit } from "@/lib/types";
 
 const EINHEITEN: Einheit[] = ["g", "kg", "ml", "l", "Stück"];
@@ -21,6 +21,10 @@ function leer(): Omit<Zutat, "id"> {
 
 export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zutat; onSubmit: (input: Omit<Zutat, "id">) => void; onAbbrechen?: () => void }) {
   const [z, setZ] = useState<Omit<Zutat, "id">>(initial ? { ...initial } : leer());
+  const lieferanten = useSuppliers();
+  // Importierte Zutaten können eine Kategorie außerhalb der Standardliste tragen — die bleibt wählbar,
+  // statt beim Speichern stillschweigend auf die erste Option zu springen.
+  const kategorien = ZUTAT_KATEGORIEN.includes(z.kategorie) || !z.kategorie ? ZUTAT_KATEGORIEN : [z.kategorie, ...ZUTAT_KATEGORIEN];
 
   const set = <K extends keyof Omit<Zutat, "id">>(key: K, value: Omit<Zutat, "id">[K]) => setZ((prev) => ({ ...prev, [key]: value }));
   const toggleAllergen = (a: string) => set("allergene", z.allergene.includes(a) ? z.allergene.filter((x) => x !== a) : [...z.allergene, a]);
@@ -42,8 +46,22 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
         <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <TextField label="Name" value={z.name} onChange={(v) => set("name", v)} required />
           <TextField label="Artikelnummer" value={z.artikelnummer} onChange={(v) => set("artikelnummer", v)} required />
-          <SelectField label="Kategorie" value={z.kategorie} onChange={(v) => set("kategorie", v)} options={ZUTAT_KATEGORIEN} />
-          <TextField label="Lieferant" value={z.lieferant} onChange={(v) => set("lieferant", v)} />
+          <SelectField label="Kategorie" value={z.kategorie} onChange={(v) => set("kategorie", v)} options={kategorien} />
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-medium text-ink">Lieferant</span>
+            <input
+              type="text"
+              list="zutat-lieferanten"
+              value={z.lieferant}
+              onChange={(e) => set("lieferant", e.target.value)}
+              placeholder="Lieferant wählen oder neuen Namen eingeben"
+              className="min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-basil"
+            />
+            <datalist id="zutat-lieferanten">
+              {lieferanten.map((l) => <option key={l.id} value={l.name} />)}
+            </datalist>
+            <span className="text-xs text-muted">Ein neuer Name legt den Lieferanten automatisch an.</span>
+          </label>
         </div>
       </Card>
 
@@ -53,7 +71,15 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
           <SelectField label="Basiseinheit" value={z.basiseinheit} onChange={(v) => set("basiseinheit", v as Einheit)} options={EINHEITEN} />
           <TextField label="Einkaufseinheit" value={z.einkaufseinheit} onChange={(v) => set("einkaufseinheit", v)} placeholder="z. B. Sack (25 kg)" />
           <NumberField label="Umrechnungsfaktor" value={z.umrechnungsfaktor} onChange={(v) => set("umrechnungsfaktor", v)} min={0.01} hint="Basiseinheiten je Einkaufseinheit" />
-          <NumberField label="Einkaufspreis" value={z.einkaufspreis ?? ""} onChange={(v) => set("einkaufspreis", v)} min={0} suffix="€ je Einkaufseinheit" />
+          <OptionalNumberField
+            label="Standardpreis"
+            value={z.einkaufspreis}
+            onChange={(v) => set("einkaufspreis", v)}
+            min={0}
+            step={0.01}
+            suffix="€ je Einkaufseinheit"
+            hint="Greift, solange kein Lieferantenpreis hinterlegt ist. Lieferantenpreise pflegen Sie nach dem Speichern auf der Zutatenseite."
+          />
         </div>
       </Card>
 

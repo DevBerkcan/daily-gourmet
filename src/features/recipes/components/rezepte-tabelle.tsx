@@ -72,6 +72,7 @@ export function RezepteTabelle() {
           { label: "Kategorie", className: "hidden md:table-cell" },
           { label: "Portionen (Std.)", className: "hidden sm:table-cell" },
           { label: "Nutri-Score", className: "hidden sm:table-cell" },
+          { label: "Preis / Portion", className: "hidden md:table-cell" },
           { label: "Ersteller", className: "hidden lg:table-cell" },
           { label: "Allergene", className: "hidden md:table-cell" },
           { label: "Ernährung", className: "hidden lg:table-cell" },
@@ -105,6 +106,11 @@ export function RezepteTabelle() {
               <Td className="hidden text-muted md:table-cell">{r.kategorie}</Td>
               <Td className="hidden sm:table-cell">{r.standardPortionen}</Td>
               <Td className="hidden sm:table-cell">{r.nutriScore ? <Tag tone="green">{r.nutriScore}</Tag> : <span className="text-muted">—</span>}</Td>
+              <Td className="hidden whitespace-nowrap md:table-cell">
+                {r.geschaetzteKostenProPortion != null
+                  ? <>{r.geschaetzteKostenProPortion.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}{r.manuellerPreisProPortion != null && <span className="block text-[11px] text-muted">manuell</span>}</>
+                  : <span className="text-muted">—</span>}
+              </Td>
               <Td className="hidden text-muted lg:table-cell">{r.erstelltVon}</Td>
               <Td className="hidden md:table-cell">
                 {allergene.length > 0

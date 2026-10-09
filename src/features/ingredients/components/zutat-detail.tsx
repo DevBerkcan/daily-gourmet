@@ -2,20 +2,26 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 import { PageHeader, Card, CardHeader, Table, Td, StatusBadge, Button, Tag, EmptyState, LoadingState, ACTION_ICONS } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ApiError } from "@/lib/api/client";
 import { ZutatFormular } from "./zutat-formular";
 import { PreisePanel } from "./preise-panel";
-import { useZutaten, useUpdateZutat, type Zutat } from "@/lib/services/ingredients";
+import { useZutaten, useUpdateZutat, useDeleteZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function ZutatDetail({ id }: { id: string }) {
+  const router = useRouter();
   const toast = useToast();
   const zutaten = useZutaten();
   const zutat = zutaten.find((z) => z.id === id);
   const ladend = useIsFetching({ queryKey: ["ingredients"] }) > 0 && zutaten.length === 0;
   const updateZutat = useUpdateZutat();
+  const deleteZutat = useDeleteZutat();
   const [bearbeiten, setBearbeiten] = useState(false);
+  const [loeschen, setLoeschen] = useState(false);
 
   if (!zutat) {
     return (
@@ -57,6 +63,8 @@ export function ZutatDetail({ id }: { id: string }) {
     );
   }
 
+  const guenstigster = zutat.lieferantenpreise.length > 0 ? zutat.lieferantenpreise.reduce((a, b) => (a.preis <= b.preis ? a : b)) : undefined;
+
   return (
     <>
       <nav aria-label="Brotkrumen" className="mb-3 text-xs text-muted no-print">
@@ -68,7 +76,33 @@ export function ZutatDetail({ id }: { id: string }) {
       <PageHeader
         title={zutat.name}
         subtitle={`${zutat.kategorie} · ${zutat.artikelnummer} · ${zutat.lieferant}`}
-        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel onClick={() => setBearbeiten(true)} />}
+        actions={
+          <>
+            <Button icon={ACTION_ICONS.delete} label="Löschen" showLabel variant="danger" onClick={() => setLoeschen(true)} />
+            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" showLabel onClick={() => setBearbeiten(true)} />
+          </>
+        }
+      />
+      <ConfirmDialog
+        open={loeschen}
+        title="Zutat löschen"
+        tone="warn"
+        message={
+          <>
+            <strong>{zutat.name}</strong> wird unwiderruflich gelöscht. Wird sie bereits in einer Rezeptur oder einer
+            Beschaffungsliste verwendet, schlägt das Löschen fehl — deaktivieren Sie sie dann über „Bearbeiten“.
+          </>
+        }
+        confirmLabel="Endgültig löschen"
+        confirmIcon={ACTION_ICONS.delete}
+        onCancel={() => setLoeschen(false)}
+        onConfirm={() => {
+          setLoeschen(false);
+          deleteZutat.mutate(zutat.id, {
+            onSuccess: () => { toast.success(`„${zutat.name}“ wurde gelöscht.`); router.push("/admin/ingredients"); },
+            onError: (error) => toast.error(error instanceof ApiError ? error.message : "Löschen fehlgeschlagen. Bitte erneut versuchen."),
+          });
+        }}
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -89,9 +123,9 @@ export function ZutatDetail({ id }: { id: string }) {
             <tr><Td className="font-medium text-ink">Basiseinheit</Td><Td>{zutat.basiseinheit}</Td></tr>
             <tr><Td className="font-medium text-ink">Einkaufseinheit</Td><Td>{zutat.einkaufseinheit || "—"}</Td></tr>
             <tr><Td className="font-medium text-ink">Umrechnungsfaktor</Td><Td>{zutat.umrechnungsfaktor}</Td></tr>
-            <tr><Td className="font-medium text-ink">Standardpreis</Td><Td>{zutat.einkaufspreis != null ? `${zutat.einkaufspreis.toLocaleString("de-DE")} €` : "—"}</Td></tr>
-            {zutat.guenstigsterPreis != null && (
-              <tr><Td className="font-medium text-ink">Günstigster Lieferant</Td><Td>{zutat.guenstigsterLieferantName} · {zutat.guenstigsterPreis.toLocaleString("de-DE")} €</Td></tr>
+            <tr><Td className="font-medium text-ink">Standardpreis</Td><Td>{zutat.einkaufspreis != null ? `${zutat.einkaufspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} je ${zutat.einkaufseinheit || "Einkaufseinheit"}` : "—"}</Td></tr>
+            {guenstigster && (
+              <tr><Td className="font-medium text-ink">Günstigster Lieferant</Td><Td>{guenstigster.lieferantName} · {guenstigster.preis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} je {guenstigster.einheit}</Td></tr>
             )}
           </Table>
         </Card>

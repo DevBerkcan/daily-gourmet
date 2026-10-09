@@ -53,6 +53,11 @@ export interface Rezept {
   /** Serverseitig berechnet aus den aktuellen (günstigsten) Zutatenpreisen — nie gespeichert, siehe
    * RecipeHandler.ComputeEstimatedCostPerPortion. Undefined, solange keine Preise hinterlegt sind. */
   geschaetzteKostenProPortion?: number;
+  /** Nur der live aus Zutatenpreisen berechnete Anteil — zum Vergleich neben einem manuellen Preis. */
+  berechneteKostenProPortion?: number;
+  /** Manuell gepflegter Preis je Portion; hat Vorrang vor der Berechnung (dann ist
+   * geschaetzteKostenProPortion = dieser Wert). Undefined = nur Live-Berechnung. */
+  manuellerPreisProPortion?: number;
   produktionshinweise?: string;
   /** DGE-"Lebenswelten", für die das Rezept freigegeben ist. */
   zielgruppen: string[];

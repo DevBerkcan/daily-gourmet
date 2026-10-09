@@ -62,7 +62,9 @@ export function ProcurementBoard() {
   const aktuelle = listenDieserWoche.find((l) => l.id === ausgewaehlteId) ?? listenDieserWoche[0];
 
   const mengeFuer = (position: (typeof aktuelle.positionen)[number]) => bearbeiteteMengen[position.id] ?? position.einkaufsmenge;
-  const gesamtwert = aktuelle.positionen.reduce((summe, position) => summe + mengeFuer(position) * (zutaten.find((z) => z.id === position.zutatId)?.einkaufspreis ?? 0), 0);
+  const gesamtwert = aktuelle.positionen.reduce((summe, position) => summe + mengeFuer(position) * (position.preisJeEinkaufseinheit ?? 0), 0);
+  const ohnePreis = aktuelle.positionen.filter((p) => p.preisJeEinkaufseinheit == null).length;
+  const euro = (v: number) => v.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
   const naechsterStatus = NEXT_STATUS[aktuelle.status];
 
   return (
@@ -93,7 +95,7 @@ export function ProcurementBoard() {
           <Button icon={FileText} label="PDF-Export" variant="secondary" onClick={() => exportEinkaufsliste(aktuelle.id, "pdf", `einkauf-kw-${aktuelle.kalenderwoche}.pdf`)} showLabel />
           <Button icon={ACTION_ICONS.print} label="Druckansicht" variant="secondary" onClick={() => window.print()} showLabel />
         </div>
-        <Table head={["Zutat", "Gesamtbedarf", "Bestellmenge", "Preis", "Lieferant"]}>
+        <Table head={["Zutat", "Gesamtbedarf", "Bestellmenge", "Einzelpreis", "Preis", "Lieferant"]}>
           {aktuelle.positionen.map((position) => {
             const zutat = zutaten.find((z) => z.id === position.zutatId);
             const menge = mengeFuer(position);
@@ -115,14 +117,24 @@ export function ProcurementBoard() {
                     />
                   </label>
                 </Td>
-                <Td>{(menge * (zutat?.einkaufspreis ?? 0)).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
+                <Td className="whitespace-nowrap">
+                  {position.preis != null ? <>{euro(position.preis)}<span className="text-muted"> / {position.preisEinheit}</span></> : <span className="text-muted">kein Preis</span>}
+                </Td>
+                <Td className="whitespace-nowrap font-medium text-ink">
+                  {position.preisJeEinkaufseinheit != null ? euro(menge * position.preisJeEinkaufseinheit) : <span className="font-normal text-muted">—</span>}
+                  {zutat?.einkaufseinheit && <span className="block text-[11px] font-normal text-muted">{menge} × {zutat.einkaufseinheit}</span>}
+                </Td>
                 <Td className="text-muted">{position.lieferant ?? "—"}</Td>
               </tr>
             );
           })}
         </Table>
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-5 py-4">
-          <div><p className="text-sm text-muted">Bestellwert gesamt</p><p className="font-display text-2xl font-semibold text-basil">{gesamtwert.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</p></div>
+          <div>
+            <p className="text-sm text-muted">Bestellwert gesamt</p>
+            <p className="font-display text-2xl font-semibold text-basil">{euro(gesamtwert)}</p>
+            {ohnePreis > 0 && <p className="text-xs text-warn">{ohnePreis} {ohnePreis === 1 ? "Position" : "Positionen"} ohne Preis — nicht enthalten.</p>}
+          </div>
           {aktuelle.status === "READY_FOR_APPROVAL" && (
             <p className="text-xs text-muted">Armin wurde per E-Mail zur Freigabe eingeladen — er kann alternativ auch hier direkt freigeben.</p>
           )}

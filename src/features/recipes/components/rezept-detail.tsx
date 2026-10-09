@@ -11,6 +11,7 @@ import { RezeptSkalierung } from "./skalierung";
 import { RezeptFormular, type RezeptFormDaten } from "./rezept-formular";
 import { EtikettButton } from "./etikett-button";
 import { NaehrwerteModal } from "./naehrwerte-modal";
+import { KalkulationCard } from "./kalkulation-card";
 import {
   useRezepte,
   useUpdateRezept,
@@ -222,19 +223,7 @@ export function RezeptDetail({ id }: { id: string }) {
             </Card>
           )}
 
-          <Card className="h-fit">
-            <CardHeader title="Kalkulation" hint="Geschätzt anhand der günstigsten hinterlegten Lieferantenpreise, ersatzweise Standardpreis" />
-            {rezept.geschaetzteKostenProPortion != null ? (
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 text-sm">
-                <span className="text-muted">Wareneinsatz gesamt:</span>
-                <span className="font-display text-lg font-semibold text-basil">{(rezept.geschaetzteKostenProPortion * rezept.standardPortionen).toLocaleString("de-DE")} €</span>
-                <span className="ml-auto text-muted">je Portion:</span>
-                <span className="font-display text-lg font-semibold text-basil">{rezept.geschaetzteKostenProPortion.toLocaleString("de-DE")} €</span>
-              </div>
-            ) : (
-              <p className="px-5 py-4 text-sm text-muted">Für die Zutaten dieses Rezepts sind noch keine Einkaufspreise hinterlegt.</p>
-            )}
-          </Card>
+          <KalkulationCard rezept={rezept} />
         </div>
       </div>
 

@@ -58,6 +58,8 @@ interface RecipeDto {
   lactoseFree: boolean;
   dgeCertified: boolean;
   estimatedCostPerPortion: number | null;
+  computedCostPerPortion: number | null;
+  manualCostPerPortion: number | null;
   nutrition: RecipeNutritionDto | null;
   productionNotes: string | null;
   imageUrl: string | null;
@@ -122,6 +124,8 @@ function toRezept(dto: RecipeDto): Rezept {
     laktosefrei: dto.lactoseFree,
     dgeZertifiziert: dto.dgeCertified,
     geschaetzteKostenProPortion: dto.estimatedCostPerPortion ?? undefined,
+    berechneteKostenProPortion: dto.computedCostPerPortion ?? undefined,
+    manuellerPreisProPortion: dto.manualCostPerPortion ?? undefined,
     produktionshinweise: dto.productionNotes ?? undefined,
     zielgruppen: dto.targetGroupNames,
     bildUrl: dto.imageUrl ?? undefined,
@@ -203,6 +207,7 @@ function toSaveDto(input: RezeptFormDaten, categories: LookupDto[], targetGroups
     storageNote: input.lagerhinweis || null,
     shelfLifeAfterPrep: input.haltbarkeitNachZubereitung || null,
     reductionFactor: input.reduktionsfaktor || 1,
+    manualCostPerPortion: input.manuellerPreisProPortion ?? null,
     prepSteps: input.zubereitungsschritte,
     ingredients: input.zutaten.map((rz) => ({ ingredientId: rz.zutatId, quantity: rz.menge, unit: unitToBackend(rz.einheit) })),
     targetGroupIds,

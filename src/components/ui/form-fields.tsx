@@ -50,6 +50,31 @@ export function NumberField({ label, value, onChange, min, step, suffix, require
   );
 }
 
+/** Wie NumberField, aber leeres Feld = undefined statt 0 — für optionale Werte wie einen manuellen
+ * Preis, bei dem "nicht gesetzt" etwas anderes bedeutet als "0 €". */
+export function OptionalNumberField({ label, value, onChange, min, step, suffix, hint, placeholder }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void; min?: number; step?: number; suffix?: string; hint?: string; placeholder?: string }) {
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={value ?? ""}
+          min={min}
+          step={step ?? "any"}
+          placeholder={placeholder}
+          onChange={(e) => {
+            if (e.target.value === "") return onChange(undefined);
+            const parsed = Number(e.target.value) || 0;
+            onChange(min !== undefined ? Math.max(min, parsed) : parsed);
+          }}
+          className={inputCls}
+        />
+        {suffix && <span className="shrink-0 text-xs text-muted">{suffix}</span>}
+      </div>
+    </Field>
+  );
+}
+
 export function TimeField({ label, value, onChange, required, hint }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string }) {
   return (
     <Field label={label} required={required} hint={hint}>
