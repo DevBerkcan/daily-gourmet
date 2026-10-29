@@ -185,6 +185,21 @@ function useTransition(action: "submit-review" | "publish" | "unpublish" | "arch
 
 export const useSubmitReviewSpeiseplan = () => useTransition("submit-review");
 export const usePublishSpeiseplan = () => useTransition("publish");
+
+/** Ob ein Entwurf direkt veröffentlicht werden darf — Mandanteneinstellung "Prüfung vor
+ * Veröffentlichung" (Standard: an, d. h. nur aus REVIEW). */
+export function useDirektVeroeffentlichenErlaubt(): boolean {
+  const query = useQuery({
+    queryKey: ["meal-plan-publish-rules"],
+    queryFn: () => api.get<{ requireReviewBeforePublish: boolean }>("/meal-plans/publish-rules"),
+    staleTime: 5 * 60_000,
+  });
+  return query.data ? !query.data.requireReviewBeforePublish : false;
+}
+
+/** Status, aus denen veröffentlicht werden kann. */
+export const kannVeroeffentlichen = (status: SpeiseplanStatus, direktErlaubt: boolean) =>
+  status === "REVIEW" || (direktErlaubt && status === "DRAFT");
 export const useUnpublishSpeiseplan = () => useTransition("unpublish");
 export const useArchiveSpeiseplan = () => useTransition("archive");
 

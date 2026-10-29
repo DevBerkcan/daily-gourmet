@@ -7,7 +7,7 @@ import { Table, Td, StatusBadge, Pagination, Button, ACTION_ICONS } from "@/comp
 import { ConfirmDialog, PromptDialog } from "@/components/ui/confirm-dialog";
 import { useStandorte } from "@/lib/services/locations";
 import { useEinrichtungen } from "@/lib/services/facilities";
-import { useSpeiseplaene, useDuplicateSpeiseplan, useDeleteSpeiseplan, useSubmitReviewSpeiseplan, usePublishSpeiseplan, useRejectSpeiseplan } from "@/lib/services/meal-plans";
+import { useSpeiseplaene, useDuplicateSpeiseplan, useDeleteSpeiseplan, useSubmitReviewSpeiseplan, usePublishSpeiseplan, useRejectSpeiseplan, useDirektVeroeffentlichenErlaubt, kannVeroeffentlichen } from "@/lib/services/meal-plans";
 import { usePagination } from "@/lib/use-pagination";
 import type { Speiseplan } from "@/features/meal-plans/types";
 
@@ -19,6 +19,7 @@ export function WochenplanTabelle() {
   const deleteSpeiseplan = useDeleteSpeiseplan();
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
+  const direktErlaubt = useDirektVeroeffentlichenErlaubt();
   const reject = useRejectSpeiseplan();
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(plaene);
   const [loeschenBestaetigung, setLoeschenBestaetigung] = useState<Speiseplan | null>(null);
@@ -38,7 +39,7 @@ export function WochenplanTabelle() {
           <Td>{p.tage.reduce((sum, t) => sum + t.gerichte.length, 0)}</Td>
           <Td>
             <div className="flex items-center gap-1.5 no-print">
-              {p.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" variant="ghost" size="sm" onClick={() => publish.mutate(p.id)} />}
+              {kannVeroeffentlichen(p.status, direktErlaubt) && <Button icon={Megaphone} label="Veröffentlichen" variant="ghost" size="sm" onClick={() => publish.mutate(p.id)} />}
               {p.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="ghost" size="sm" onClick={() => setAblehnenPlan(p)} />}
               {p.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung" variant="ghost" size="sm" onClick={() => submitReview.mutate(p.id)} />}
               <Button icon={ACTION_ICONS.copy} label="Duplizieren" variant="ghost" size="sm" onClick={() => duplicateSpeiseplan.mutate(p.id)} />

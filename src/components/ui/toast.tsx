@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, X, XCircle } from "lucide-react";
 import { Button } from "./button";
+import { ApiError } from "@/lib/api/client";
 
 type ToastTone = "success" | "error";
 interface ToastEntry {
@@ -14,6 +16,8 @@ interface ToastEntry {
 interface ToastContextValue {
   success: (text: string) => void;
   error: (text: string) => void;
+  /** True, wenn seit since (Date.now()) bereits eine Fehlermeldung angezeigt wurde. */
+  errorShownSince: (since: number) => boolean;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -23,12 +27,14 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const nextId = useRef(0);
+  const lastErrorAt = useRef(0);
 
   const dismiss = useCallback((id: number) => setToasts((prev) => prev.filter((t) => t.id !== id)), []);
 
   const push = useCallback(
     (tone: ToastTone, text: string) => {
       const id = nextId.current++;
+      if (tone === "error") lastErrorAt.current = Date.now();
       setToasts((prev) => [...prev, { id, tone, text }]);
       window.setTimeout(() => dismiss(id), 4000);
     },
@@ -38,6 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const value: ToastContextValue = {
     success: (text) => push("success", text),
     error: (text) => push("error", text),
+    errorShownSince: (since) => lastErrorAt.current >= since,
   };
 
   return (
@@ -68,4 +75,27 @@ export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) throw new Error("useToast muss innerhalb von ToastProvider verwendet werden.");
   return ctx;
+}
+
+/** Zeigt für jede fehlgeschlagene Mutation (Speichern, Löschen, Veröffentlichen …) die Fehlermeldung
+ * des Servers als Toast — vorher scheiterten viele Aktionen ohne jede Rückmeldung, weil nicht jeder
+ * Aufrufer ein eigenes onError hatte. Hat der Aufrufer selbst schon eine Fehlermeldung angezeigt
+ * (sein onError läuft direkt nach diesem Event), bleibt diese hier stumm — daher der kurze Aufschub. */
+export function MutationErrorToasts() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  useEffect(() => queryClient.getMutationCache().subscribe((event) => {
+    if (event.type !== "updated" || event.action.type !== "error") return;
+    const error = event.action.error;
+    const since = Date.now();
+    window.setTimeout(() => {
+      if (toastRef.current.errorShownSince(since)) return;
+      toastRef.current.error(error instanceof ApiError ? error.message : "Aktion fehlgeschlagen. Bitte erneut versuchen.");
+    }, 50);
+  }), [queryClient]);
+
+  return null;
 }

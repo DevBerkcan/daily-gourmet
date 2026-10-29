@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/lib/auth/AuthContext";
-import { ToastProvider } from "@/components/ui/toast";
+import { MutationErrorToasts, ToastProvider } from "@/components/ui/toast";
 import { GlobalLoadingBar } from "@/components/ui/global-loading-bar";
 import { TooltipLayer } from "@/components/ui/tooltip-layer";
 import { I18nProvider } from "@/lib/i18n/I18nContext";
@@ -24,7 +24,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <TooltipLayer />
       <I18nProvider>
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <MutationErrorToasts />
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </I18nProvider>
     </QueryClientProvider>

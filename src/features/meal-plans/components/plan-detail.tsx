@@ -7,6 +7,7 @@ import { PageHeader, Card, StatusBadge, Button, ACTION_ICONS, Tag, EmptyState, L
 import { WeekCalendar, DayColumn, MealTile } from "@/components/meal-plans";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useToast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/client";
 import { PromptDialog } from "@/components/ui/confirm-dialog";
 import { MarkAsTemplateDialog } from "./mark-as-template-dialog";
 import type { Speiseplan, SpeiseplanTag, Menuelinie } from "../types";
@@ -18,6 +19,8 @@ import {
   useUpdateSpeiseplanTag,
   useSubmitReviewSpeiseplan,
   usePublishSpeiseplan,
+  useDirektVeroeffentlichenErlaubt,
+  kannVeroeffentlichen,
   useUnpublishSpeiseplan,
   useMarkAsTemplate,
   useRejectSpeiseplan,
@@ -128,6 +131,7 @@ export function PlanDetail({ id }: { id: string }) {
   const updateTag = useUpdateSpeiseplanTag();
   const submitReview = useSubmitReviewSpeiseplan();
   const publish = usePublishSpeiseplan();
+  const direktErlaubt = useDirektVeroeffentlichenErlaubt();
   const unpublish = useUnpublishSpeiseplan();
   const markAsTemplate = useMarkAsTemplate();
   const reject = useRejectSpeiseplan();
@@ -142,7 +146,7 @@ export function PlanDetail({ id }: { id: string }) {
       { id: plan.id, vorlagenSlot: slot },
       {
         onSuccess: () => { setVorlagenDialogOffen(false); toast.success(`Vorlage ${slot} angelegt.`); },
-        onError: () => toast.error("Vorlage konnte nicht angelegt werden."),
+        onError: (error) => toast.error(error instanceof ApiError ? error.message : "Vorlage konnte nicht angelegt werden."),
       }
     );
   };
@@ -153,7 +157,7 @@ export function PlanDetail({ id }: { id: string }) {
       { id: plan.id, grund },
       {
         onSuccess: () => { setAblehnenDialogOffen(false); toast.success("Wochenplan abgelehnt."); },
-        onError: () => toast.error("Ablehnen fehlgeschlagen. Bitte erneut versuchen."),
+        onError: (error) => toast.error(error instanceof ApiError ? error.message : "Ablehnen fehlgeschlagen. Bitte erneut versuchen."),
       }
     );
   };
@@ -200,7 +204,7 @@ export function PlanDetail({ id }: { id: string }) {
             <Button icon={ACTION_ICONS.view} label="Vorschau als Einrichtung" variant="secondary" href="/portal/meal-plans" showLabel />
             <Button icon={ACTION_ICONS.template} label="Als Vorlage markieren" variant="secondary" onClick={() => setVorlagenDialogOffen(true)} showLabel />
             {plan.status === "DRAFT" && <Button icon={ACTION_ICONS.send} label="Zur Prüfung senden" onClick={() => submitReview.mutate(plan.id)} showLabel />}
-            {plan.status === "REVIEW" && <Button icon={Megaphone} label="Veröffentlichen" onClick={() => publish.mutate(plan.id)} showLabel />}
+            {kannVeroeffentlichen(plan.status, direktErlaubt) && <Button icon={Megaphone} label="Veröffentlichen" onClick={() => publish.mutate(plan.id)} showLabel />}
             {plan.status === "REVIEW" && <Button icon={ACTION_ICONS.reject} label="Ablehnen" variant="secondary" onClick={() => setAblehnenDialogOffen(true)} showLabel />}
             {plan.status === "PUBLISHED" && <Button icon={Undo2} label="Veröffentlichung zurückziehen" variant="secondary" onClick={() => unpublish.mutate(plan.id)} showLabel />}
           </>
