@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Table, Td, Button, Tag, ACTION_ICONS } from "@/components/ui";
 import { NumberField, SelectField, TextField } from "@/components/ui/form-fields";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -87,6 +87,7 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
       )}
 
       {formular && neu && (
+        <Modal open onClose={() => setFormular(null)} title={formular.preisId ? "Preis bearbeiten" : "Neuer Preis"} hint="Der günstigste Preis wird automatisch für Kalkulation und Einkauf verwendet.">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -94,9 +95,8 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
             if (formular.preisId) updatePrice.mutate({ preisId: formular.preisId, input: neu }, { onSuccess, onError: fehler });
             else savePrice.mutate(neu, { onSuccess, onError: fehler });
           }}
-          className="grid gap-3 border-t border-line px-5 py-4 sm:grid-cols-2 lg:grid-cols-5"
+          className="grid gap-4 p-5 sm:grid-cols-2"
         >
-          <p className="col-span-full text-sm font-medium text-ink">{formular.preisId ? "Preis bearbeiten" : "Neuer Preis"}</p>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Lieferant</span>
             <select
@@ -111,11 +111,12 @@ export function PreisePanel({ zutatId }: { zutatId: string }) {
           <NumberField label="Preis" value={neu.preis} onChange={(v) => setNeu({ ...neu, preis: v })} min={0} step={0.01} suffix="€" />
           <SelectField label="je Einheit" value={neu.einheit} onChange={(v) => setNeu({ ...neu, einheit: v as Einheit })} options={EINHEITEN} />
           <TextField label="Verfügbarkeit / Hinweis" value={neu.verfuegbarkeitshinweis ?? ""} onChange={(v) => setNeu({ ...neu, verfuegbarkeitshinweis: v })} placeholder="z. B. Vorlaufzeit 3 Tage" />
-          <div className="col-span-full flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!neu.lieferantId} loading={savePrice.isPending || updatePrice.isPending} />
+          <div className="col-span-full flex justify-end gap-2">
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setFormular(null)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!neu.lieferantId} loading={savePrice.isPending || updatePrice.isPending} />
           </div>
         </form>
+        </Modal>
       )}
 
       <ConfirmDialog

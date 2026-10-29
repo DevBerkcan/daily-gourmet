@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AlertTriangle, BellRing, Clock3, Search } from "lucide-react";
-import { ACTION_ICONS, Button, Card, CardHeader, StatCard, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { ACTION_ICONS, Button, Card, StatCard, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useEinrichtungen } from "@/lib/services/facilities";
 import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useRezepte } from "@/lib/services/recipes";
@@ -82,7 +83,21 @@ export function OrdersBoard() {
         />
       </Card>
 
-      {korrekturId ?<Card className="mt-6 border-warn/40"><CardHeader title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert." actions={<AlertTriangle size={19} className="text-warn" aria-hidden />} /><div className="p-5"><label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label><div className="mt-4 flex gap-2"><Button icon={ACTION_ICONS.approve} label="Korrektur freigeben" disabled={!begruendung.trim()} onClick={() => { overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }} showLabel /><Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }} showLabel /></div></div></Card> : null}
+      {korrekturId ? (
+        <Modal open onClose={() => { setKorrekturId(null); setBegruendung(""); }} title="Nachträgliche Korrektur freigeben" hint="Korrekturen nach Fristablauf werden mit Begründung protokolliert.">
+          <form
+            onSubmit={(event) => { event.preventDefault(); if (!begruendung.trim()) return; overrideBestellung.mutate({ id: korrekturId, reason: begruendung }); setKorrekturId(null); setBegruendung(""); }}
+            className="flex flex-col gap-4 p-5"
+          >
+            <p className="flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-xs font-medium text-warn"><AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden />Die Bestellung ist bereits gesperrt.</p>
+            <label className="block text-xs font-medium text-muted">Begründung<textarea value={begruendung} onChange={(event) => setBegruendung(event.target.value)} rows={3} placeholder="z. B. telefonische Korrektur der Einrichtung" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm" /></label>
+            <div className="flex justify-end gap-2">
+              <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" onClick={() => { setKorrekturId(null); setBegruendung(""); }} showLabel />
+              <Button icon={ACTION_ICONS.approve} label="Korrektur freigeben" type="submit" disabled={!begruendung.trim()} showLabel />
+            </div>
+          </form>
+        </Modal>
+      ) : null}
 
       {detailBestellung ? (
         <BestellungDetailModal

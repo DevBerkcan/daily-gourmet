@@ -3,8 +3,8 @@
 import { type FormEvent, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { ACTION_ICONS, Button, Card, CardHeader, StatusBadge, Table, Td, Pagination } from "@/components/ui";
-import { InviteLinkDialog } from "@/components/ui/confirm-dialog";
+import { ACTION_ICONS, Button, Card, StatusBadge, Table, Td, Pagination } from "@/components/ui";
+import { InviteLinkDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useTenants, useCreateTenant } from "@/lib/services/super-admin";
 import type { TenantStatus } from "@/lib/services/super-admin";
 import { usePagination } from "@/lib/use-pagination";
@@ -42,9 +42,11 @@ export function TenantsManager() {
 
   return (
     <>
+      <div className="mb-6 flex justify-end">
+        <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel onClick={() => setOffen(true)} />
+      </div>
       {offen ? (
-        <Card className="mb-6">
-          <CardHeader title="Neuen Mandanten anlegen" hint="Nur der Super Admin kann Catering-Unternehmen auf der Plattform anlegen." />
+        <Modal open onClose={() => setOffen(false)} title="Neuen Mandanten anlegen" hint="Nur der Super Admin kann Catering-Unternehmen auf der Plattform anlegen.">
           <form onSubmit={speichern} className="grid gap-4 p-5 sm:grid-cols-2 md:grid-cols-3">
             <label className="text-xs font-medium text-muted">
               Unternehmen
@@ -58,17 +60,13 @@ export function TenantsManager() {
               E-Mail
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className={`mt-1.5 ${fieldClass}`} />
             </label>
-            <div className="flex gap-2 sm:col-span-2 md:col-span-3">
-              <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel type="submit" />
+            <div className="flex justify-end gap-2 sm:col-span-2 md:col-span-3">
               <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setOffen(false)} />
+              <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel type="submit" loading={createTenant.isPending} />
             </div>
           </form>
-        </Card>
-      ) : (
-        <div className="mb-6 flex justify-end">
-          <Button icon={ACTION_ICONS.create} label="Mandant anlegen" showLabel onClick={() => setOffen(true)} />
-        </div>
-      )}
+        </Modal>
+      ) : null}
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-line px-5 py-3.5">
           <label className="relative min-w-56 flex-1">

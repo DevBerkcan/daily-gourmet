@@ -27,7 +27,7 @@ import { useBestellungen } from "@/lib/services/orders";
 import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
 
-const HEUTE = "2026-08-06";
+import { HEUTE } from "@/lib/heute";
 const BINDENDE_STATUS = ["SUBMITTED", "CONFIRMED", "LOCKED"];
 
 function TagRezeptHinzufuegen({

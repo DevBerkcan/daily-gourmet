@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ACTION_ICONS, Button, Card, CardHeader, Tag } from "@/components/ui";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useTenantSettings, useUpdateTenantSettings, notificationLabel, type TenantSettings } from "@/lib/services/super-admin";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
@@ -41,17 +42,11 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
       <CardHeader
         title="Einstellungen"
         hint="Bestellfristen, Freigaben und Standardwerte — nur durch Daily Gourmet editierbar"
-        actions={
-          bearbeiten ? (
-            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" showLabel onClick={() => setBearbeiten(false)} />
-          ) : (
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!settings} />
-          )
-        }
+        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!settings} />}
       />
       {!settings || !form ? (
         <p className="px-5 py-6 text-sm text-muted">Lade Einstellungen …</p>
-      ) : !bearbeiten ? (
+      ) : (
         <dl className="grid gap-4 p-5 text-sm sm:grid-cols-2">
           <div><dt className="text-xs text-muted">Bestellfrist</dt><dd className="font-medium text-ink">{settings.bestellfristTageVorher} Tag(e) vorher, {settings.bestellfristUhrzeit} Uhr</dd></div>
           <div><dt className="text-xs text-muted">Anpassung am Liefertag bis</dt><dd className="font-medium text-ink">{settings.sameDayAnpassungFrist} Uhr</dd></div>
@@ -66,8 +61,10 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
             </dd>
           </div>
         </dl>
-      ) : (
-        <div className="flex flex-col gap-5 p-5">
+      )}
+      {bearbeiten && form ? (
+        <Modal open onClose={() => setBearbeiten(false)} title="Einstellungen bearbeiten" hint="Bestellfristen, Freigaben und Standardwerte — nur durch Daily Gourmet editierbar" widthClassName="max-w-3xl">
+        <form onSubmit={(e) => { e.preventDefault(); void speichern(); }} className="flex flex-col gap-5 p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs font-medium text-muted">Bestellfrist (Tage vorher)
               <input type="number" min={0} value={form.bestellfristTageVorher} onChange={(e) => setForm((f) => f && { ...f, bestellfristTageVorher: Math.max(0, Number(e.target.value) || 0) })} className={`mt-1.5 ${fieldClass}`} />
@@ -108,12 +105,13 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
               ))}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel onClick={speichern} loading={updateSettings.isPending} />
+          <div className="flex justify-end gap-2">
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel type="submit" loading={updateSettings.isPending} />
           </div>
-        </div>
-      )}
+        </form>
+        </Modal>
+      ) : null}
     </Card>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Button, Tag, ACTION_ICONS } from "@/components/ui";
 import { OptionalNumberField } from "@/components/ui/form-fields";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useUpdateRezept, type Rezept } from "@/lib/services/recipes";
 
@@ -35,17 +36,16 @@ export function KalkulationCard({ rezept }: { rezept: Rezept }) {
         title="Kalkulation"
         hint={manuell ? "Manuell gepflegter Preis je Portion" : "Geschätzt anhand der günstigsten hinterlegten Lieferantenpreise, ersatzweise Standardpreis"}
         actions={
-          !bearbeiten ? (
-            <div className="no-print">
-              <Button icon={ACTION_ICONS.edit} label="Preis pflegen" variant="ghost" size="sm" showLabel onClick={() => { setPreis(rezept.manuellerPreisProPortion); setBearbeiten(true); }} />
-            </div>
-          ) : undefined
+          <div className="no-print">
+            <Button icon={ACTION_ICONS.edit} label="Preis pflegen" variant="ghost" size="sm" showLabel onClick={() => { setPreis(rezept.manuellerPreisProPortion); setBearbeiten(true); }} />
+          </div>
         }
       />
       {bearbeiten ? (
+        <Modal open onClose={() => setBearbeiten(false)} title="Preis je Portion pflegen" hint={`Wareneinsatz für „${rezept.name}“ — ein manueller Preis hat Vorrang vor dem berechneten.`}>
         <form
           onSubmit={(e) => { e.preventDefault(); speichern(preis); }}
-          className="flex flex-col gap-3 px-5 py-4"
+          className="flex flex-col gap-4 p-5"
         >
           <OptionalNumberField
             label="Preis je Portion (manuell)"
@@ -60,13 +60,15 @@ export function KalkulationCard({ rezept }: { rezept: Rezept }) {
                 : "Für die Zutaten sind keine Preise hinterlegt — leer lassen heißt: kein Preis."
             }
           />
-          <div className="flex flex-wrap gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" loading={updateRezept.isPending} />
-            {manuell && <Button icon={ACTION_ICONS.delete} label="Manuellen Preis entfernen" showLabel variant="secondary" onClick={() => speichern(undefined)} />}
+          <div className="flex flex-wrap justify-end gap-2">
+            {manuell && <Button icon={ACTION_ICONS.delete} label="Manuellen Preis entfernen" showLabel variant="danger" className="mr-auto" onClick={() => speichern(undefined)} />}
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" loading={updateRezept.isPending} />
           </div>
         </form>
-      ) : proPortion != null ? (
+        </Modal>
+      ) : null}
+      {proPortion != null ? (
         <div className="flex flex-col gap-2 px-5 py-4 text-sm">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
             <span className="text-muted">Wareneinsatz gesamt:</span>

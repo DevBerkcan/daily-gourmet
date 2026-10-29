@@ -3,6 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { Truck } from "lucide-react";
 import { Button, Card, CardHeader, ACTION_ICONS } from "@/components/ui";
+import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useActivateUser, useDeactivateUser, useUsers } from "@/lib/services/users";
 import { fahrerProfilVollstaendig, useCreateFahrer, useFahrer, useUpdateFahrer } from "@/lib/services/logistics";
 
@@ -22,6 +23,7 @@ export function DriverManager() {
   const [telefon, setTelefon] = useState("");
   const [fahrzeug, setFahrzeug] = useState("");
   const [kennzeichen, setKennzeichen] = useState("");
+  const [deaktiviere, setDeaktiviere] = useState<{ id: string; name: string } | null>(null);
 
   const fahrerNutzer = nutzer.filter((person) => person.rolle === "DRIVER");
   if (fahrerNutzer.length === 0) return null;
@@ -55,7 +57,6 @@ export function DriverManager() {
       <div className="flex flex-col gap-3 p-5">
         {fahrerNutzer.map((person) => {
           const profil = profilByUserId.get(person.id);
-          const bearbeitetGerade = bearbeiteUserId === person.id;
           return (
             <div key={person.id} className="rounded-lg border border-line p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -70,32 +71,42 @@ export function DriverManager() {
                   </p>
                   {!fahrerProfilVollstaendig(profil) ? <p className="mt-1 text-xs font-medium text-warn">Telefon, Fahrzeug oder Kennzeichen fehlen noch</p> : null}
                 </div>
-                {!bearbeitetGerade ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={!profil ? "Profil anlegen" : fahrerProfilVollstaendig(profil) ? "Bearbeiten" : "Daten ergänzen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
-                    {person.status === "DEAKTIVIERT" ? (
-                      <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" showLabel variant="secondary" onClick={() => activateUser.mutate(person.id)} />
-                    ) : (
-                      <Button icon={ACTION_ICONS.userDeactivate} label="Deaktivieren" showLabel variant="danger" onClick={() => { if (confirm(`${person.name} deaktivieren? Der Fahrer kann sich danach nicht mehr anmelden.`)) deactivateUser.mutate(person.id); }} />
-                    )}
-                  </div>
-                ) : null}
+                <div className="flex flex-wrap gap-2">
+                  <Button icon={profil ? ACTION_ICONS.edit : ACTION_ICONS.create} label={!profil ? "Profil anlegen" : fahrerProfilVollstaendig(profil) ? "Bearbeiten" : "Daten ergänzen"} showLabel variant="secondary" onClick={() => bearbeitungStarten(person.id)} />
+                  {person.status === "DEAKTIVIERT" ? (
+                    <Button icon={ACTION_ICONS.userActivate} label="Aktivieren" showLabel variant="secondary" onClick={() => activateUser.mutate(person.id)} />
+                  ) : (
+                    <Button icon={ACTION_ICONS.userDeactivate} label="Deaktivieren" showLabel variant="danger" onClick={() => setDeaktiviere({ id: person.id, name: person.name })} />
+                  )}
+                </div>
               </div>
-              {bearbeitetGerade ? (
-                <form onSubmit={(event) => speichern(event, person.id)} className="mt-3 grid gap-3 sm:grid-cols-3">
-                  <input value={telefon} onChange={(event) => setTelefon(event.target.value)} placeholder="Telefon" required className={fieldClass} />
-                  <input value={fahrzeug} onChange={(event) => setFahrzeug(event.target.value)} placeholder="Fahrzeug, z. B. Sprinter 3.5t" required className={fieldClass} />
-                  <input value={kennzeichen} onChange={(event) => setKennzeichen(event.target.value)} placeholder="Kennzeichen" required className={fieldClass} />
-                  <div className="flex flex-wrap gap-2 sm:col-span-3">
-                    <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" />
-                    <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeiteUserId(null)} />
-                  </div>
-                </form>
-              ) : null}
             </div>
           );
         })}
       </div>
+      {bearbeiteUserId ? (
+        <Modal open onClose={() => setBearbeiteUserId(null)} title={`Fahrerprofil · ${fahrerNutzer.find((p) => p.id === bearbeiteUserId)?.name ?? ""}`} hint="Telefon, Fahrzeug und Kennzeichen des Fahrers.">
+          <form onSubmit={(event) => speichern(event, bearbeiteUserId)} className="grid gap-4 p-5 sm:grid-cols-3">
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Telefon<input value={telefon} onChange={(event) => setTelefon(event.target.value)} placeholder="Telefon" required className={fieldClass} /></label>
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Fahrzeug<input value={fahrzeug} onChange={(event) => setFahrzeug(event.target.value)} placeholder="z. B. Sprinter 3.5t" required className={fieldClass} /></label>
+            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted">Kennzeichen<input value={kennzeichen} onChange={(event) => setKennzeichen(event.target.value)} placeholder="Kennzeichen" required className={fieldClass} /></label>
+            <div className="flex flex-wrap justify-end gap-2 sm:col-span-3">
+              <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeiteUserId(null)} />
+              <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" loading={createFahrer.isPending || updateFahrer.isPending} />
+            </div>
+          </form>
+        </Modal>
+      ) : null}
+      <ConfirmDialog
+        open={!!deaktiviere}
+        title="Fahrer deaktivieren"
+        tone="warn"
+        message={<><strong>{deaktiviere?.name}</strong> kann sich danach nicht mehr anmelden.</>}
+        confirmLabel="Deaktivieren"
+        confirmIcon={ACTION_ICONS.userDeactivate}
+        onCancel={() => setDeaktiviere(null)}
+        onConfirm={() => { if (deaktiviere) deactivateUser.mutate(deaktiviere.id); setDeaktiviere(null); }}
+      />
     </Card>
   );
 }

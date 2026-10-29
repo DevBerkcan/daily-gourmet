@@ -18,7 +18,10 @@ export function NeuerProduktionsplan() {
   const einrichtungen = useEinrichtungen();
   const bestellungen = useBestellungen();
   const createPlan = useCreateProduktionsplan();
-  const [standortId, setStandortId] = useState(standorte[0]?.id ?? "");
+  // Abgeleitet statt useState(standorte[0]?.id): beim ersten Render sind die Standorte oft noch nicht
+  // geladen, dann blieb der State dauerhaft leer, obwohl das Dropdown schon den ersten Standort zeigte.
+  const [standortWahl, setStandortId] = useState("");
+  const standortId = standortWahl || standorte[0]?.id || "";
   const [datumOverride, setDatumOverride] = useState<string | undefined>(undefined);
 
   const bestelldatenJeStandort = useMemo(() => {

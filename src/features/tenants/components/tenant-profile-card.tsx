@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ACTION_ICONS, Button, Card, CardHeader } from "@/components/ui";
 import { ImageField } from "@/components/ui/form-fields";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useTenantProfile, useUpdateTenantProfile, type TenantProfile } from "@/lib/services/super-admin";
 
 const fieldClass = "min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink focus:outline-2 focus:outline-offset-1 focus:outline-basil";
@@ -41,17 +42,11 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
       <CardHeader
         title="Unternehmensprofil"
         hint="Stammdaten und Branding — nur durch Daily Gourmet editierbar"
-        actions={
-          bearbeiten ? (
-            <Button icon={ACTION_ICONS.cancel} label="Bearbeitung schließen" variant="ghost" showLabel onClick={() => setBearbeiten(false)} />
-          ) : (
-            <Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!profile} />
-          )
-        }
+        actions={<Button icon={ACTION_ICONS.edit} label="Bearbeiten" variant="secondary" showLabel onClick={starten} disabled={!profile} />}
       />
       {!profile ? (
         <p className="px-5 py-6 text-sm text-muted">Lade Unternehmensprofil …</p>
-      ) : !bearbeiten ? (
+      ) : (
         <dl className="grid gap-4 p-5 text-sm sm:grid-cols-2">
           <div><dt className="text-xs text-muted">USt-IdNr.</dt><dd className="font-medium text-ink">{profile.ustId || "—"}</dd></div>
           <div><dt className="text-xs text-muted">Telefon</dt><dd className="font-medium text-ink">{profile.telefon || "—"}</dd></div>
@@ -59,8 +54,10 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
           <div><dt className="text-xs text-muted">E-Mail (Rechnung)</dt><dd className="break-all font-medium text-ink">{profile.email || "—"}</dd></div>
           <div><dt className="text-xs text-muted">Zeitzone / Währung</dt><dd className="font-medium text-ink">{profile.zeitzone} · {profile.waehrung}</dd></div>
         </dl>
-      ) : (
-        <div className="flex flex-col gap-4 p-5">
+      )}
+      {bearbeiten ? (
+        <Modal open onClose={() => setBearbeiten(false)} title="Unternehmensprofil bearbeiten" hint="Stammdaten und Branding — nur durch Daily Gourmet editierbar">
+        <form onSubmit={(e) => { e.preventDefault(); void speichern(); }} className="flex flex-col gap-4 p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="ust" label="USt-IdNr." value={form.ustId ?? ""} onChange={(v) => setForm((f) => ({ ...f, ustId: v }))} />
             <Field id="tel" label="Telefon" value={form.telefon ?? ""} onChange={(v) => setForm((f) => ({ ...f, telefon: v }))} />
@@ -76,12 +73,13 @@ export function TenantProfileCard({ tenantId }: { tenantId: string }) {
             </div>
           </div>
           <ImageField label="Logo" value={form.logoUrl} onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))} hint="PNG oder SVG, max. 1 MB" />
-          <div className="flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel onClick={speichern} loading={updateProfile.isPending} />
+          <div className="flex justify-end gap-2">
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" variant="secondary" showLabel onClick={() => setBearbeiten(false)} />
+            <Button icon={ACTION_ICONS.save} label="Änderungen speichern" showLabel type="submit" loading={updateProfile.isPending} />
           </div>
-        </div>
-      )}
+        </form>
+        </Modal>
+      ) : null}
     </Card>
   );
 }

@@ -391,7 +391,25 @@ export function useStoppHinzufuegen() {
   });
 }
 
-interface DuplicateWeekResultDto { createdCount: number; skippedExisting: string[] }
+export interface DuplicateWeekResultDto { createdCount: number; skippedExisting: string[]; skippedFacilities: string[] }
+
+/** Toast-Text für das Ergebnis von Woche kopieren / Tour auf Tage kopieren. */
+export function kopierErgebnisText(ergebnis: DuplicateWeekResultDto | undefined) {
+  const teile = [`${ergebnis?.createdCount ?? 0} Tour(en) angelegt.`];
+  if (ergebnis?.skippedExisting.length) teile.push(`Übersprungen (bereits vorhanden): ${ergebnis.skippedExisting.join(", ")}.`);
+  if (ergebnis?.skippedFacilities.length) teile.push(`Nicht übernommen (an dem Tag schon auf einer anderen Tour): ${ergebnis.skippedFacilities.join("; ")}.`);
+  return teile.join(" ");
+}
+
+/** Wochenplanung: eine Tour mit gleicher Kundenreihenfolge auf weitere Tage kopieren. */
+export function useRouteKopieren() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ routeId, daten }: { routeId: string; daten: string[] }) =>
+      api.post<DuplicateWeekResultDto>(`/routes/${routeId}/copy`, { dates: daten }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["routes"] }),
+  });
+}
 
 /** Übernimmt alle Routen einer Woche (Mo–So) als Ausgangspunkt für eine andere Woche — Stopps
  * werden für die Zielwoche frisch aufgebaut (aktuelle Bestellungen/Schließtage berücksichtigt). */

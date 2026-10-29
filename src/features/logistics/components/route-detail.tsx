@@ -6,7 +6,7 @@ import { useIsFetching } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, MapPin, Thermometer, Truck, Undo2 } from "lucide-react";
 import { ACTION_ICONS, Button, Card, EmptyState, LoadingState, PageHeader, StatCard } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
-import { ConfirmDialog, PromptDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, Modal, PromptDialog } from "@/components/ui/confirm-dialog";
 import {
   useLieferRoute, useLieferRouten, useFahrer, useUpdateStoppStatus, useAdvanceRouteStatus,
   useRouteAbgeben, useStoppUebertragen, portionenJeRoute,
@@ -140,12 +140,8 @@ export function DriverRouteDetail({ id }: { id: string }) {
       />
 
       {transferStoppId ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 no-print">
-          <div className="absolute inset-0 bg-ink/50" onClick={() => setTransferStoppId(null)} aria-hidden />
+        <Modal open onClose={() => setTransferStoppId(null)} title="Stopp an anderen Fahrer übergeben" widthClassName="max-w-md">
           <form
-            role="dialog"
-            aria-modal="true"
-            className="relative flex w-full max-w-md flex-col overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
             onSubmit={(event) => {
               event.preventDefault();
               if (!zielRouteId) return;
@@ -158,7 +154,6 @@ export function DriverRouteDetail({ id }: { id: string }) {
               );
             }}
           >
-            <div className="px-5 pt-5"><h2 className="font-display text-lg font-semibold text-ink">Stopp an anderen Fahrer übergeben</h2></div>
             <div className="flex flex-col gap-2 px-5 py-4 text-sm text-ink-soft">
               <p>Der Stopp wird sofort auf die gewählte Route übertragen — ohne Rückfrage beim Zielfahrer. Bitte vorher telefonisch absprechen.</p>
               <label className="text-xs font-medium text-muted">
@@ -181,7 +176,7 @@ export function DriverRouteDetail({ id }: { id: string }) {
               <Button icon={ACTION_ICONS.transfer} label="Übertragen" showLabel type="submit" disabled={!zielRouteId} loading={stoppUebertragen.isPending} />
             </div>
           </form>
-        </div>
+        </Modal>
       ) : null}
     </>
   );

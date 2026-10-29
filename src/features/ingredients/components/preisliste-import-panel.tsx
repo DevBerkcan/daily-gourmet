@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Card, CardHeader, Table, Td, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField } from "@/components/ui/form-fields";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog, Modal } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -108,6 +108,7 @@ export function PreislisteImportPanel() {
       )}
 
       {bearbeitet && (
+        <Modal open onClose={() => setBearbeitet(null)} title={`${bearbeitet.name || "Lieferant"} bearbeiten`} hint="Stammdaten des Lieferanten.">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -120,17 +121,18 @@ export function PreislisteImportPanel() {
               }
             );
           }}
-          className="grid gap-3 border-t border-line px-5 py-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-4 p-5 sm:grid-cols-2"
         >
           <TextField label="Name" value={bearbeitet.name} onChange={(v) => setBearbeitet({ ...bearbeitet, name: v })} required />
           <TextField label="Ansprechpartner" value={bearbeitet.ansprechpartner ?? ""} onChange={(v) => setBearbeitet({ ...bearbeitet, ansprechpartner: v })} />
           <TextField label="Telefon" value={bearbeitet.telefon ?? ""} onChange={(v) => setBearbeitet({ ...bearbeitet, telefon: v })} />
           <TextField label="E-Mail" value={bearbeitet.email ?? ""} onChange={(v) => setBearbeitet({ ...bearbeitet, email: v })} />
-          <div className="col-span-full flex flex-wrap gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!bearbeitet.name.trim()} loading={updateSupplier.isPending} />
+          <div className="col-span-full flex flex-wrap justify-end gap-2">
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setBearbeitet(null)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!bearbeitet.name.trim()} loading={updateSupplier.isPending} />
           </div>
         </form>
+        </Modal>
       )}
 
       <form

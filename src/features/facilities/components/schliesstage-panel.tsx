@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Table, Td, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField } from "@/components/ui/form-fields";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { usePortalSchliesstage, useAddPortalSchliesstag, useDeletePortalSchliesstag } from "@/lib/services/facilities";
 
 const formatiert = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -26,10 +27,10 @@ export function SchliesstagePanel() {
       <CardHeader
         title="Schließtage / Abwesenheit"
         hint="Am besten für das ganze Jahr im Voraus eintragen (z. B. Ferien) — dann fragen wir nicht jede Woche einzeln nach."
-        actions={!offen ? <Button icon={ACTION_ICONS.create} label="Zeitraum hinzufügen" showLabel variant="secondary" onClick={() => setOffen(true)} /> : undefined}
+        actions={<Button icon={ACTION_ICONS.create} label="Zeitraum hinzufügen" showLabel variant="secondary" onClick={() => setOffen(true)} />}
       />
 
-      {schliesstage.length === 0 && !offen && <p className="px-5 py-4 text-sm text-muted">Noch keine Schließtage eingetragen.</p>}
+      {schliesstage.length === 0 &&<p className="px-5 py-4 text-sm text-muted">Noch keine Schließtage eingetragen.</p>}
 
       {schliesstage.length > 0 && (
         <Table head={["Von", "Bis", "Hinweis", ""]}>
@@ -47,13 +48,14 @@ export function SchliesstagePanel() {
       )}
 
       {offen && (
+        <Modal open onClose={() => setOffen(false)} title="Schließzeitraum hinzufügen" hint="Zeitraum, in dem die Einrichtung geschlossen ist (z. B. Ferien).">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             if (!kannSpeichern) return;
             hinzufuegen.mutate({ von, bis, hinweis: hinweis.trim() || undefined }, { onSuccess: () => { setVon(""); setBis(""); setHinweis(""); setOffen(false); } });
           }}
-          className="grid gap-3 border-t border-line px-5 py-4 sm:grid-cols-4"
+          className="grid gap-4 p-5 sm:grid-cols-2"
         >
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Von</span>
@@ -66,11 +68,13 @@ export function SchliesstagePanel() {
           <div className="sm:col-span-2">
             <TextField label="Hinweis" value={hinweis} onChange={setHinweis} placeholder="z. B. Sommerferien" />
           </div>
-          <div className="col-span-full flex gap-2">
-            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!kannSpeichern} loading={hinzufuegen.isPending} />
+          {von !== "" && bis !== "" && von > bis ? <p className="col-span-full text-xs font-medium text-danger">„Bis“ darf nicht vor „Von“ liegen.</p> : null}
+          <div className="col-span-full flex justify-end gap-2">
             <Button icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel variant="secondary" onClick={() => setOffen(false)} />
+            <Button icon={ACTION_ICONS.save} label="Speichern" showLabel type="submit" disabled={!kannSpeichern} loading={hinzufuegen.isPending} />
           </div>
         </form>
+        </Modal>
       )}
     </Card>
   );

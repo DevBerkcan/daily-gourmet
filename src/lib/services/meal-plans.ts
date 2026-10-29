@@ -103,7 +103,7 @@ export function useCreateSpeiseplan() {
         isTemplate: input.istVorlage ?? false,
         templateSlot: input.vorlagenSlot ?? null,
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["meal-plans"] }); queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] }); },
   });
 }
 
@@ -125,7 +125,7 @@ export function useDuplicateSpeiseplan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<MealPlanDto>(`/meal-plans/${id}/duplicate`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["meal-plans"] }); queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] }); },
   });
 }
 
@@ -138,7 +138,7 @@ export function useDuplicateIntoWeek() {
   return useMutation({
     mutationFn: ({ id, zielJahr, zielKalenderwoche, einrichtungIds }: { id: string; zielJahr: number; zielKalenderwoche: number; einrichtungIds?: string[] }) =>
       api.post<MealPlanDto>(`/meal-plans/${id}/duplicate-into-week`, { targetYear: zielJahr, targetCalendarWeek: zielKalenderwoche, facilityIds: einrichtungIds ?? null }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["meal-plans"] }); queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] }); },
   });
 }
 
@@ -147,7 +147,7 @@ export function useDeleteSpeiseplan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/meal-plans/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["meal-plans"] }); queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] }); },
   });
 }
 
@@ -171,7 +171,7 @@ export function useUpdateSpeiseplanTag() {
         facilityIds: plan.einrichtungIds,
         days: [{ dayId: tagId, items: gerichte.map((g) => ({ recipeId: g.rezeptId, dietLine: dietLineToBackend[g.menuelinie] })), note: hinweis }],
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["meal-plans"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["meal-plans"] }); queryClient.invalidateQueries({ queryKey: ["meal-plan-templates"] }); },
   });
 }
 

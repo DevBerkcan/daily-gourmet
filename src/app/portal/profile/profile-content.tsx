@@ -5,6 +5,7 @@ import { useIsFetching } from "@tanstack/react-query";
 import { PageHeader, Card, CardHeader, Table, Td, Button, ACTION_ICONS, StatusBadge, Tag, EmptyState, LoadingState } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { TextField } from "@/components/ui/form-fields";
+import { Modal } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useEinrichtung, useUpdatePortalEinrichtung } from "@/lib/services/facilities";
 import { useUsers } from "@/lib/services/users";
@@ -67,15 +68,15 @@ export function ProfileContent() {
         <Card>
           <CardHeader
             title="Einrichtungsdaten"
-            hint={bearbeiten ? "Kontaktdaten Ihrer Einrichtung" : "Kontaktdaten können Sie hier selbst pflegen"}
-            actions={!bearbeiten && (
-              <Button size="sm" variant="ghost" onClick={() => setBearbeiten(true)} icon={ACTION_ICONS.edit} label="Bearbeiten" className="no-print" showLabel />
-            )}
+            hint="Kontaktdaten können Sie hier selbst pflegen"
+            actions={<Button size="sm" variant="ghost" onClick={() => setBearbeiten(true)} icon={ACTION_ICONS.edit} label="Bearbeiten" className="no-print" showLabel />}
           />
           {bearbeiten ? (
-            <EinrichtungsdatenFormular e={e} onClose={() => setBearbeiten(false)} />
-          ) : (
-            <dl className="grid gap-y-3 px-5 py-5 text-sm sm:grid-cols-[10rem_1fr]">
+            <Modal open onClose={() => setBearbeiten(false)} title="Einrichtungsdaten bearbeiten" hint="Kontaktdaten Ihrer Einrichtung">
+              <EinrichtungsdatenFormular e={e} onClose={() => setBearbeiten(false)} />
+            </Modal>
+          ) : null}
+          <dl className="grid gap-y-3 px-5 py-5 text-sm sm:grid-cols-[10rem_1fr]">
               <dt className="text-muted">Anschrift</dt><dd className="text-ink">{e.anschrift}</dd>
               <dt className="text-muted">Ansprechpartner</dt><dd className="text-ink">{e.ansprechpartner}</dd>
               <dt className="text-muted">E-Mail</dt><dd className="min-w-0 break-all text-ink">{e.email}</dd>
@@ -84,7 +85,6 @@ export function ProfileContent() {
               <dt className="text-muted">Liefertage</dt>
               <dd className="flex flex-wrap gap-1">{e.aktiveWochentage.map((t) => <Tag key={t}>{t}</Tag>)}</dd>
             </dl>
-          )}
         </Card>
         <Card>
           <CardHeader title="Benutzer Ihrer Einrichtung" hint="Als Facility Admin können Sie weitere Benutzer einladen" />
