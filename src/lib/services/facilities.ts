@@ -27,6 +27,8 @@ export interface Einrichtung {
   lieferdauerMinuten?: number;
   /** Besonderheiten bei der Anlieferung, z. B. steile Treppe, kein Rollwagen möglich. */
   lieferBesonderheiten?: string;
+  /** Vereinbarung: Einrichtung darf am Liefertag bis zur Tagesfrist (Standard 9 Uhr) Portionen reduzieren. */
+  tagesanpassungVereinbart: boolean;
 }
 
 export interface FacilityDto {
@@ -48,6 +50,7 @@ export interface FacilityDto {
   status: string;
   notes: string | null;
   routeNumber: string | null;
+  sameDayAdjustmentEnabled: boolean;
   adminInvited: boolean;
   adminUsername: string | null;
   adminInviteLink: string | null;
@@ -68,6 +71,7 @@ export interface CreateEinrichtungInput {
   lieferfensterEnde?: string;
   lieferdauerMinuten?: number;
   lieferBesonderheiten?: string;
+  tagesanpassungVereinbart?: boolean;
 }
 
 const trimZeit = (t: string | null | undefined) => (t ? t.slice(0, 5) : undefined);
@@ -95,6 +99,7 @@ export function toEinrichtung(dto: FacilityDto): Einrichtung {
     lieferfensterEnde: trimZeit(dto.deliveryWindowEnd),
     lieferdauerMinuten: dto.deliveryDurationMinutes ?? undefined,
     lieferBesonderheiten: dto.deliveryRequirements ?? undefined,
+    tagesanpassungVereinbart: dto.sameDayAdjustmentEnabled ?? false,
   };
 }
 
@@ -135,6 +140,7 @@ export function useCreateEinrichtung() {
         portionPrice: input.portionspreis,
         notes: input.notizen,
         routeNumber: input.routeNummer,
+        sameDayAdjustmentEnabled: input.tagesanpassungVereinbart ?? false,
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["facilities"] }),
   });
@@ -163,6 +169,7 @@ export function useUpdateEinrichtung() {
         portionPrice: input.portionspreis,
         notes: input.notizen,
         routeNumber: input.routeNummer,
+        sameDayAdjustmentEnabled: input.tagesanpassungVereinbart ?? false,
         status: input.status,
       }),
     onSuccess: (_, { id }) => {

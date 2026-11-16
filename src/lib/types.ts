@@ -59,7 +59,11 @@ export interface BestellPosition {
   id?: string;
   datum: string;
   rezeptId: string;
+  /** Abrechenbare Menge (nach einer evtl. Reduzierung am Liefertag). */
   portionen: number;
+  /** Ursprünglich bestellte Menge — nur gesetzt, wenn am Liefertag reduziert wurde (Einkauf/Planung
+   * basiert hierauf, Abrechnung auf `portionen`). */
+  urspruenglichePortionen?: number;
   hinweis?: string;
 }
 
@@ -71,6 +75,17 @@ export interface Bestellung {
   positionen: BestellPosition[];
   abgesendetAm?: string;
   frist: string;
+  /** Einrichtung hat eine Vereinbarung zur Reduzierung am Liefertag. */
+  tagesanpassungErlaubt?: boolean;
+  /** Tagesfrist für die Reduzierung, z. B. "09:00". */
+  tagesanpassungFrist?: string;
+}
+
+/** Ursprünglich vs. angepasst je Bestellung — Differenz = am Liefertag reduzierte Portionen. */
+export function bestellSummen(bestellung: Bestellung) {
+  const angepasst = bestellung.positionen.reduce((s, p) => s + p.portionen, 0);
+  const urspruenglich = bestellung.positionen.reduce((s, p) => s + (p.urspruenglichePortionen ?? p.portionen), 0);
+  return { urspruenglich, angepasst, differenz: urspruenglich - angepasst };
 }
 
 export interface AuditEintrag {

@@ -10,47 +10,73 @@ import { usePortalSpeiseplaene, MENUELINIEN } from "@/lib/services/meal-plans";
 import { useRezepte, rezeptAllergeneLive } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
 import { useSaveBestellung, useBestellungen, useAdjustBestellungSameDay } from "@/lib/services/orders";
+import { useEinrichtung, usePortalSchliesstage, type EinrichtungSchliesstag } from "@/lib/services/facilities";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { ApiError } from "@/lib/api/client";
 import type { Speiseplan } from "@/features/meal-plans/types";
 import type { Rezept } from "@/features/recipes/types";
 import type { Bestellung } from "@/lib/types";
 import { HEUTE as heute } from "@/lib/heute";
 
-/** Anpassung am Liefertag selbst — nur für heutige Positionen einer bereits abgesendeten
- * Bestellung, und nur reduzierbar (siehe useAdjustBestellungSameDay / OrderHandler.AdjustSameDayAsync). */
+const WOCHENTAG_KUERZEL = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const wochentagKuerzel = (datum: string) => WOCHENTAG_KUERZEL[new Date(`${datum}T12:00:00`).getDay()];
+const tagLabel = (datum: string) =>
+  new Date(`${datum}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit" });
+const jetztUhrzeit = () => new Date().toTimeString().slice(0, 5);
+
+/** Anpassung am Liefertag selbst — nur für Einrichtungen mit entsprechender Vereinbarung, nur für
+ * heutige Positionen einer bereits abgesendeten Bestellung, nur bis zur Tagesfrist (Standard 9 Uhr)
+ * und nur reduzierbar (siehe OrderHandler.AdjustSameDayAsync). Die ursprüngliche Menge bleibt
+ * gespeichert (Abrechnung erfolgt auf die reduzierte Menge); die Küche wird per E-Mail informiert. */
 function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezepte: Rezept[] }) {
   const anpassen = useAdjustBestellungSameDay();
-  const heutigePositionen = bestellung.positionen.filter((p) => p.datum === heute && p.id);
+  const heutigePositionen = bestellung.positionen.filter((p) => p.datum === heute && p.id && (p.portionen > 0 || p.urspruenglichePortionen));
   const [werte, setWerte] = useState<Record<string, number>>(() => Object.fromEntries(heutigePositionen.map((p) => [p.id!, p.portionen])));
   const [hinweis, setHinweis] = useState("");
   const [gespeichert, setGespeichert] = useState(false);
 
+  if (!bestellung.tagesanpassungErlaubt) return null;
   if (heutigePositionen.length === 0) return null;
   if (bestellung.status !== "SUBMITTED" && bestellung.status !== "CONFIRMED") return null;
 
+  const frist = bestellung.tagesanpassungFrist ?? "09:00";
+  const fristAbgelaufen = jetztUhrzeit() > frist;
   const geaendert = heutigePositionen.some((p) => (werte[p.id!] ?? p.portionen) !== p.portionen);
+  const fehler = anpassen.error instanceof ApiError ? anpassen.error.message : anpassen.isError ? "Anpassung fehlgeschlagen. Bitte erneut versuchen." : null;
 
   return (
     <div className="mb-4 rounded-card border border-line bg-surface px-5 py-4">
-      <p className="mb-2 text-sm font-medium text-ink">Portionen für heute anpassen</p>
-      <p className="mb-3 text-xs text-muted">Nur Reduzieren möglich, bis zur tagesaktuellen Frist — bitte kurz begründen (z. B. „5 Kinder krank“).</p>
-      <div className="flex flex-col gap-2">
+      <p className="mb-2 text-sm font-medium text-ink">Portionen für heute reduzieren</p>
+      <p className="mb-3 text-xs text-muted">
+        {fristAbgelaufen
+          ? `Die Frist für heute (${frist} Uhr) ist abgelaufen — Änderungen bitte telefonisch mitteilen.`
+          : `Nur Reduzieren möglich, bis heute ${frist} Uhr. Bitte kurz begründen (z. B. „5 Kinder krank“). Die Küche wird automatisch informiert.`}
+      </p>
+      <div className="flex flex-col gap-3 sm:gap-2">
         {heutigePositionen.map((p) => (
-          <div key={p.id} className="flex items-center gap-3 text-sm">
+          <div key={p.id} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3">
             <span className="min-w-0 flex-1 break-words text-muted">{rezepte.find((r) => r.id === p.rezeptId)?.name ?? p.rezeptId}</span>
-            <span className="shrink-0 text-xs text-muted">bisher {p.portionen}</span>
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
+            <span className="text-xs text-muted">
+              {p.urspruenglichePortionen !== undefined && p.urspruenglichePortionen !== p.portionen
+                ? `bestellt ${p.urspruenglichePortionen} · aktuell ${p.portionen}`
+                : `bestellt ${p.portionen}`}
+            </span>
             <input
               type="number"
               min={0}
               max={p.portionen}
               value={werte[p.id!] ?? p.portionen}
-              onChange={(e) => setWerte((w) => ({ ...w, [p.id!]: Math.min(p.portionen, Math.max(0, Number(e.target.value) || 0)) }))}
-              className="min-h-9 w-20 shrink-0 rounded-lg border border-line bg-surface px-2.5 text-right text-sm"
+              disabled={fristAbgelaufen}
+              onChange={(e) => { setGespeichert(false); setWerte((w) => ({ ...w, [p.id!]: Math.min(p.portionen, Math.max(0, Number(e.target.value) || 0)) })); }}
+              className="min-h-9 w-20 shrink-0 rounded-lg border border-line bg-surface px-2.5 text-right text-sm disabled:cursor-not-allowed disabled:bg-line"
               aria-label={`Neue Portionenzahl für ${rezepte.find((r) => r.id === p.rezeptId)?.name ?? p.rezeptId}`}
             />
+            </div>
           </div>
         ))}
       </div>
-      {geaendert && (
+      {geaendert && !fristAbgelaufen && (
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <div className="min-w-48 flex-1">
             <TextField label="Begründung" value={hinweis} onChange={setHinweis} placeholder="Grund für die Reduzierung" />
@@ -75,7 +101,8 @@ function TagesAnpassung({ bestellung, rezepte }: { bestellung: Bestellung; rezep
           />
         </div>
       )}
-      {gespeichert && <p className="mt-2 text-sm text-ok">Anpassung wurde übermittelt.</p>}
+      {gespeichert && <p className="mt-2 text-sm text-ok">Anpassung wurde übermittelt — die Küche wurde informiert.</p>}
+      {fehler && <p className="mt-2 text-sm text-danger">{fehler}</p>}
     </div>
   );
 }
@@ -85,6 +112,9 @@ export function BestellWoche() {
   const bestellungen = useBestellungen();
   const rezepte = useRezepte();
   const zutaten = useZutaten();
+  const { user } = useAuth();
+  const einrichtung = useEinrichtung(user?.facilityId);
+  const schliesstage = usePortalSchliesstage();
   const [planId, setPlanId] = useState<string>("");
   const aktivePlanId = planId || wochen.find((p) => p.status === "PUBLISHED")?.id || wochen[0]?.id || "";
   const plan = wochen.find((p) => p.id === aktivePlanId);
@@ -123,7 +153,16 @@ export function BestellWoche() {
       ) : plan.tage.length === 0 ? (
         <EmptyState title="Keine Tage geplant" text={`Für KW ${plan.kalenderwoche} liegen keine Plandaten vor.`} />
       ) : (
-        <WochenTage key={plan.id} plan={plan} bestellung={bestellung} readOnly={readOnly} rezepte={rezepte} zutaten={zutaten} />
+        <WochenTage
+          key={plan.id}
+          plan={plan}
+          bestellung={bestellung}
+          readOnly={readOnly}
+          rezepte={rezepte}
+          zutaten={zutaten}
+          aktiveWochentage={einrichtung?.aktiveWochentage}
+          schliesstage={schliesstage}
+        />
       )}
     </>
   );
@@ -135,13 +174,23 @@ function WochenTage({
   readOnly,
   rezepte,
   zutaten,
+  aktiveWochentage,
+  schliesstage,
 }: {
   plan: Speiseplan;
   bestellung: Bestellung | undefined;
   readOnly: boolean;
   rezepte: Rezept[];
   zutaten: ReturnType<typeof useZutaten>;
+  /** Liefertage der Einrichtung ("Mo", "Di", …) — undefined solange noch nicht geladen. */
+  aktiveWochentage: string[] | undefined;
+  schliesstage: EinrichtungSchliesstag[];
 }) {
+  const schliesstagFuer = (datum: string) => schliesstage.find((s) => s.von <= datum && datum <= s.bis);
+  // Ein Tag ist "relevant", wenn die Einrichtung an diesem Wochentag beliefert wird und kein
+  // Schließtag eingetragen ist — dieselbe Regel wie im Backend (OrderDeadline.IsDeliveryDay).
+  const istLiefertag = (datum: string) =>
+    !schliesstagFuer(datum) && (!aktiveWochentage || aktiveWochentage.length === 0 || aktiveWochentage.includes(wochentagKuerzel(datum)));
   const saveBestellung = useSaveBestellung();
   const initialMengen = useMemo(() => {
     const m: Record<string, number> = {};
@@ -184,18 +233,16 @@ function WochenTage({
     );
   };
 
-  // "Absenden" fragt immer noch einmal gezielt nach — bei (noch editierbaren) Gerichten mit 0/keiner
-  // Menge wird zusätzlich aufgelistet, welche das sind (häufig schlicht vergessen einzutragen, nicht
-  // bewusst auf 0 gesetzt). Serverseitig bleibt 0 weiterhin ein gültiger, bewusster Wert (s. o.).
+  // Bestellkontrolle: "Absenden" fragt immer noch einmal nach — und listet gezielt die Liefertage
+  // auf, für die insgesamt keine einzige Portion eingetragen ist (meist schlicht vergessen).
+  // Schließtage und Wochentage ohne Belieferung zählen nicht als fehlend. Einzelne Gerichte mit 0
+  // sind normal (mehrere Menülinien pro Tag) und lösen keine Warnung aus.
   const absendenAnklicken = () => {
-    const offenePositionen = plan.tage
-      .filter((tag) => tag.datum >= heute)
-      .flatMap((tag) =>
-        tag.gerichte
-          .filter((gericht) => (mengen[`${tag.datum}|${gericht.rezeptId}`] ?? 0) === 0)
-          .map((gericht) => `${tag.wochentag}: ${rezepte.find((r) => r.id === gericht.rezeptId)?.name ?? gericht.rezeptId}`)
-      );
-    setAbsendenBestaetigung(offenePositionen);
+    const fehlendeTage = plan.tage
+      .filter((tag) => tag.datum >= heute && tag.gerichte.length > 0 && istLiefertag(tag.datum))
+      .filter((tag) => tag.gerichte.every((gericht) => (mengen[`${tag.datum}|${gericht.rezeptId}`] ?? 0) === 0))
+      .map((tag) => tagLabel(tag.datum));
+    setAbsendenBestaetigung(fehlendeTage);
   };
 
   return (
@@ -211,19 +258,21 @@ function WochenTage({
         open={absendenBestaetigung !== null}
         title="Bestellung absenden?"
         tone={absendenBestaetigung && absendenBestaetigung.length > 0 ? "warn" : "default"}
-        confirmLabel="Ja, absenden"
+        confirmLabel={absendenBestaetigung && absendenBestaetigung.length > 0 ? "Trotzdem absenden" : "Ja, absenden"}
         confirmIcon={ACTION_ICONS.send}
         onCancel={() => setAbsendenBestaetigung(null)}
         onConfirm={() => { setAbsendenBestaetigung(null); speichern(true); }}
         message={
           absendenBestaetigung && absendenBestaetigung.length > 0 ? (
             <>
-              <p>Für folgende Gerichte wurden keine Portionen eingetragen (0):</p>
+              <p>Für folgende Liefertage ist noch <strong>keine Bestellung</strong> eingetragen:</p>
               <ul className="my-3 list-disc space-y-1 pl-5">
-                {absendenBestaetigung.slice(0, 8).map((eintrag, i) => <li key={i}>{eintrag}</li>)}
-                {absendenBestaetigung.length > 8 && <li>… und {absendenBestaetigung.length - 8} weitere</li>}
+                {absendenBestaetigung.map((eintrag) => <li key={eintrag}>{eintrag}</li>)}
               </ul>
-              <p>Trotzdem absenden?</p>
+              <p>
+                Eingetragene Schließtage sind bereits berücksichtigt. Falls Ihre Einrichtung an diesen Tagen geschlossen ist,
+                tragen Sie die Schließtage bitte im Profil ein. Trotzdem absenden?
+              </p>
             </>
           ) : (
             <p>Möchten Sie diese Bestellung jetzt absenden? Änderungen sind danach nur noch bis zur Frist möglich.</p>
@@ -246,7 +295,11 @@ function WochenTage({
 
       <WeekCalendar>
         {plan.tage.map((tag) => {
-          const gesperrt = readOnly || tag.datum < heute;
+          const schliesstag = schliesstagFuer(tag.datum);
+          const gesperrt = readOnly || tag.datum < heute || !!schliesstag;
+          const tagHinweis = schliesstag
+            ? `Geschlossen (Schließtag${schliesstag.hinweis ? `: ${schliesstag.hinweis}` : ""}) — keine Bestellung nötig.`
+            : tag.hinweis;
           return (
             <DayColumn
               key={tag.datum}
@@ -254,8 +307,8 @@ function WochenTage({
               datum={tag.datum}
               isToday={tag.datum === heute}
               locked={gesperrt}
-              lockedLabel="Frist abgelaufen"
-              hinweis={tag.hinweis}
+              lockedLabel={schliesstag ? "Geschlossen" : "Frist abgelaufen"}
+              hinweis={tagHinweis}
               footer={
                 !gesperrt && (
                   <label className="mt-auto text-xs text-muted">

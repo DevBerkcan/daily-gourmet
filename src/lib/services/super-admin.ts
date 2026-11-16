@@ -94,6 +94,10 @@ export interface TenantSettings {
   praefixEinrichtungen: string;
   praefixArtikel: string;
   praefixTouren: string;
+  /** Empfänger (Küche) für E-Mails bei Reduzierung am Liefertag, komma-getrennt. Leer → Mandanten-Admins. */
+  kuecheEmails: string;
+  /** Wie viele Stunden vor Bestellfrist Einrichtungen ohne abgesendete Bestellung erinnert werden. */
+  erinnerungStundenVorher: number;
   benachrichtigungen: { eventKey: string; aktiv: boolean }[];
 }
 
@@ -107,6 +111,8 @@ interface TenantSettingsDto {
   facilityNumberPrefix: string;
   articleNumberPrefix: string;
   routeNumberPrefix: string;
+  kitchenNotificationEmails: string | null;
+  orderReminderHoursBefore: number;
   notificationSettings: { eventKey: string; enabled: boolean }[];
 }
 
@@ -121,6 +127,8 @@ function toTenantSettings(dto: TenantSettingsDto): TenantSettings {
     praefixEinrichtungen: dto.facilityNumberPrefix,
     praefixArtikel: dto.articleNumberPrefix,
     praefixTouren: dto.routeNumberPrefix,
+    kuecheEmails: dto.kitchenNotificationEmails ?? "",
+    erinnerungStundenVorher: dto.orderReminderHoursBefore ?? 24,
     benachrichtigungen: dto.notificationSettings.map((n) => ({ eventKey: n.eventKey, aktiv: n.enabled })),
   };
 }
@@ -136,6 +144,8 @@ function toTenantSettingsDto(input: TenantSettings): TenantSettingsDto {
     facilityNumberPrefix: input.praefixEinrichtungen,
     articleNumberPrefix: input.praefixArtikel,
     routeNumberPrefix: input.praefixTouren,
+    kitchenNotificationEmails: input.kuecheEmails.trim() || null,
+    orderReminderHoursBefore: input.erinnerungStundenVorher,
     notificationSettings: input.benachrichtigungen.map((n) => ({ eventKey: n.eventKey, enabled: n.aktiv })),
   };
 }
@@ -143,7 +153,7 @@ function toTenantSettingsDto(input: TenantSettings): TenantSettingsDto {
 const NOTIFICATION_LABELS: Record<string, string> = {
   MealPlanPublished: "Speiseplan veröffentlicht → Einrichtungen",
   DeadlineApproaching: "Frist läuft ab → Einrichtungen ohne Bestellung",
-  OrderChangedAfterSubmit: "Bestellung nachträglich geändert → Küche",
+  OrderChangedAfterSubmit: "Reduzierung am Liefertag → Küche",
   ProductionPlanChanged: "Produktionsplan geändert → Kitchen Manager",
 };
 export const notificationLabel = (eventKey: string) => NOTIFICATION_LABELS[eventKey] ?? eventKey;

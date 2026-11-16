@@ -9,7 +9,7 @@ import { useSpeiseplaene } from "@/lib/services/meal-plans";
 import { useRezepte } from "@/lib/services/recipes";
 import { useBestellungen, useConfirmBestellung, useLockBestellung, useOverrideBestellung } from "@/lib/services/orders";
 import { usePagination } from "@/lib/use-pagination";
-import type { BestellStatus, Bestellung } from "@/lib/types";
+import { bestellSummen, type BestellStatus, type Bestellung } from "@/lib/types";
 import { BestellungDetailModal } from "./bestellung-detail-modal";
 
 const statusOptionen: { value: "ALLE" | BestellStatus; label: string }[] = [
@@ -42,7 +42,13 @@ export function OrdersBoard() {
   const { pageItems, page, setPage, pageSize, setPageSize, totalPages, totalItems, pageSizeOptions } = usePagination(gefiltert);
 
   function csvExportieren() {
-    const zeilen = [["Bestellung", "Einrichtung", "Status", "Portionen", "Frist"], ...gefiltert.map((bestellung) => [bestellung.id, einrichtungById(bestellung.einrichtungId)?.name ?? "", bestellung.status, bestellung.positionen.reduce((summe, position) => summe + position.portionen, 0), bestellung.frist])];
+    const zeilen = [
+      ["Bestellung", "Einrichtung", "Status", "Portionen ursprünglich", "Portionen abrechenbar", "Differenz Tagesanpassung", "Frist"],
+      ...gefiltert.map((bestellung) => {
+        const summen = bestellSummen(bestellung);
+        return [bestellung.id, einrichtungById(bestellung.einrichtungId)?.name ?? "", bestellung.status, summen.urspruenglich, summen.angepasst, summen.differenz, bestellung.frist];
+      }),
+    ];
     const csv = zeilen.map((zeile) => zeile.map((wert) => `"${String(wert).replace(/"/g, '""')}"`).join(";")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a"); link.href = url; link.download = "bestellungen.csv"; link.click(); URL.revokeObjectURL(url);
@@ -72,9 +78,9 @@ export function OrdersBoard() {
         <Table head={["Bestellung & Einrichtung", "Woche", "Portionen", "Status", "Abgesendet", "Frist", "Aktion"]}>
           {pageItems.map((bestellung) => {
             const plan = speiseplaene.find((eintrag) => eintrag.id === bestellung.speiseplanId);
-            const gesamt = bestellung.positionen.reduce((summe, position) => summe + position.portionen, 0);
+            const { angepasst: gesamt, differenz } = bestellSummen(bestellung);
             const istEntwurf = bestellung.status === "DRAFT";
-            return <tr key={bestellung.id} className="hover:bg-paper"><Td><div className="min-w-0"><button type="button" onClick={() => setDetailBestellung(bestellung)} className="cursor-pointer text-left font-semibold text-ink hover:text-basil hover:underline">{einrichtungById(bestellung.einrichtungId)?.name}</button><p className="mt-0.5 break-all text-xs text-muted">{bestellung.id}</p></div></Td><Td className="whitespace-nowrap">KW {plan?.kalenderwoche ?? "—"}</Td><Td className="font-display text-lg font-semibold text-basil">{gesamt}</Td><Td><StatusBadge status={bestellung.status} /></Td><Td className="text-muted">{bestellung.abgesendetAm ?? "—"}</Td><Td><span className={`inline-flex items-center gap-1.5 text-xs ${istEntwurf ? "font-medium text-warn" : "text-muted"}`}><Clock3 size={14} className="shrink-0" aria-hidden />{bestellung.frist}</span>{istEntwurf ? <p className="mt-1 text-xs text-warn">Noch nicht abgesendet</p> : null}</Td><Td><div className="flex flex-wrap items-center gap-1.5"><Button icon={ACTION_ICONS.view} label="Details" variant="ghost" size="sm" onClick={() => setDetailBestellung(bestellung)} />{bestellung.status === "SUBMITTED" ? <Button icon={ACTION_ICONS.confirm} label="Bestätigen" variant="ghost" size="sm" onClick={() => confirmBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "CONFIRMED" ? <Button icon={ACTION_ICONS.reject} label="Sperren" variant="danger" size="sm" onClick={() => lockBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "LOCKED" ? <Button icon={ACTION_ICONS.edit} label="Korrektur" variant="ghost" size="sm" onClick={() => setKorrekturId(bestellung.id)} /> : null}{bestellung.status === "DRAFT" ? <Button icon={BellRing} label="Erinnerung senden" variant="ghost" size="sm" onClick={() => setMeldung(`Fristerinnerung an ${einrichtungById(bestellung.einrichtungId)?.name} wurde vorgemerkt.`)} /> : null}</div></Td></tr>;
+            return <tr key={bestellung.id} className="hover:bg-paper"><Td><div className="min-w-0"><button type="button" onClick={() => setDetailBestellung(bestellung)} className="cursor-pointer text-left font-semibold text-ink hover:text-basil hover:underline">{einrichtungById(bestellung.einrichtungId)?.name}</button><p className="mt-0.5 break-all text-xs text-muted">{bestellung.id}</p></div></Td><Td className="whitespace-nowrap">KW {plan?.kalenderwoche ?? "—"}</Td><Td className="whitespace-nowrap"><span className="font-display text-lg font-semibold text-basil">{gesamt}</span>{differenz > 0 ? <p className="text-xs text-warn" title="Am Liefertag reduziert">−{differenz} am Liefertag</p> : null}</Td><Td><StatusBadge status={bestellung.status} /></Td><Td className="text-muted">{bestellung.abgesendetAm ?? "—"}</Td><Td><span className={`inline-flex items-center gap-1.5 text-xs ${istEntwurf ? "font-medium text-warn" : "text-muted"}`}><Clock3 size={14} className="shrink-0" aria-hidden />{bestellung.frist}</span>{istEntwurf ? <p className="mt-1 text-xs text-warn">Noch nicht abgesendet</p> : null}</Td><Td><div className="flex flex-wrap items-center gap-1.5"><Button icon={ACTION_ICONS.view} label="Details" variant="ghost" size="sm" onClick={() => setDetailBestellung(bestellung)} />{bestellung.status === "SUBMITTED" ? <Button icon={ACTION_ICONS.confirm} label="Bestätigen" variant="ghost" size="sm" onClick={() => confirmBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "CONFIRMED" ? <Button icon={ACTION_ICONS.reject} label="Sperren" variant="danger" size="sm" onClick={() => lockBestellung.mutate(bestellung.id)} /> : null}{bestellung.status === "LOCKED" ? <Button icon={ACTION_ICONS.edit} label="Korrektur" variant="ghost" size="sm" onClick={() => setKorrekturId(bestellung.id)} /> : null}{bestellung.status === "DRAFT" ? <Button icon={BellRing} label="Erinnerung senden" variant="ghost" size="sm" onClick={() => setMeldung(`Fristerinnerung an ${einrichtungById(bestellung.einrichtungId)?.name} wurde vorgemerkt.`)} /> : null}</div></Td></tr>;
           })}
         </Table>
         <Pagination

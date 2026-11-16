@@ -1,7 +1,7 @@
 "use client";
 
 import { ACTION_ICONS, Button, StatusBadge, Table, Td } from "@/components/ui";
-import type { Bestellung } from "@/lib/types";
+import { bestellSummen, type Bestellung } from "@/lib/types";
 import type { Rezept } from "@/features/recipes/types";
 import type { Einrichtung } from "@/lib/services/facilities";
 import type { Speiseplan } from "@/features/meal-plans/types";
@@ -19,7 +19,7 @@ export function BestellungDetailModal({
   rezepte: Rezept[];
   onClose: () => void;
 }) {
-  const gesamt = bestellung.positionen.reduce((summe, position) => summe + position.portionen, 0);
+  const { urspruenglich, angepasst: gesamt, differenz } = bestellSummen(bestellung);
   const nachTag = [...bestellung.positionen].sort((a, b) => a.datum.localeCompare(b.datum) || a.rezeptId.localeCompare(b.rezeptId));
 
   return (
@@ -48,8 +48,13 @@ export function BestellungDetailModal({
         <div className="overflow-y-auto px-6 py-5">
           <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-paper px-4 py-3 text-sm">
             <StatusBadge status={bestellung.status} />
-            <span className="text-muted">Bestellte Portionen gesamt:</span>
+            <span className="text-muted">{differenz > 0 ? "Abrechenbare Portionen:" : "Bestellte Portionen gesamt:"}</span>
             <span className="font-display text-xl font-semibold text-basil">{gesamt}</span>
+            {differenz > 0 && (
+              <span className="text-xs text-muted">
+                ursprünglich {urspruenglich} · am Liefertag reduziert <strong className="text-warn">−{differenz}</strong>
+              </span>
+            )}
             <span className="ml-auto min-w-0 break-all text-xs text-muted">{bestellung.id}</span>
           </div>
 
@@ -63,7 +68,18 @@ export function BestellungDetailModal({
                     {new Date(`${position.datum}T12:00:00`).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" })}
                   </Td>
                   <Td className="font-medium text-ink">{rezepte.find((r) => r.id === position.rezeptId)?.name ?? position.rezeptId}</Td>
-                  <Td className="font-semibold">{position.portionen}</Td>
+                  <Td className="whitespace-nowrap font-semibold">
+                    {/* Single wrapper: in the mobile card layout every direct child of a cell is laid
+                        out separately, which split the number and the "urspr." line apart. */}
+                    <div>
+                      {position.portionen}
+                      {position.urspruenglichePortionen !== undefined && position.urspruenglichePortionen !== position.portionen && (
+                        <span className="block text-xs font-normal text-muted">
+                          urspr. {position.urspruenglichePortionen} · <span className="text-warn">−{position.urspruenglichePortionen - position.portionen}</span>
+                        </span>
+                      )}
+                    </div>
+                  </Td>
                   <Td className="text-muted">{position.hinweis ?? "—"}</Td>
                 </tr>
               ))}

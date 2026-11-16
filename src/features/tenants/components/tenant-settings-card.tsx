@@ -54,6 +54,8 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
           <div><dt className="text-xs text-muted">Prüfung vor Veröffentlichung</dt><dd><Tag tone={settings.pruefungVorVeroeffentlichung ? "green" : "neutral"}>{settings.pruefungVorVeroeffentlichung ? "Aktiv" : "Inaktiv"}</Tag></dd></div>
           <div><dt className="text-xs text-muted">Zurückziehen nur ohne Bestellungen</dt><dd><Tag tone={settings.zurueckziehenNurOhneBestellungen ? "green" : "neutral"}>{settings.zurueckziehenNurOhneBestellungen ? "Aktiv" : "Inaktiv"}</Tag></dd></div>
           <div><dt className="text-xs text-muted">Nummernkreise</dt><dd className="font-medium text-ink">{settings.praefixEinrichtungen || "—"} · {settings.praefixArtikel || "—"} · {settings.praefixTouren || "—"}</dd></div>
+          <div><dt className="text-xs text-muted">Bestellerinnerung</dt><dd className="font-medium text-ink">{settings.erinnerungStundenVorher} Std. vor Bestellfrist</dd></div>
+          <div className="min-w-0"><dt className="text-xs text-muted">E-Mail Küche (Tagesanpassung)</dt><dd className="break-words font-medium text-ink">{settings.kuecheEmails || "— (Mandanten-Admins)"}</dd></div>
           <div className="sm:col-span-2">
             <dt className="mb-1.5 text-xs text-muted">Benachrichtigungen</dt>
             <dd className="flex flex-wrap gap-1.5">
@@ -74,6 +76,13 @@ export function TenantSettingsCard({ tenantId }: { tenantId: string }) {
             </label>
             <label className="text-xs font-medium text-muted">Anpassung am Liefertag bis
               <input type="time" value={form.sameDayAnpassungFrist} onChange={(e) => setForm((f) => f && { ...f, sameDayAnpassungFrist: e.target.value })} className={`mt-1.5 ${fieldClass}`} />
+            </label>
+            <label className="text-xs font-medium text-muted">Bestellerinnerung (Std. vor Frist)
+              <input type="number" min={1} max={168} value={form.erinnerungStundenVorher} onChange={(e) => setForm((f) => f && { ...f, erinnerungStundenVorher: Math.min(168, Math.max(1, Number(e.target.value) || 24)) })} className={`mt-1.5 ${fieldClass}`} />
+            </label>
+            <label className="text-xs font-medium text-muted sm:col-span-2">E-Mail Küche bei Reduzierung am Liefertag
+              <input type="text" value={form.kuecheEmails} onChange={(e) => setForm((f) => f && { ...f, kuecheEmails: e.target.value })} placeholder="kueche@beispiel.de, leitung@beispiel.de" className={`mt-1.5 ${fieldClass}`} />
+              <span className="mt-1 block font-normal">Mehrere Adressen mit Komma trennen. Leer = Mandanten-Admins erhalten die E-Mail.</span>
             </label>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">

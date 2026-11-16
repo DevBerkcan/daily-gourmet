@@ -9,6 +9,8 @@ interface OrderItemDto {
   recipeId: string;
   recipeName: string;
   portions: number;
+  originalPortions: number | null;
+  sameDayAdjustedAtUtc: string | null;
   note: string | null;
 }
 
@@ -22,6 +24,8 @@ interface OrderDto {
   status: string;
   submittedAt: string | null;
   deadlineAtUtc: string;
+  sameDayAdjustmentEnabled: boolean;
+  sameDayAdjustmentDeadlineTime: string;
   items: OrderItemDto[];
 }
 
@@ -34,9 +38,14 @@ function toBestellung(dto: OrderDto): Bestellung {
     einrichtungId: dto.facilityId,
     speiseplanId: dto.mealPlanId,
     status: dto.status as BestellStatus,
-    positionen: dto.items.map((i) => ({ id: i.id, datum: i.date, rezeptId: i.recipeId, portionen: i.portions, hinweis: i.note ?? undefined })),
+    positionen: dto.items.map((i) => ({
+      id: i.id, datum: i.date, rezeptId: i.recipeId, portionen: i.portions, hinweis: i.note ?? undefined,
+      urspruenglichePortionen: i.originalPortions ?? undefined,
+    })),
     abgesendetAm: dto.submittedAt ? formatDateTime(dto.submittedAt) : undefined,
     frist: formatDateTime(dto.deadlineAtUtc),
+    tagesanpassungErlaubt: dto.sameDayAdjustmentEnabled ?? false,
+    tagesanpassungFrist: dto.sameDayAdjustmentDeadlineTime?.slice(0, 5) ?? "09:00",
   };
 }
 

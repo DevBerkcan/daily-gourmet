@@ -80,7 +80,10 @@ export function FacilitiesManager() {
               </Td>
               <Td className="text-muted">{e.standortName}</Td>
               <Td className="text-muted">{e.routeNummer ?? "—"}</Td>
-              <Td className="text-muted">{e.aktiveWochentage.join(", ")}</Td>
+              <Td className="text-muted">
+                {e.aktiveWochentage.join(", ")}
+                {e.tagesanpassungVereinbart && <span className="block text-xs text-basil">Tagesanpassung</span>}
+              </Td>
               <Td className="text-muted">{e.lieferfensterStart && e.lieferfensterEnde ? `${e.lieferfensterStart}–${e.lieferfensterEnde}` : "—"}</Td>
               <Td>{e.portionspreis.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}</Td>
               <Td><StatusBadge status={e.status} /></Td>
@@ -156,6 +159,7 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
   const [lieferfensterEnde, setLieferfensterEnde] = useState(initial?.lieferfensterEnde ?? "");
   const [lieferdauerMinuten, setLieferdauerMinuten] = useState<number | "">(initial?.lieferdauerMinuten ?? "");
   const [lieferBesonderheiten, setLieferBesonderheiten] = useState(initial?.lieferBesonderheiten ?? "");
+  const [tagesanpassungVereinbart, setTagesanpassungVereinbart] = useState(initial?.tagesanpassungVereinbart ?? false);
   const [inviteResult, setInviteResult] = useState<{ username: string; link: string } | null>(null);
 
   const mutation = initial ? updateEinrichtung : createEinrichtung;
@@ -185,6 +189,7 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
       lieferfensterEnde: lieferfensterEnde || undefined,
       lieferdauerMinuten: lieferdauerMinuten === "" ? undefined : lieferdauerMinuten,
       lieferBesonderheiten: lieferBesonderheiten.trim() || undefined,
+      tagesanpassungVereinbart,
     };
     if (initial) {
       updateEinrichtung.mutate(
@@ -268,6 +273,20 @@ function EinrichtungFormular({ standorte, initial, onClose }: { standorte: Retur
           rows={2}
           placeholder="z. B. steile Treppe, kein Rollwagen möglich, Temperaturkontrolle"
         />
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={tagesanpassungVereinbart}
+            onChange={(e) => setTagesanpassungVereinbart(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-basil"
+          />
+          <span className="min-w-0">
+            <span className="block font-medium text-ink">Anpassung am Liefertag vereinbart</span>
+            <span className="block text-xs text-muted">
+              Die Einrichtung darf am Liefertag selbst bis zur Tagesfrist (Standard 9:00 Uhr) Portionen reduzieren. Die Küche wird per E-Mail informiert.
+            </span>
+          </span>
+        </label>
         {mutation.isError && <p className="text-sm text-danger">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>}
         <div className="flex flex-wrap justify-end gap-2 no-print">
           <Button variant="secondary" onClick={onClose} icon={ACTION_ICONS.cancel} label="Abbrechen" showLabel />
