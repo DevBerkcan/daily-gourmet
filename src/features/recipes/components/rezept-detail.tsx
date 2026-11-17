@@ -26,6 +26,7 @@ import {
   naehrwerteProPortion,
 } from "@/lib/services/recipes";
 import { useZutaten } from "@/lib/services/ingredients";
+import { mengeInBasiseinheit } from "../store";
 
 export function RezeptDetail({ id }: { id: string }) {
   const router = useRouter();
@@ -234,13 +235,14 @@ export function RezeptDetail({ id }: { id: string }) {
                 {rezept.zutaten.map((rz) => {
                   const z = zutaten.find((zt) => zt.id === rz.zutatId);
                   if (!z) return null;
-                  const faktor = (rz.menge * (z.basiseinheit === "Stück" ? 1 : 1000)) / 100 / rezept.standardPortionen;
-                  const kcal = Math.round(z.naehrwertePro100.kcal * faktor);
+                  // Nährwerte gelten je 100 g/ml — Stück-Zeilen haben kein Gewicht und bleiben ohne Anteil.
+                  const kg = mengeInBasiseinheit(rz.menge, rz.einheit, "kg") ?? mengeInBasiseinheit(rz.menge, rz.einheit, "l");
+                  const kcal = kg == null ? null : Math.round(z.naehrwertePro100.kcal * ((kg * 1000) / 100 / rezept.standardPortionen));
                   return (
                     <tr key={rz.id ?? rz.zutatId}>
                       <Td className="font-medium text-ink">{z.name}</Td>
                       <Td className="text-muted">{rz.menge} {rz.einheit}</Td>
-                      <Td>{kcal} kcal</Td>
+                      <Td>{kcal == null ? "–" : `${kcal} kcal`}</Td>
                     </tr>
                   );
                 })}

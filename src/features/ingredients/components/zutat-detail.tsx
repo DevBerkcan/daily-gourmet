@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ApiError } from "@/lib/api/client";
 import { ZutatFormular } from "./zutat-formular";
 import { PreisePanel } from "./preise-panel";
+import { ALLERGEN_CODES, ZUSATZSTOFF_CODES } from "../data";
 import { useZutaten, useUpdateZutat, useDeleteZutat, type Zutat } from "@/lib/services/ingredients";
 
 export function ZutatDetail({ id }: { id: string }) {
@@ -112,8 +113,8 @@ export function ZutatDetail({ id }: { id: string }) {
         {zutat.vegan ? <Tag tone="green">vegan</Tag> : zutat.vegetarisch ? <Tag tone="green">vegetarisch</Tag> : null}
         {zutat.bio && <Tag tone="green">Bio</Tag>}
         {zutat.regional && <Tag tone="green">Regional</Tag>}
-        {zutat.allergene.map((a) => <Tag key={a} tone="amber">Allergen: {a}</Tag>)}
-        {zutat.zusatzstoffe.map((z) => <Tag key={z}>{z}</Tag>)}
+        {zutat.allergene.map((a) => <Tag key={a} tone="amber">Allergen: {ALLERGEN_CODES[a] ? `${ALLERGEN_CODES[a]} · ` : ""}{a}</Tag>)}
+        {zutat.zusatzstoffe.map((z) => <Tag key={z}>{ZUSATZSTOFF_CODES[z] ? `${ZUSATZSTOFF_CODES[z]} · ` : ""}{z}</Tag>)}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">

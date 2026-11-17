@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
+import { SearchSelect } from "@/components/ui/search-select";
+import type { Einheit } from "@/lib/types";
 import { TextField, NumberField, OptionalNumberField, TextareaField, SelectField, CheckboxRow, CheckboxGroup, ImageField } from "@/components/ui/form-fields";
 import { REZEPT_KATEGORIEN, ZIELGRUPPEN_LISTE, SCHWIERIGKEITSGRADE } from "../data";
 import { useZutaten } from "@/lib/services/ingredients";
@@ -9,12 +11,22 @@ import type { Rezept, RezeptZutat, Schwierigkeitsgrad } from "../types";
 
 const formatEuro = (v: number) => v.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
+/** Einheiten je Rezeptzeile — Gramm und Stück (z. B. Eier) statt nur der kg-Basiseinheit. */
+const REZEPT_EINHEITEN: Einheit[] = ["g", "kg", "ml", "l", "Stück"];
+
+/** Neue Zeilen starten in Gramm bzw. Milliliter (Küchenpraxis) — Backend rechnet g↔kg / ml↔l für Preis & Nährwerte um. */
+const standardEinheit = (basis: Einheit): Einheit => (basis === "kg" ? "g" : basis === "l" ? "ml" : basis);
+
+/** Gleiche Dimension wie die Basiseinheit der Zutat (Masse, Volumen, Stück) → umrechenbar. */
+const dimension = (e: Einheit) => (e === "g" || e === "kg" ? "masse" : e === "ml" || e === "l" ? "volumen" : "stueck");
+const einheitPasst = (e: Einheit, basis: Einheit) => dimension(e) === dimension(basis);
+
 export type RezeptFormDaten = Omit<Rezept, "id" | "version" | "erstelltVon" | "erstelltAm" | "aktualisiertAm">;
 
-function leer(erstesZutatId: string): RezeptFormDaten {
+function leer(erstesZutatId: string, basis: Einheit = "kg"): RezeptFormDaten {
   return {
     name: "", beschreibung: "", kategorie: REZEPT_KATEGORIEN[0], standardPortionen: 10, zubereitungszeitMin: 30, schwierigkeit: "Einfach",
-    zubereitungsschritte: [""], zutaten: erstesZutatId ? [{ zutatId: erstesZutatId, menge: 1, einheit: "kg" }] : [],
+    zubereitungsschritte: [""], zutaten: erstesZutatId ? [{ zutatId: erstesZutatId, menge: 1, einheit: standardEinheit(basis) }] : [],
     vegetarisch: true, vegan: true, glutenfrei: false, laktosefrei: false, dgeZertifiziert: false,
     produktionshinweise: "", zielgruppen: [], bildUrl: undefined,
     kerntemperaturC: undefined, lagerhinweis: "", haltbarkeitNachZubereitung: "", reduktionsfaktor: 1, aktiv: true,
@@ -31,7 +43,11 @@ export function RezeptFormular({
   onAbbrechen?: () => void;
 }) {
   const zutaten = useZutaten();
-  const [r, setR] = useState<RezeptFormDaten>(initial ? { ...initial } : leer(zutaten[0]?.id ?? ""));
+  const [r, setR] = useState<RezeptFormDaten>(initial ? { ...initial } : leer(zutaten[0]?.id ?? "", zutaten[0]?.basiseinheit));
+  const zutatOptionen = useMemo(
+    () => [...zutaten].sort((a, b) => a.name.localeCompare(b.name, "de")).map((z) => ({ value: z.id, label: z.name })),
+    [zutaten],
+  );
 
   const set = <K extends keyof RezeptFormDaten>(key: K, value: RezeptFormDaten[K]) => setR((prev) => ({ ...prev, [key]: value }));
   const toggleZielgruppe = (z: string) => set("zielgruppen", r.zielgruppen.includes(z) ? r.zielgruppen.filter((x) => x !== z) : [...r.zielgruppen, z]);
@@ -39,7 +55,7 @@ export function RezeptFormular({
   const addZutatRow = () => {
     const erste = zutaten[0];
     if (!erste) return;
-    set("zutaten", [...r.zutaten, { zutatId: erste.id, menge: 1, einheit: erste.basiseinheit }]);
+    set("zutaten", [...r.zutaten, { zutatId: erste.id, menge: 1, einheit: standardEinheit(erste.basiseinheit) }]);
   };
   const updateZutatRow = (i: number, updates: Partial<RezeptZutat>) => {
     set("zutaten", r.zutaten.map((rz, idx) => (idx === i ? { ...rz, ...updates } : rz)));
@@ -104,31 +120,37 @@ export function RezeptFormular({
           {r.zutaten.map((rz, i) => {
             const zutat = zutaten.find((z) => z.id === rz.zutatId);
             return (
-              <div key={i} className="flex items-end gap-2">
-                <div className="min-w-0 flex-1">
-                  <select
-                    aria-label="Zutat"
-                    value={rz.zutatId}
-                    onChange={(e) => {
-                      const neu = zutaten.find((z) => z.id === e.target.value);
-                      updateZutatRow(i, { zutatId: e.target.value, einheit: neu?.basiseinheit ?? rz.einheit });
-                    }}
-                    className="min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm"
-                  >
-                    {zutaten.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
-                  </select>
-                </div>
+              <div key={rz.id ?? i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                <SearchSelect
+                  ariaLabel="Zutat"
+                  placeholder="Zutat suchen…"
+                  value={rz.zutatId}
+                  options={zutatOptionen}
+                  onChange={(id) => {
+                    const neu = zutaten.find((z) => z.id === id);
+                    updateZutatRow(i, { zutatId: id, einheit: neu ? standardEinheit(neu.basiseinheit) : rz.einheit });
+                  }}
+                  className="min-w-0 basis-full sm:basis-auto sm:flex-1"
+                />
                 <input
                   type="number"
                   aria-label="Menge"
                   min={0}
-                  step="any"
+                  step={rz.einheit === "Stück" ? 1 : "any"}
                   value={rz.menge}
                   onChange={(e) => updateZutatRow(i, { menge: Number(e.target.value) || 0 })}
-                  className="min-h-10 w-20 shrink-0 rounded-lg border border-line bg-surface px-3 text-sm text-right sm:w-24"
+                  className="min-h-10 w-20 shrink-0 rounded-lg border border-line bg-surface px-3 text-right text-sm sm:w-24"
                 />
-                <span className="min-h-10 flex shrink-0 items-center whitespace-nowrap px-1 text-sm text-muted">{zutat?.basiseinheit ?? rz.einheit}</span>
-                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" showLabel className="mb-1 lg:mb-0 no-print" onClick={() => removeZutatRow(i)} />
+                <select
+                  aria-label="Einheit"
+                  value={rz.einheit}
+                  onChange={(e) => updateZutatRow(i, { einheit: e.target.value as Einheit })}
+                  title={zutat && !einheitPasst(rz.einheit, zutat.basiseinheit) ? `Basiseinheit der Zutat ist ${zutat.basiseinheit} — für diese Zeile ist keine Preis-/Nährwertumrechnung möglich.` : undefined}
+                  className={`min-h-10 w-24 shrink-0 rounded-lg border bg-surface px-2 text-sm ${zutat && !einheitPasst(rz.einheit, zutat.basiseinheit) ? "border-warn" : "border-line"}`}
+                >
+                  {REZEPT_EINHEITEN.map((e) => <option key={e} value={e}>{e}</option>)}
+                </select>
+                <Button icon={ACTION_ICONS.delete} label="Zutat entfernen" variant="danger" size="sm" showLabel className="ml-auto no-print sm:ml-0" onClick={() => removeZutatRow(i)} />
               </div>
             );
           })}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, Button, ACTION_ICONS } from "@/components/ui";
 import { TextField, NumberField, OptionalNumberField, SelectField, CheckboxRow, CheckboxGroup } from "@/components/ui/form-fields";
-import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE, ZUSATZSTOFFE_LISTE } from "../data";
+import { ZUTAT_KATEGORIEN, ALLERGENE_LISTE, ZUSATZSTOFFE_LISTE, ALLERGEN_CODES, ZUSATZSTOFF_CODES } from "../data";
 import { useSuppliers, type Zutat } from "@/lib/services/ingredients";
 import type { Einheit } from "@/lib/types";
 
@@ -30,7 +30,7 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
   const toggleAllergen = (a: string) => set("allergene", z.allergene.includes(a) ? z.allergene.filter((x) => x !== a) : [...z.allergene, a]);
   const toggleZusatzstoff = (a: string) => set("zusatzstoffe", z.zusatzstoffe.includes(a) ? z.zusatzstoffe.filter((x) => x !== a) : [...z.zusatzstoffe, a]);
 
-  const kannSpeichern = z.name.trim() !== "" && z.artikelnummer.trim() !== "";
+  const kannSpeichern = z.name.trim() !== "";
 
   return (
     <form
@@ -45,7 +45,13 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
         <CardHeader title="Stammdaten" />
         <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
           <TextField label="Name" value={z.name} onChange={(v) => set("name", v)} required />
-          <TextField label="Artikelnummer" value={z.artikelnummer} onChange={(v) => set("artikelnummer", v)} required />
+          <TextField
+            label="Artikelnummer"
+            value={z.artikelnummer}
+            onChange={(v) => set("artikelnummer", v)}
+            placeholder={initial ? undefined : "Leer lassen für automatische Nummer"}
+            hint={initial ? undefined : "Optional — ohne Eingabe wird die nächste freie Nummer vergeben."}
+          />
           <SelectField label="Kategorie" value={z.kategorie} onChange={(v) => set("kategorie", v)} options={kategorien} />
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-ink">Lieferant</span>
@@ -86,8 +92,8 @@ export function ZutatFormular({ initial, onSubmit, onAbbrechen }: { initial?: Zu
       <Card>
         <CardHeader title="Kennzeichnung & Nachhaltigkeit" />
         <div className="flex flex-col gap-4 px-5 py-4">
-          <CheckboxGroup label="Allergene" options={ALLERGENE_LISTE} selected={z.allergene} onToggle={toggleAllergen} />
-          <CheckboxGroup label="Zusatzstoffe" options={ZUSATZSTOFFE_LISTE} selected={z.zusatzstoffe} onToggle={toggleZusatzstoff} />
+          <CheckboxGroup label="Allergene" options={ALLERGENE_LISTE} codes={ALLERGEN_CODES} selected={z.allergene} onToggle={toggleAllergen} hint="Kennzeichnung im Speiseplan mit Buchstaben (A–N)." />
+          <CheckboxGroup label="Zusatzstoffe" options={ZUSATZSTOFFE_LISTE} codes={ZUSATZSTOFF_CODES} selected={z.zusatzstoffe} onToggle={toggleZusatzstoff} hint="Kennzeichnung im Speiseplan mit Zahlen (1–9)." />
           <div className="grid gap-2.5 sm:grid-cols-2">
             <CheckboxRow checked={z.vegetarisch} onChange={() => set("vegetarisch", !z.vegetarisch)} label="Vegetarisch" />
             <CheckboxRow checked={z.vegan} onChange={() => set("vegan", !z.vegan)} label="Vegan" />

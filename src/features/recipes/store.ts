@@ -45,6 +45,18 @@ export function naehrwerteProPortion(n: RezeptNaehrwerte100, portionsgewichtG: n
 
 const MASSE_FAKTOR: Record<string, number> = { kg: 1, l: 1, g: 0.001, ml: 0.001 };
 
+/** Rechnet eine Rezeptmenge in die Basiseinheit der Zutat um (g↔kg, ml↔l; Stück nur zu Stück) —
+ * spiegelt IngredientPricing.ConvertQuantity im Backend. Null = nicht umrechenbar. */
+export function mengeInBasiseinheit(menge: number, einheit: string, basis: string): number | null {
+  if (einheit === basis) return menge;
+  const masse = (e: string) => e === "g" || e === "kg";
+  const volumen = (e: string) => e === "ml" || e === "l";
+  if ((masse(einheit) && masse(basis)) || (volumen(einheit) && volumen(basis))) {
+    return (menge * MASSE_FAKTOR[einheit]) / MASSE_FAKTOR[basis];
+  }
+  return null;
+}
+
 /** Massenanteil (%) der Zutaten mit dem gegebenen Flag (bio/regional) am Gesamtgewicht des Rezepts. */
 function anteilByFlag(r: Rezept, zutaten: Zutat[], flag: "bio" | "regional"): number {
   let gesamt = 0;
@@ -68,7 +80,9 @@ export function rezeptWareneinsatzLive(r: Rezept, zutaten: Zutat[]): { gesamt: n
   r.zutaten.forEach((rz) => {
     const z = zutatByIdIn(zutaten, rz.zutatId);
     if (!z || z.einkaufspreis == null || z.umrechnungsfaktor === 0) return;
-    gesamt += rz.menge * (z.einkaufspreis / z.umrechnungsfaktor);
+    const menge = mengeInBasiseinheit(rz.menge, rz.einheit, z.basiseinheit);
+    if (menge == null) return; // z. B. Stück-Zeile bei kg-Zutat — nicht umrechenbar (wie Backend)
+    gesamt += menge * (z.einkaufspreis / z.umrechnungsfaktor);
   });
   const proPortion = r.standardPortionen > 0 ? gesamt / r.standardPortionen : 0;
   return { gesamt: Math.round(gesamt * 100) / 100, proPortion: Math.round(proPortion * 100) / 100 };

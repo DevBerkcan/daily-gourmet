@@ -295,11 +295,13 @@ async function toSaveDto(input: Omit<Zutat, "id">, categories: LookupDto[], alle
 
   return {
     name: input.name,
-    articleNumber: input.artikelnummer,
+    // Optional: leer → Backend vergibt die nächste freie Nummer aus dem Mandanten-Präfix.
+    articleNumber: input.artikelnummer.trim() || null,
     categoryId: category?.id ?? categories[0]?.id,
     supplierId,
     baseUnit: unitToBackend(input.basiseinheit),
-    purchaseUnit: input.einkaufseinheit,
+    // Backend verlangt eine Einkaufseinheit — leer gelassen gilt die Basiseinheit.
+    purchaseUnit: input.einkaufseinheit.trim() || input.basiseinheit,
     conversionFactor: input.umrechnungsfaktor || 1,
     purchasePrice: input.einkaufspreis ?? null,
     vegetarian: input.vegetarisch,

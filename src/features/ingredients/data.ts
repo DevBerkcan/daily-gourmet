@@ -6,6 +6,11 @@ export const ZUTAT_KATEGORIEN = ["Gemüse", "Obst", "Fleisch & Geflügel", "Fisc
 export const ALLERGENE_LISTE = ["Gluten", "Krebstiere", "Eier", "Fisch", "Erdnüsse", "Soja", "Milch", "Schalenfrüchte", "Sellerie", "Senf", "Sesam", "Sulfite", "Lupinen", "Weichtiere"];
 export const ZUSATZSTOFFE_LISTE = ["Farbstoff", "Konservierungsstoff", "Antioxidationsmittel", "Geschmacksverstärker", "geschwefelt", "geschwärzt", "Phosphat", "Süßungsmittel", "enthält eine Phenylalaninquelle"];
 
+/** Speiseplan-Kennzeichnung wie im Rezeptrechner: Allergene als Buchstaben (LMIV, Reihenfolge der
+ * EU-14), kennzeichnungspflichtige Zusatzstoffe als Zahlen (ZZulV/LMIDV). */
+export const ALLERGEN_CODES: Record<string, string> = Object.fromEntries(ALLERGENE_LISTE.map((a, i) => [a, String.fromCharCode(65 + i)]));
+export const ZUSATZSTOFF_CODES: Record<string, string> = Object.fromEntries(ZUSATZSTOFFE_LISTE.map((z, i) => [z, String(i + 1)]));
+
 /**
  * Aus einer echten Rezeptur-/Kennzeichnungsexport (2026-08-13) importierte Zutatenliste.
  * Nährwerte, Einkaufspreise, Lieferanten und Allergene je Zutat liegen aus dem Export NICHT vor

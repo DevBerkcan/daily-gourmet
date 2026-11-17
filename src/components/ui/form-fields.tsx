@@ -113,7 +113,11 @@ export function CheckboxRow({ checked, onChange, label, sub }: { checked: boolea
   );
 }
 
-export function CheckboxGroup({ label, options, selected, onToggle, hint }: { label: string; options: readonly string[]; selected: string[]; onToggle: (value: string) => void; hint?: string }) {
+export function CheckboxGroup({ label, options, selected, onToggle, hint, codes }: {
+  label: string; options: readonly string[]; selected: string[]; onToggle: (value: string) => void; hint?: string;
+  /** Optionales Kürzel je Option (z. B. Allergen „C“, Zusatzstoff „2“), wird als Badge vorangestellt. */
+  codes?: Record<string, string>;
+}) {
   return (
     <Field label={label} hint={hint}>
       <div className="flex flex-wrap gap-1.5">
@@ -125,10 +129,15 @@ export function CheckboxGroup({ label, options, selected, onToggle, hint }: { la
               type="button"
               onClick={() => onToggle(o)}
               aria-pressed={checked}
-              className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border py-1 pr-3 text-xs font-medium transition-colors ${codes?.[o] ? "pl-1" : "pl-3"} ${
                 checked ? "border-basil bg-basil-soft text-basil" : "border-line bg-surface text-ink-soft hover:bg-paper"
               }`}
             >
+              {codes?.[o] && (
+                <span className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-semibold ${checked ? "bg-basil text-white" : "bg-paper text-ink"}`}>
+                  {codes[o]}
+                </span>
+              )}
               {o}
             </button>
           );
