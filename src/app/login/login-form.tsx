@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChefHat, School, Truck } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/client";
 import { useTranslation } from "@/lib/i18n/I18nContext";
@@ -17,15 +16,6 @@ const landingByRole: Record<Rolle, string> = {
   DRIVER: "/driver",
   READ_ONLY: "/admin/dashboard",
 };
-
-/** Seeded dev accounts (see Data/DbSeeder.cs) — convenient one-click logins during local
- * development. All seeded accounts share the same dev password. */
-const devAccounts = [
-  { username: "miriam.hoffmann", icon: ChefHat, label: "Tenant Owner", hint: "Daily Gourmet · Verwaltung" },
-  { username: "markus.becker", icon: Truck, label: "Fahrer", hint: "Daily Gourmet · Auslieferung" },
-  { username: "claudia.winter", icon: School, label: "Einrichtung", hint: "Musterschule Nord · Kundenportal" },
-];
-const DEV_PASSWORD = "Passwort123!";
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -87,25 +77,6 @@ export function LoginForm() {
           {isSubmitting ? t("login.submitting") : t("login.submit")}
         </button>
       </form>
-
-      <div className="mt-9">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("login.devAccounts")}</p>
-        <div className="mt-3 grid gap-2">
-          {devAccounts.map((account) => (
-            <button
-              key={account.username} type="button" disabled={isSubmitting}
-              onClick={() => void handleLogin(account.username, DEV_PASSWORD)}
-              className="group flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-left transition-colors hover:border-basil hover:bg-basil-soft disabled:opacity-60"
-            >
-              <account.icon size={18} className="shrink-0 text-basil" aria-hidden />
-              <span className="min-w-0">
-                <span className="block text-sm font-medium text-ink">{account.label}</span>
-                <span className="block text-xs text-muted">{account.hint}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
     </>
   );
 }

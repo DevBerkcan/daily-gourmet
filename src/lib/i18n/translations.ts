@@ -67,7 +67,6 @@ export const translations = {
     "login.submit": "Anmelden",
     "login.submitting": "Anmeldung läuft …",
     "login.failed": "Anmeldung fehlgeschlagen.",
-    "login.devAccounts": "Demo-Zugänge (Entwicklung)",
 
     "adminDashboard.title": "Übersicht",
     "adminDashboard.subtitle": "Hier ist der Stand für KW {week} bei Daily Gourmet.",
@@ -149,7 +148,6 @@ export const translations = {
     "login.submit": "Sign in",
     "login.submitting": "Signing in …",
     "login.failed": "Sign-in failed.",
-    "login.devAccounts": "Demo accounts (development)",
 
     "adminDashboard.title": "Overview",
     "adminDashboard.subtitle": "Here's the state of week {week} at Daily Gourmet.",
